@@ -14,7 +14,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Status:", err)
 	}
-
 	defer config.DB.Close()
 
 	config.DB.AutoMigrate(
