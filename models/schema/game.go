@@ -8,8 +8,8 @@ type Game struct {
 	PaidTicketNum int64 `gorm:"not null" json:"paidTicketNum" db:"paidTicketNum"`
 	Type          int64 `gorm:"not null" json:"type" db:"type"`
 	Status        int64 `gorm:"not null" json:"status" db:"status"`
-	IsWin        bool `gorm:"not null" json:"isWin" db:"is_win"`
-	GiftId        int64 `json:"giftId" db:"gift_id"`
+	IsWin         bool `gorm:"not null" json:"isWin" db:"is_win"`
+	PrizeID       int64 `json:"prizeID" db:"prize_id"`
 	// CreatedAt   time.Time `sql:"DEFAULT:current_timestamp"`
 	// UpdatedAt   time.Time
 }
@@ -21,7 +21,6 @@ type GameInProgress struct {
 	Type          int64 `gorm:"not null" json:"type" db:"type"`
 	Status        int64 `gorm:"not null" json:"status" db:"status"`
 	//IsWin        bool `gorm:"not null" json:"isWin" db:"is_win"`
-	//GiftId        int64 `json:"giftId" db:"gift_id"`
 	// CreatedAt   time.Time `sql:"DEFAULT:current_timestamp"`
 	// UpdatedAt   time.Time
 }

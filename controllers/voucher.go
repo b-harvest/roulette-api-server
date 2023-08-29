@@ -45,9 +45,11 @@ func SendVoucher(c *gin.Context) {
 			err = models.InsertNewAddr(&account, iAddr)
 			if err != nil {
 				services.NotAcceptable(c, "Can not enroll user address", err)
+				return
 			}
 		} else {
 			services.NotAcceptable(c, "Something went wrong! Can not query user balance", err)
+			return
 		}
 	}
 

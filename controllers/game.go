@@ -62,23 +62,23 @@ func StartGame(c *gin.Context) {
 	rand.Seed(time.Now().UnixNano())
 	resultNum := rand.Intn(1000)
 	var isWin bool
-	var giftId int
+	var prizeID int
 	fmt.Println(resultNum)
 	// 룰렛판(roulette_set) 에 따라 결과를 분기
-	// 풀렛판은 동시에 2개 이상의 gift 를 얻을 수 없다. 즉 결과는 하나다.
-	// 풀렛판은 각 gift + startNum + endNum 으로 구성. 해당 num 안에 포함될 경우
-	// inWin && giftId 부여. 어떤 num 에도 포함되지 않으면 꽝
+	// 풀렛판은 동시에 2개 이상의 prize 를 얻을 수 없다. 즉 결과는 하나다.
+	// 풀렛판은 각 prize + startNum + endNum 으로 구성. 해당 num 안에 포함될 경우
+	// inWin && prizeID 부여. 어떤 num 에도 포함되지 않으면 꽝
 	if resultNum > 500 {	// 꽝
 		isWin = false
-		giftId = 0
+		prizeID = 0
 	} else {	//당첨
 		isWin = true
-		giftId = 1
+		prizeID = 1
 	}
 
 	// 게임 저장
 	game.IsWin  = isWin
-	game.GiftId = int64(giftId)
+	game.PrizeID = int64(prizeID)
 	game.PaidTicketNum = int64(1)
 	err = models.StartNewGame(&game, iAddr)
 	if err != nil {

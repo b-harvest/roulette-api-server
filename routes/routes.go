@@ -9,8 +9,9 @@ import (
 )
 
 func SetupRouter() *gin.Engine {
-	route := gin.Default()
+	route := gin.Default()			// gin Engine 초기화
 
+	// CORS 설정
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowCredentials = true
@@ -18,7 +19,7 @@ func SetupRouter() *gin.Engine {
 	route.Use(cors.New(config))
 
 	//------------------------------------------------------------------------------
-	// boilplate
+	// test
 	//------------------------------------------------------------------------------
 	route.POST("auth/signin", middlewares.IsClientAuthenticated, controllers.AuthSignin)
 	route.DELETE("auth/signout", middlewares.IsUserAuthenticated, controllers.AuthSignout)
@@ -30,19 +31,20 @@ func SetupRouter() *gin.Engine {
 	route.DELETE("users/:id", middlewares.IsUserAuthenticated, controllers.UserDelete)
 	// end of boilplate
 	
-	// 유저 밸런스 조회
-	route.GET("/balance/users/:addr", controllers.GetBalanceByAddr)
-	// 바우처 -> 티켓 스왑
-	route.GET("/voucher/swap/:addr/:voucher_num", controllers.SwapVoucherToTicket)
-	// 바우처 send
-	route.GET("/voucher/send/:addr/:voucher_num", controllers.SendVoucher)
-	// 게임 시작
-	route.GET("/game/random", controllers.GetRandom)	// 난수 테스트
-	route.GET("/game/start/:addr", controllers.StartGame)
-	// 게임 종료
-	route.GET("/game/stop/:addr", controllers.StopGame)
-	// 현재 진행 중인 게임 조회
-	route.GET("/game/ongoing/:addr", controllers.GetOngoingGame)
+	//------------------------------------------------------------------------------
+	// 룰렛 API
+	//------------------------------------------------------------------------------
+	route.GET("/balance/users/:addr", controllers.GetBalanceByAddr)										// 유저 밸런스 조회
+	//TODO: change method GET -> POST
+	route.GET("/voucher/swap/:addr/:voucher_num", controllers.SwapVoucherToTicket)		// 바우처 -> 티켓 스왑
+	//TODO: change method GET -> POST
+	route.GET("/voucher/send/:addr/:voucher_num", controllers.SendVoucher)						// 바우처 send
+	route.GET("/game/random", controllers.GetRandom)																	// 난수 테스트
+	//TODO: change method GET -> POST
+	route.GET("/game/start/:addr", controllers.StartGame)															// 게임 시작
+	//TODO: change method GET -> POST
+	route.GET("/game/stop/:addr", controllers.StopGame)																// 게임 종료
+	route.GET("/game/ongoing/:addr", controllers.GetOngoingGame)											// 현재 진행 중인 게임 조회
 
 	return route
 }

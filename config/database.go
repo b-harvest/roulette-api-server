@@ -16,12 +16,16 @@ type DBConfig struct {
 }
 
 func BuildDBConfig() *DBConfig {
+	cfg, err := Load(DefaultConfigPath)
+	if err != nil {
+		panic(err)
+	}
 	dbConfig := DBConfig{
-		Host:     "localhost",
-		Port:     3306,
-		User:     "root",
-		Password: "password",
-		DBName:   "crescent_roulette_db",
+		Host:     cfg.DBConf.Host,
+		Port:     cfg.DBConf.Port,
+		User:    	cfg.DBConf.User,
+		Password: cfg.DBConf.Password,
+		DBName:   cfg.DBConf.DBName,
 	}
 	return &dbConfig
 }

@@ -20,18 +20,18 @@ CREATE TABLE IF NOT EXISTS `game_order` (
   `type` int NOT NULL DEFAULT '0',
   `status` int NOT NULL DEFAULT '1',
   `is_win` boolean NOT NULL default false,
-  `gift_id` int,
+  `prize_id` int,
   `created_ts` bigint NOT NULL DEFAULT '0',
   `update_ts` bigint DEFAULT NULL,
   PRIMARY KEY (`game_order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `gift` (
-  `gift_id` bigint NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `prize` (
+  `prize_id` bigint NOT NULL AUTO_INCREMENT,
   `type` int NOT NULL DEFAULT '0',
   `token_denom` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `token_num` int NOT NULL DEFAULT '0',
   `created_ts` bigint NOT NULL DEFAULT '0',
   `update_ts` bigint DEFAULT NULL,
-  PRIMARY KEY (`gift_id`)
+  PRIMARY KEY (`prize_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
