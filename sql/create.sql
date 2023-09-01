@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   PRIMARY KEY (`promotion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 유저 테이블
 CREATE TABLE IF NOT EXISTS `account` (
   `uid` bigint unsigned NOT NULL AUTO_INCREMENT,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -32,8 +33,9 @@ CREATE TABLE IF NOT EXISTS `account` (
   `created_at` timestamp,
   `updated_at` timestamp,
   `last_login_at` timestamp,
-  PRIMARY KEY (`promotion_id`)
+  PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 CREATE TABLE IF NOT EXISTS `game_order` (
   `order_id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -53,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `game_order` (
   `updated_at` timestamp,
   PRIMARY KEY (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- 상품의 종류 ex) cre, bcre, 10%수수료쿠폰, atom, nft 등
 CREATE TABLE IF NOT EXISTS `prize_type` (
@@ -77,6 +80,7 @@ CREATE TABLE IF NOT EXISTS `distribution_pool` (
   PRIMARY KEY (`dist_pool_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 -- 프로모션 내 상품 리스트
 CREATE TABLE IF NOT EXISTS `prize` (
   `prize_id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -84,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `prize` (
   `promotion_id` bigint unsigned NOT NULL, -- option
   `prize_type_id` bigint unsigned NOT NULL, -- option
   `amount` bigint NOT NULL DEFAULT 1,  -- 100개
-  `odds` decimal(3,1) NOT NULL,
+  `odds` decimal(3,3) NOT NULL,
   `win_cnt` int unsigned NOT NULL DEFAULT 0,
   `win_image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `max_daily_win_limit` int,
@@ -114,14 +118,14 @@ CREATE TABLE IF NOT EXISTS `user_voucher_balance` (
   `account_id` bigint unsigned NOT NULL,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
-  `amount` bigint NOT NULL,
+  `current_amount` bigint NOT NULL,
+  `total_recevied_amount` bigint NOT NULL,
   `created_at` timestamp,
   `updated_at` timestamp,
   PRIMARY KEY (`id`),
   UNIQUE KEY `addr_voucher` (`addr`, `promotion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- promotion 으로 merge 됨
 CREATE TABLE IF NOT EXISTS `game_type` (
   `game_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -134,10 +138,11 @@ CREATE TABLE IF NOT EXISTS `game_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- voucher 전송 히스토리
-CREATE TABLE IF NOT EXISTS `voucher_mint_history` (
+CREATE TABLE IF NOT EXISTS `voucher_send_history` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `account_id` bigint unsigned NOT NULL,
+  `account_id` bigint unsigned,
   `recipient_addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  -- `voucher_id` 는 없어짐
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `amount` bigint NOT NULL,
   `sent_at` timestamp,
@@ -159,30 +164,18 @@ CREATE TABLE IF NOT EXISTS `voucher_burn_history` (
   KEY `addr` (`addr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- voucher -> ticket 교환 히스토리
-CREATE TABLE IF NOT EXISTS `voucher_burn_history` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `account_id` bigint unsigned NOT NULL,
-  `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
-  `burned_voucher_amount` bigint NOT NULL,
-  `minted_ticket_amount` bigint NOT NULL,
-  `burned_at` timestamp,
-  PRIMARY KEY (`id`),
-  KEY `addr` (`addr`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- 이벤트: 지갑 접속
+-- 향후 고려사항: is_mobile, browser_type, ip, location...
 CREATE TABLE IF NOT EXISTS `event_wallet_conn` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` int NOT NULL DEFAULT 0,
+  `addr_type` int NOT NULL DEFAULT 0,
   `promotion_id` bigint NOT NULL DEFAULT 0,
   `created_at` timestamp,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 이벤트: 플립 링크 클릭
+-- 이벤트: 링크 클릭
 CREATE TABLE IF NOT EXISTS `event_flip_link` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
