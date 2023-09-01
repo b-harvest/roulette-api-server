@@ -1,8 +1,10 @@
 package schema
 
+import "time"
+
 // import "time"
 
-type Game struct {
+type GameOrder struct {
 	GameOrderId   int64 `gorm:"not null" json:"gameOrderId" db:"game_order_id"`
 	Address 			string `gorm:"not null" json:"address"`
 	PaidTicketNum int64 `gorm:"not null" json:"paidTicketNum" db:"paidTicketNum"`
@@ -27,4 +29,14 @@ type GameInProgress struct {
 
 func (b *Game) TableName() string {
 	return "game_order"
+}
+
+type Game struct {
+	GameId         int64  `json:"gameId" db:"game_id"`
+	Title 			   string `json:"title" db:"title"`
+	Desc 			     string `json:"desc" db:"desc"`
+	IsActive       bool   `json:"isActive" db:"is_active"`
+	Url 			     string `json:"url" db:"url"`
+	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt      time.Time `json:"updatedAt" db:"updated_at"`
 }

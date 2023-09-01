@@ -32,7 +32,7 @@ func SetupRouter() *gin.Engine {
 	// end of boilplate
 	
 	//------------------------------------------------------------------------------
-	// 룰렛 API
+	// 룰렛 API samples
 	//------------------------------------------------------------------------------
 	route.GET("/balance/users/:addr", controllers.GetBalanceByAddr)										// 유저 밸런스 조회
 	//TODO: change method GET -> POST
@@ -45,6 +45,18 @@ func SetupRouter() *gin.Engine {
 	//TODO: change method GET -> POST
 	route.GET("/game/stop/:addr", controllers.StopGame)																// 게임 종료
 	route.GET("/game/ongoing/:addr", controllers.GetOngoingGame)											// 현재 진행 중인 게임 조회
+
+	//------------------------------------------------------------------------------
+	// 룰렛 API 1차 개발
+	//------------------------------------------------------------------------------
+	
+	// game-mgmt
+	route.GET("/game-mgmt/games", controllers.GetGames)											
+	route.POST("/game-mgmt/games", controllers.CreateGame)									
+	route.PATCH("/game-mgmt/games/:game_id", controllers.UpdateGame)						
+	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)						
+	
+
 
 	return route
 }

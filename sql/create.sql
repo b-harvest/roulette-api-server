@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS `user_voucher_balance` (
   UNIQUE KEY `addr_voucher` (`addr`, `promotion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 게임 종류
 CREATE TABLE IF NOT EXISTS `game_type` (
   `game_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -134,7 +135,8 @@ CREATE TABLE IF NOT EXISTS `game_type` (
   `url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp,
   `updated_at` timestamp,
-  PRIMARY KEY (`game_id`)
+  PRIMARY KEY (`game_id`),
+  UNIQUE KEY `title` (`title`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- voucher 전송 히스토리

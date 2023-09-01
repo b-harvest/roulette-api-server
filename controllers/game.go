@@ -1,11 +1,16 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
+	"roulette-api-server/types"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +26,7 @@ func StartGame(c *gin.Context) {
 	iAddr := c.Param("addr")
 
 	// 이미 게임이 진행 중인지 확인
-	var game schema.Game
+	var game schema.GameOrder
 	err := models.QueryCurGameByAddr(&game, iAddr)
 	if err != nil {
 		if err.Error() != "record not found" {
@@ -68,6 +73,15 @@ func StartGame(c *gin.Context) {
 	// 풀렛판은 동시에 2개 이상의 prize 를 얻을 수 없다. 즉 결과는 하나다.
 	// 풀렛판은 각 prize + startNum + endNum 으로 구성. 해당 num 안에 포함될 경우
 	// inWin && prizeID 부여. 어떤 num 에도 포함되지 않으면 꽝
+	// 1상품의 확률이 3%
+	// 2상품의 확률이 10%
+	// 3상품의 확률이 50%
+	// 나머지는 꽝이다
+	// 1상품: 0 ~ 30
+	// 2상품: 31 ~ 130
+	// 3상품: 131 ~ 630
+	// 꽝: 631 ~ 999
+
 	if resultNum > 500 {	// 꽝
 		isWin = false
 		prizeID = 0
@@ -100,7 +114,7 @@ func StopGame(c *gin.Context) {
 	iAddr := c.Param("addr")
 
 	// 이미 게임이 진행 중인지 확인
-	var game schema.Game
+	var game schema.GameOrder
 	err := models.QueryCurGameByAddr(&game, iAddr)
 	if err != nil {
 		if err.Error() != "record not found" {
@@ -127,7 +141,7 @@ func GetOngoingGame(c *gin.Context) {
 	iAddr := c.Param("addr")
 
 	// 이미 게임이 진행 중인지 확인
-	var game schema.Game
+	var game schema.GameOrder
 	err := models.QueryCurGameByAddr(&game, iAddr)
 	if err != nil {
 		if err.Error() != "record not found" {
@@ -141,4 +155,123 @@ func GetOngoingGame(c *gin.Context) {
 	}
 
 	services.Success(c, nil, game)
+}
+
+//-----------------------------------------------------------------------------------------
+
+// 게임 생성
+func CreateGame(c *gin.Context) {
+	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+			services.BadRequest(c, "Bad Request", err)
+			return
+	}
+	var req types.ReqCreateGame
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		services.BadRequest(c, "Bad Request Unmarshal error", err)
+		return
+	}
+
+	// handler data
+	game := schema.Game{
+		Title: req.Title,
+		Desc: req.Desc,
+		IsActive: req.IsActive,
+		Url: req.Url,
+	}
+	err = models.CreateGame(&game)
+
+	// result
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		if strings.Contains(err.Error(),"1062") {
+			services.NotAcceptable(c, "data already exists", err)
+		} else {
+			services.NotAcceptable(c, "CreateGame Fail", err)
+		}
+	} else {
+		services.Success(c, nil, game)
+	}
+}
+
+// 게임 종류 조회
+func GetGames(c *gin.Context) {
+	games := make([]schema.Game, 0, 100)
+	err := models.QueryGameTypes(&games)
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		services.NotAcceptable(c, "GetGame fail", err)
+	}
+
+	services.Success(c, nil, games)
+}
+
+
+// 게임 정보 수정
+func UpdateGame(c *gin.Context) {
+	// 파라미터 조회 -> body 조회 -> 언마샬
+	strGameId := c.Param("game_id")
+	gameId, err := strconv.ParseInt(strGameId, 10, 64)
+	if err != nil {
+		services.NotAcceptable(c, "Bad Request gameId path parameter", err)
+		return
+	}
+	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+			services.BadRequest(c, "Bad Request", err)
+			return
+	}
+	var req types.ReqUpdateGame
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		services.BadRequest(c, "Bad Request Unmarshal error", err)
+		return
+	}
+
+	// handler data
+	game := schema.Game{
+		GameId: gameId,
+		Title: req.Title,
+		Desc: req.Desc,
+		IsActive: req.IsActive,
+		Url: req.Url,
+		UpdatedAt: time.Now(),
+	}
+	err = models.UpdateGame(&game)
+
+	// result
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		if strings.Contains(err.Error(),"1062") {
+			services.NotAcceptable(c, "Title already exists", err)
+		} else {
+			services.NotAcceptable(c, "UpdateGame Fail", err)
+		}
+	} else {
+		services.Success(c, nil, game)
+	}
+}
+
+
+// 게임 정보 수정
+func DeleteGame(c *gin.Context) {
+	// 파라미터 조회
+	strGameId := c.Param("game_id")
+	gameId, err := strconv.ParseInt(strGameId, 10, 64)
+	if err != nil {
+		services.NotAcceptable(c, "Bad Request gameId path parameter", err)
+		return
+	}
+
+	// handler data
+	game := schema.Game{
+		GameId: gameId,
+	}
+	err = models.DeleteGame(&game)
+
+	// result
+	if err != nil {
+		services.NotAcceptable(c, "failed DeleteGame", err)
+	} else {
+		services.Success(c, nil, game)
+	}
 }
