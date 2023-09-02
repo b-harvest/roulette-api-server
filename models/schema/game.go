@@ -27,10 +27,6 @@ type GameInProgress struct {
 	// UpdatedAt   time.Time
 }
 
-func (b *Game) TableName() string {
-	return "game_order"
-}
-
 type Game struct {
 	GameId         int64  `json:"gameId" db:"game_id"`
 	Title 			   string `json:"title" db:"title"`
@@ -39,4 +35,8 @@ type Game struct {
 	Url 			     string `json:"url" db:"url"`
 	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt      time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+func (b *Game) TableName() string {
+	return "game"
 }

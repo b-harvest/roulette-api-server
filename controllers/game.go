@@ -159,12 +159,25 @@ func GetOngoingGame(c *gin.Context) {
 
 //-----------------------------------------------------------------------------------------
 
+// 게임 종류 조회
+func GetGames(c *gin.Context) {
+	games := make([]schema.Game, 0, 100)
+	err := models.QueryGameTypes(&games)
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		services.NotAcceptable(c, "GetGame fail", err)
+		return
+	}
+
+	services.Success(c, nil, games)
+}
+
 // 게임 생성
 func CreateGame(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Request", err)
-			return
+		services.BadRequest(c, "Bad Request", err)
+		return
 	}
 	var req types.ReqCreateGame
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -194,18 +207,29 @@ func CreateGame(c *gin.Context) {
 	}
 }
 
-// 게임 종류 조회
-func GetGames(c *gin.Context) {
-	games := make([]schema.Game, 0, 100)
-	err := models.QueryGameTypes(&games)
+func GetGame(c *gin.Context) {
+	// 파라미터 조회
+	strGameId := c.Param("game_id")
+	gameId, err := strconv.ParseInt(strGameId, 10, 64)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "GetGame fail", err)
+		services.NotAcceptable(c, "Bad Request gameId path parameter", err)
+		return
 	}
+	game := schema.Game{
+		GameId: gameId,
+	}
+	err = models.QueryGameType(&game)
 
-	services.Success(c, nil, games)
+	if err != nil {
+		if err.Error() == "record not found" {	// if addr not exists
+			services.NotAcceptable(c, "record not found", err)
+		} else {
+			services.NotAcceptable(c, "failed GetGame", err)
+		}
+	} else {
+		services.Success(c, nil, game)
+	}
 }
-
 
 // 게임 정보 수정
 func UpdateGame(c *gin.Context) {
@@ -252,7 +276,7 @@ func UpdateGame(c *gin.Context) {
 }
 
 
-// 게임 정보 수정
+// 게임 정보 삭제
 func DeleteGame(c *gin.Context) {
 	// 파라미터 조회
 	strGameId := c.Param("game_id")

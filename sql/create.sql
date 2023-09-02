@@ -10,17 +10,19 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   `is_active` tinyint(1) NOT NULL DEFAULT 0, -- 진행 중/일시 중지 여부
   `is_whitelisted` tinyint(1) NOT NULL DEFAULT 0, -- 프론트에서 보여줄지 여부
   `voucher_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, -- 상품 이름
-  `voucher_exchange_ratio_0` int unsigned NOT NULL default 1,
-  `voucher_exchange_ratio_1` int unsigned NOT NULL default 1,
+  `voucher_exchange_ratio0` int unsigned NOT NULL default 1,
+  `voucher_exchange_ratio1` int unsigned NOT NULL default 1,
   `voucher_total_supply` int NOT NULL DEFAULT 0,
   `voucher_remaining_qty` int NOT NULL DEFAULT 0,
-  `promotion_start_at` timestamp,
-  `promotion_end_at` timestamp,
-  `claim_start_at` timestamp,
-  `claim_end_at` timestamp,
+  `promotion_start_at` timestamp NOT NULL,
+  `promotion_end_at` timestamp NOT NULL,
+  `claim_start_at` timestamp NOT NULL,
+  `claim_end_at` timestamp NOT NULL,
   `created_at` timestamp,
   `updated_at` timestamp,
-  PRIMARY KEY (`promotion_id`)
+  PRIMARY KEY (`promotion_id`),
+  UNIQUE KEY `title` (`title`),
+  UNIQUE KEY `voucher_name` (`voucher_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 유저 테이블
@@ -30,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `account` (
   `ticket_amount` int NOT NULL DEFAULT 0,
   `admin_memo` tinytext COLLATE utf8mb4_unicode_ci,
   `type` int NOT NULL DEFAULT 0,
+  `is_blacklisted` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp,
   `updated_at` timestamp,
   `last_login_at` timestamp,
@@ -58,13 +61,14 @@ CREATE TABLE IF NOT EXISTS `game_order` (
 
 
 -- 상품의 종류 ex) cre, bcre, 10%수수료쿠폰, atom, nft 등
-CREATE TABLE IF NOT EXISTS `prize_type` (
-  `prize_type_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `prize_denom` (
+  `prize_denom_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, -- 상품 이름
   `type` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL, -- cre (name 과 중복인지 애매함)
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp,
   `updated_at` timestamp,
-  PRIMARY KEY (`prize_type_id`)
+  PRIMARY KEY (`prize_denom_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -72,12 +76,14 @@ CREATE TABLE IF NOT EXISTS `prize_type` (
 CREATE TABLE IF NOT EXISTS `distribution_pool` (
   `dist_pool_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `promotion_id` bigint unsigned NOT NULL,
-  `prize_type_id` bigint unsigned NOT NULL,
+  `prize_denom_id` bigint unsigned NOT NULL,
   `total_supply` int NOT NULL DEFAULT 0,
   `remaining_qty` int NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp,
   `updated_at` timestamp,
-  PRIMARY KEY (`dist_pool_id`)
+  PRIMARY KEY (`dist_pool_id`),
+  UNIQUE KEY `promotion_denom` (`promotion_id`, `prize_denom_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -86,16 +92,17 @@ CREATE TABLE IF NOT EXISTS `prize` (
   `prize_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `dist_pool_id` bigint unsigned NOT NULL,
   `promotion_id` bigint unsigned NOT NULL, -- option
-  `prize_type_id` bigint unsigned NOT NULL, -- option
+  `prize_denom_id` bigint unsigned NOT NULL, -- option
   `amount` bigint NOT NULL DEFAULT 1,  -- 100개
   `odds` decimal(3,3) NOT NULL,
   `win_cnt` int unsigned NOT NULL DEFAULT 0,
   `win_image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `max_daily_win_limit` int,
   `max_total_win_limit` int,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp,
   `updated_at` timestamp,
-  PRIMARY KEY (`prize_id`)
+  PRIMARY KEY (`prize_id`),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- temp: promotion 으로 merge 됨

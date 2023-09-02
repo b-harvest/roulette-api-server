@@ -51,11 +51,37 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	
 	// game-mgmt
-	route.GET("/game-mgmt/games", controllers.GetGames)											
-	route.POST("/game-mgmt/games", controllers.CreateGame)									
-	route.PATCH("/game-mgmt/games/:game_id", controllers.UpdateGame)						
+	route.GET   ("/game-mgmt/games", controllers.GetGames)											
+	route.POST  ("/game-mgmt/games", controllers.CreateGame)									
+	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)						
+	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame)						
 	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)						
 	
+	// promotions
+	route.GET   ("/promotions", controllers.GetPromotions)											
+	route.POST  ("/promotions", controllers.CreatePromotion)									
+	route.GET   ("/promotions/:promotion_id", controllers.GetPromotion)						
+	route.PATCH ("/promotions/:promotion_id", controllers.UpdatePromotion)						
+	route.DELETE("/promotions/:promotion_id", controllers.DeletePromotion)	
+
+	// prize
+	route.GET   ("/prize-mgmt/denoms", controllers.GetPrizeDenoms)											
+	route.POST  ("/prize-mgmt/denoms", controllers.CreatePrizeDenom)									
+	route.GET   ("/prize-mgmt/denoms/:prize_denom_id", controllers.GetPrizeDenom)						
+	route.PATCH ("/prize-mgmt/denoms/:prize_denom_id", controllers.UpdatePrizeDenom)						
+	route.DELETE("/prize-mgmt/denoms/:prize_denom_id", controllers.DeletePrizeDenom)	
+
+	// prize distribution pool
+	route.GET   ("/prize-mgmt/pools", controllers.GetDistPool)											
+	route.POST  ("/prize-mgmt/pools", controllers.CreateDistPool)									
+	route.GET   ("/prize-mgmt/pools/:dist_pool_id", controllers.GetDistPool)						
+	route.PATCH ("/prize-mgmt/pools/:dist_pool_id", controllers.UpdateDistPool)						
+	route.DELETE("/prize-mgmt/pools/:dist_pool_id", controllers.DeleteDistPool)
+
+
+	//------------------------------------------------------------------------------
+	// 룰렛 API 1차 개발 optonal APIs
+	//------------------------------------------------------------------------------
 
 
 	return route

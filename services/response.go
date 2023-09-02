@@ -19,7 +19,8 @@ func ErrorResponse(c *gin.Context, status int, message interface{}, error interf
 }
 
 func Success(c *gin.Context, message interface{}, data interface{}) {
-	SuccessResponse(c, http.StatusOK, message, data)
+	//SuccessResponse(c, http.StatusOK, message, data)
+	SuccessResponse(c, http.StatusOK, "ok", data)
 }
 
 func Created(c *gin.Context, message interface{}, data interface{}) {

@@ -38,14 +38,19 @@ func StopGame(game *schema.GameOrder, addr string) (err error) {
 	return nil
 }
 
+func QueryGameTypes(games *[]schema.Game) (err error) {
+	err = config.DB.Table("game_type").Find(games).Error
+	return
+}
+
 func CreateGame(game *schema.Game) (err error) {
 	// err = config.DB.Table("game_type").FirstOrCreate(game).Error
 	err = config.DB.Table("game_type").Create(game).Error
 	return
 }
 
-func QueryGameTypes(games *[]schema.Game) (err error) {
-	err = config.DB.Table("game_type").Find(games).Error
+func QueryGameType(game *schema.Game) (err error) {
+	err = config.DB.Table("game_type").Where("game_id = ?", game.GameId).First(game).Error
 	return
 }
 
