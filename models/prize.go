@@ -7,27 +7,27 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func QueryPrizeDenoms(denoms *[]schema.PrizeDenomRow) (err error) {
-	err = config.DB.Table("prize_denom").Find(denoms).Error
+func QueryPrizes(prizes *[]schema.PrizeRow) (err error) {
+	err = config.DB.Table("prize").Find(prizes).Error
 	return
 }
 
-func CreatePrizeDenom(denom *schema.PrizeDenomRow) (err error) {
-	err = config.DB.Table("prize_denom").Create(denom).Error
+func CreatePrize(prize *schema.PrizeRow) (err error) {
+	err = config.DB.Table("prize").Create(prize).Error
 	return
 }
 
-func QueryPrizeDenom(denom *schema.PrizeDenomRow) (err error) {
-	err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", denom.PrizeDenomId).First(denom).Error
+func QueryPrize(prize *schema.PrizeRow) (err error) {
+	err = config.DB.Table("prize").Where("prize_id = ?", prize.PrizeId).First(prize).Error
 	return
 }
 
-func UpdatePrizeDenomn(denom *schema.PrizeDenomRow) (err error) {
-	err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", denom.PrizeDenomId).Update(denom).Error
+func UpdatePrize(prize *schema.PrizeRow) (err error) {
+	err = config.DB.Table("prize").Where("prize_id = ?", prize.PrizeId).Update(prize).Error
 	return
 }
 
-func DeletePrizeDenom(denom *schema.PrizeDenomRow) (err error) {
-	err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", denom.PrizeDenomId).Delete(denom).Error
+func DeletePrize(prize *schema.PrizeRow) (err error) {
+	err = config.DB.Table("prize").Where("prize_id = ?", prize.PrizeId).Delete(prize).Error
 	return
 }

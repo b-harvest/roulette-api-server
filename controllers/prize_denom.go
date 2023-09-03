@@ -15,28 +15,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Prizes 조회
-func GetPrizes(c *gin.Context) {
-	prizes := make([]schema.PrizeRow, 0, 100)
-	err := models.QueryPrizes(&prizes)
+// 당첨품 종류 조회
+func GetPrizeDenoms(c *gin.Context) {
+	denoms := make([]schema.PrizeDenomRow, 0, 100)
+	err := models.QueryPrizeDenoms(&denoms)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
-	services.Success(c, nil, prizes)
+	services.Success(c, nil, denoms)
 }
 
 
-// Prize 생성
-func CreatePrize(c *gin.Context) {
+// 당첨풍 종류 생성
+func CreatePrizeDenom(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreatePrize
+	var req types.ReqCreatePrizeDenom
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -44,18 +44,12 @@ func CreatePrize(c *gin.Context) {
 	}
 
 	// data handling
-	prize := schema.PrizeRow{
-		DistPoolId:       req.PromotionId,
-		PromotionId:      req.PromotionId,
-		PrizeDenomId:     req.PrizeDenomId,
-		Amount:           req.Amount,
-		Odds:             req.Odds,
-		WinImageUrl:      req.WinImageUrl,
-		MaxDailyWinLimit: req.MaxDailyWinLimit,
-		MaxTotalWinLimit: req.MaxTotalWinLimit,
-		IsActive:         req.IsActive,
+	denom := schema.PrizeDenomRow{
+		Name:req.Name,
+		Type:req.Type,
+		IsActive:req.IsActive,
 	}
-	err = models.CreatePrize(&prize)
+	err = models.CreatePrizeDenom(&denom)
 
 	// result
 	if err != nil {
@@ -66,37 +60,37 @@ func CreatePrize(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, denom)
 	}
 }
 
-// 특정 Prize 조회
-func GetPrize(c *gin.Context) {
+// 특정 담청품 종류 조회
+func GetPrizeDenom(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_id")
+	strId := c.Param("prize_denom_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
+	denom := schema.PrizeDenomRow{
+		PrizeDenomId: reqId,
 	}
-	err = models.QueryPrize(&prize)
+	err = models.QueryPrizeDenom(&denom)
 
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, denom)
 	}
 }
 
-// Prize 정보 수정
-func UpdatePrize(c *gin.Context) {
+// 데놈 정보 수정
+func UpdatePrizeDenom(c *gin.Context) {
 	// 파라미터 조회 -> body 조회 -> 언마샬
-	strId := c.Param("prize_id")
+	strId := c.Param("prize_denom_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -107,22 +101,21 @@ func UpdatePrize(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdatePrize
+	var req types.ReqUpdatePrizeDenom
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
 	}
 
 	// handler data
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
-		Odds: req.Odds,
-		MaxDailyWinLimit: req.MaxDailyWinLimit,
-		MaxTotalWinLimit: req.MaxTotalWinLimit,
+	denom := schema.PrizeDenomRow{
+		PrizeDenomId: reqId,
+		Name: req.Name,
+		Type: req.Type,
 		IsActive: req.IsActive,
 		UpdatedAt: time.Now(),
 	}
-	err = models.UpdatePrize(&prize)
+	err = models.UpdatePrizeDenomn(&denom)
 
 	// result
 	if err != nil {
@@ -133,15 +126,15 @@ func UpdatePrize(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, denom)
 	}
 }
 
 
-// DistPool 삭제
-func DeletePrize(c *gin.Context) {
+// 데놈 삭제
+func DeletePrizeDenom(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_id")
+	strId := c.Param("prize_denom_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -149,16 +142,16 @@ func DeletePrize(c *gin.Context) {
 	}
 
 	// handler data
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
+	denom := schema.PrizeDenomRow{
+		PrizeDenomId: reqId,
 	}
-	err = models.DeletePrize(&prize)
+	err = models.DeletePrizeDenom(&denom)
 
 	// result
 	if err != nil {
 		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, denom)
 	}
 }
 

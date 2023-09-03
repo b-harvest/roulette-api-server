@@ -49,22 +49,20 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
-	
-	// game-mgmt
-	route.GET   ("/game-mgmt/games", controllers.GetGames)											
-	route.POST  ("/game-mgmt/games", controllers.CreateGame)									
-	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)						
-	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame)						
-	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)						
-	
-	// promotions
-	route.GET   ("/promotions", controllers.GetPromotions)											
+		
+	// promotion
+	// TODO: should query promotion, dist_pool, prize at once											
+	route.GET   ("/promotions", controllers.GetPromotions)
+	// TODO: should create promotion, dist_pool, prize at once											
 	route.POST  ("/promotions", controllers.CreatePromotion)									
+	// TODO: should query promotion, dist_pool, prize at once											
 	route.GET   ("/promotions/:promotion_id", controllers.GetPromotion)						
-	route.PATCH ("/promotions/:promotion_id", controllers.UpdatePromotion)						
+	route.PATCH ("/promotions/:promotion_id/info", controllers.UpdatePromotion)						
+	// TODO: seperate promotion only & all promotion data including dist_pool, prize
 	route.DELETE("/promotions/:promotion_id", controllers.DeletePromotion)	
 
-	// prize
+	// prize denom
+	// TODO: denom 별 상세한 정보(속하는 dist, prize 등 통계 정보) 추가
 	route.GET   ("/prize-mgmt/denoms", controllers.GetPrizeDenoms)											
 	route.POST  ("/prize-mgmt/denoms", controllers.CreatePrizeDenom)									
 	route.GET   ("/prize-mgmt/denoms/:prize_denom_id", controllers.GetPrizeDenom)						
@@ -72,11 +70,62 @@ func SetupRouter() *gin.Engine {
 	route.DELETE("/prize-mgmt/denoms/:prize_denom_id", controllers.DeletePrizeDenom)	
 
 	// prize distribution pool
-	route.GET   ("/prize-mgmt/pools", controllers.GetDistPool)											
-	route.POST  ("/prize-mgmt/pools", controllers.CreateDistPool)									
-	route.GET   ("/prize-mgmt/pools/:dist_pool_id", controllers.GetDistPool)						
-	route.PATCH ("/prize-mgmt/pools/:dist_pool_id", controllers.UpdateDistPool)						
+	// TODO: pool 별 속하는 prize 정보 함께 제공
+	route.GET   ("/prize-mgmt/pools", controllers.GetDistPools) // for test
+	route.POST  ("/prize-mgmt/pools", controllers.CreateDistPool) // for test				
+	route.GET   ("/prize-mgmt/pools/:dist_pool_id", controllers.GetDistPool) // for test					
+	route.PATCH ("/prize-mgmt/pools/:dist_pool_id", controllers.UpdateDistPool)	
 	route.DELETE("/prize-mgmt/pools/:dist_pool_id", controllers.DeleteDistPool)
+
+	// prize
+	route.GET   ("/prize-mgmt/prizes", controllers.GetPrizes) // for test
+	route.POST  ("/prize-mgmt/prizes", controllers.CreatePrize) // for test				
+	route.GET   ("/prize-mgmt/prizes/:prize_id", controllers.GetPrize) // for test					
+	route.PATCH ("/prize-mgmt/prizes/:prize_id", controllers.UpdatePrize)	
+	route.DELETE("/prize-mgmt/prizes/:prize_id", controllers.DeletePrize)	
+
+	// account
+	route.GET   ("/accounts", controllers.GetAccounts) // for test
+	route.POST  ("/accounts", controllers.CreateAccount) // for test
+	route.GET   ("/accounts/:addr", controllers.GetAccount) // for test
+	route.PATCH ("/accounts/:addr", controllers.UpdateAccount)
+	route.DELETE("/accounts/:addr", controllers.DeleteAccount)
+
+	// game-mgmt
+	route.GET   ("/game-mgmt/games", controllers.GetGames)											
+	route.POST  ("/game-mgmt/games", controllers.CreateGame)									
+	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)						
+	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame)						
+	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)		
+
+	// game-order
+	route.GET   ("/game-mgmt/orders", controllers.GetGameOrders)
+	route.POST  ("/game-mgmt/orders", controllers.CreateGameOrder) // for test
+	route.GET   ("/game-mgmt/orders/:order_id", controllers.GetGameOrder)
+	route.PATCH ("/game-mgmt/orders/:order_id", controllers.UpdateGameOrder)
+	route.DELETE("/game-mgmt/orders/:order_id", controllers.DeleteGameOrder)
+
+	// voucher
+	// TODO: route.GET   ("/vouchers", controllers.GetAccounts) // 바우처 리스트
+	route.GET   ("/voucher-mgmt/balances", controllers.GetVoucherBalances) // 바우처 밸런스 리스트
+	route.POST  ("/voucher-mgmt/balances", controllers.CreateVoucherBalance) // for test
+	route.GET   ("/voucher-mgmt/balances/:id", controllers.GetVoucherBalance) // for test
+	route.PATCH ("/voucher-mgmt/balances/:id", controllers.UpdateVoucherBalance) // for test
+	route.DELETE("/voucher-mgmt/balances/:id", controllers.DeleteVoucherBalance) // for test
+
+	// voucher send history
+	route.GET   ("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)
+	route.POST  ("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvent) // for test
+	route.GET   ("/voucher-mgmt/events/send/:id", controllers.GetVoucherSendEvent) // for test
+	route.PATCH ("/voucher-mgmt/events/send/:id", controllers.UpdateVoucherSendEvent) // for test
+	route.DELETE("/voucher-mgmt/events/send/:id", controllers.DeleteVoucherSendEvent) // for test
+
+	// voucher send history
+	route.GET   ("/voucher-mgmt/events/burn", controllers.GetVoucherBurnEvents)
+	route.POST  ("/voucher-mgmt/events/burn", controllers.CreateVoucherBurnEvent) // for test
+	route.GET   ("/voucher-mgmt/events/burn/:id", controllers.GetVoucherBurnEvent) // for test
+	route.PATCH ("/voucher-mgmt/events/burn/:id", controllers.UpdateVoucherBurnEvent) // for test
+	route.DELETE("/voucher-mgmt/evenets/burn/:id", controllers.DeleteVoucherBurnEvent) // for test
 
 
 	//------------------------------------------------------------------------------

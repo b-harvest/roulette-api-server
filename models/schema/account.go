@@ -1,22 +1,30 @@
 package schema
 
-// import "time"
+import (
+	"time"
+)
 
+// sample
 type Account struct {
-	Address 			string `gorm:"not null" json:"address"`
-	HexAddr       string `gorm:"not null" json:"hexAddr" db:"hex_addr"`
-	Voucher 			int64 `gorm:"not null" json:"voucher" db:"voucher"`
-	Ticket 			  int64 `gorm:"not null"  json:"ticket" db:"ticket"`
-	// FirstName 	string `gorm:"not null"`
-	// LastName 	string `gorm:"not null"`
-	// Email   	string `gorm:"unique;not null"`
-	// Password   	string `gorm:"not null"`
-	// Phone   	string `gorm:"not null"`
-	// Address 	*string
-	// CreatedAt   time.Time `sql:"DEFAULT:current_timestamp"`
-	// UpdatedAt   time.Time
+	// origin
+	Ticket   int64    `json:"ticket" db:"ticket"`
+	Voucher   int64    `json:"voucher" db:"voucher"`
+	Address 			     string    `json:"address" db:"address"`
+	HexAddr 			     string    `json:"hexAddr" db:"hexAddr"`
 }
 
-func (b *Account) TableName() string {
+type AccountRow struct {
+	Uid            int64     `json:"uid" db:"uid"`
+	Addr 			     string    `json:"addr" db:"addr"`
+	TicketAmount   uint64    `json:"ticketAmount" db:"ticket_amount"`
+	AdminMemo      string    `json:"adminMemo" db:"admin_memo"`
+	Type 			     string    `json:"type" db:"type"`
+	IsBlacklisted  bool      `json:"isBlacklisted" db:"is_blacklisted"`
+	LastLoginAt    time.Time `json:"lastLoginAt" db:"last_login_at"`
+	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt      time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+func (b *AccountRow) TableName() string {
 	return "account"
 }

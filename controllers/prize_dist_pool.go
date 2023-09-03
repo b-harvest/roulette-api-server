@@ -17,15 +17,15 @@ import (
 
 // DistPool 종류 조회
 func GetDistPools(c *gin.Context) {
-	denoms := make([]schema.PrizeDenomRow, 0, 100)
-	err := models.QueryPrizeDenoms(&denoms)
+	pools := make([]schema.PrizeDistPoolRow, 0, 100)
+	err := models.QueryDistPools(&pools)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
-	services.Success(c, nil, denoms)
+	services.Success(c, nil, pools)
 }
 
 
@@ -36,7 +36,7 @@ func CreateDistPool(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreatePrizeDenom
+	var req types.ReqCreateDistPool
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -44,12 +44,13 @@ func CreateDistPool(c *gin.Context) {
 	}
 
 	// data handling
-	denom := schema.PrizeDenomRow{
-		Name:req.Name,
-		Type:req.Type,
-		IsActive:req.IsActive,
+	pool := schema.PrizeDistPoolRow{
+		PromotionId:  req.PromotionId,
+		PrizeDenomId: req.PrizeDenomId,
+		TotalSupply:  req.TotalSupply,
+		IsActive:     req.IsActive,
 	}
-	err = models.CreatePrizeDenom(&denom)
+	err = models.CreateDistPool(&pool)
 
 	// result
 	if err != nil {
@@ -60,37 +61,37 @@ func CreateDistPool(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, denom)
+		services.Success(c, nil, pool)
 	}
 }
 
-// 특정 담청품 종류 조회
+// 특정 DistPool 종류 조회
 func GetDistPool(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	denom := schema.PrizeDenomRow{
-		PrizeDenomId: reqId,
+	pool := schema.PrizeDistPoolRow{
+		DistPoolId: reqId,
 	}
-	err = models.QueryPrizeDenom(&denom)
+	err = models.QueryDistPool(&pool)
 
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, denom)
+		services.Success(c, nil, pool)
 	}
 }
 
-// 데놈 정보 수정
+// DistPool 정보 수정
 func UpdateDistPool(c *gin.Context) {
 	// 파라미터 조회 -> body 조회 -> 언마샬
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -101,21 +102,21 @@ func UpdateDistPool(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdatePrizeDenom
+	var req types.ReqUpdateDistPool
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
 	}
 
 	// handler data
-	denom := schema.PrizeDenomRow{
-		PrizeDenomId: reqId,
-		Name: req.Name,
-		Type: req.Type,
+	pool := schema.PrizeDistPoolRow{
+		DistPoolId: reqId,
+		TotalSupply: req.TotalSupply,
+		RemainingQty: req.RemainingQty,
 		IsActive: req.IsActive,
 		UpdatedAt: time.Now(),
 	}
-	err = models.UpdatePrizeDenomn(&denom)
+	err = models.UpdateDistPool(&pool)
 
 	// result
 	if err != nil {
@@ -126,15 +127,15 @@ func UpdateDistPool(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, denom)
+		services.Success(c, nil, pool)
 	}
 }
 
 
-// 데놈 삭제
+// DistPool 삭제
 func DeleteDistPool(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -142,16 +143,16 @@ func DeleteDistPool(c *gin.Context) {
 	}
 
 	// handler data
-	denom := schema.PrizeDenomRow{
-		PrizeDenomId: reqId,
+	pool := schema.PrizeDistPoolRow{
+		DistPoolId: reqId,
 	}
-	err = models.DeletePrizeDenom(&denom)
+	err = models.DeleteDistPool(&pool)
 
 	// result
 	if err != nil {
 		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, denom)
+		services.Success(c, nil, pool)
 	}
 }
 

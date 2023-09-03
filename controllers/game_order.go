@@ -15,47 +15,49 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Prizes 조회
-func GetPrizes(c *gin.Context) {
-	prizes := make([]schema.PrizeRow, 0, 100)
-	err := models.QueryPrizes(&prizes)
+// Orders 조회
+func GetGameOrders(c *gin.Context) {
+	orders := make([]schema.OrderRow, 0, 100)
+	err := models.QueryOrders(&orders)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
-	services.Success(c, nil, prizes)
+	services.Success(c, nil, orders)
 }
 
 
-// Prize 생성
-func CreatePrize(c *gin.Context) {
+// Order 생성
+func CreateGameOrder(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreatePrize
+	var req types.ReqCreateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
+	// UsedTicketQty, IsWin 계산 필요
+	// ClaimedAt. ClaimFinishedAt, 
+
 	// data handling
-	prize := schema.PrizeRow{
-		DistPoolId:       req.PromotionId,
-		PromotionId:      req.PromotionId,
-		PrizeDenomId:     req.PrizeDenomId,
-		Amount:           req.Amount,
-		Odds:             req.Odds,
-		WinImageUrl:      req.WinImageUrl,
-		MaxDailyWinLimit: req.MaxDailyWinLimit,
-		MaxTotalWinLimit: req.MaxTotalWinLimit,
-		IsActive:         req.IsActive,
+	order := schema.OrderRow{
+		AccountId:       req.AccountId,
+		Addr:            req.Addr,
+		PromotionId:     req.PromotionId,
+		GameId:          req.GameId,
+		Status:          req.Status,
+		UsedTicketQty:   req.UsedTicketQty,
+		PrizeId:         req.PrizeId,
+		StartedAt:       time.Now(),
 	}
-	err = models.CreatePrize(&prize)
+	err = models.CreateOrder(&order)
 
 	// result
 	if err != nil {
@@ -66,37 +68,37 @@ func CreatePrize(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, order)
 	}
 }
 
-// 특정 Prize 조회
-func GetPrize(c *gin.Context) {
+// 특정 Order 조회
+func GetGameOrder(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_id")
+	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
+	order := schema.OrderRow{
+		OrderId: reqId,
 	}
-	err = models.QueryPrize(&prize)
+	err = models.QueryOrder(&order)
 
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, order)
 	}
 }
 
-// Prize 정보 수정
-func UpdatePrize(c *gin.Context) {
+// Order 정보 수정
+func UpdateGameOrder(c *gin.Context) {
 	// 파라미터 조회 -> body 조회 -> 언마샬
-	strId := c.Param("prize_id")
+	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -107,22 +109,23 @@ func UpdatePrize(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdatePrize
+	var req types.ReqUpdateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
 	}
 
 	// handler data
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
-		Odds: req.Odds,
-		MaxDailyWinLimit: req.MaxDailyWinLimit,
-		MaxTotalWinLimit: req.MaxTotalWinLimit,
-		IsActive: req.IsActive,
+	order := schema.OrderRow{
+		OrderId: reqId,
+		IsWin: req.IsWin,
+		Status: req.Status,
+		UsedTicketQty: req.UsedTicketQty,
+		ClaimedAt: req.ClaimedAt,
+		ClaimFinishedAt: req.ClaimFinishedAt,
 		UpdatedAt: time.Now(),
 	}
-	err = models.UpdatePrize(&prize)
+	err = models.UpdateOrder(&order)
 
 	// result
 	if err != nil {
@@ -133,15 +136,15 @@ func UpdatePrize(c *gin.Context) {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		}
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, order)
 	}
 }
 
 
-// DistPool 삭제
-func DeletePrize(c *gin.Context) {
+// Order 삭제
+func DeleteGameOrder(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_id")
+	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -149,16 +152,16 @@ func DeletePrize(c *gin.Context) {
 	}
 
 	// handler data
-	prize := schema.PrizeRow{
-		PrizeId: reqId,
+	order := schema.OrderRow{
+		OrderId: reqId,
 	}
-	err = models.DeletePrize(&prize)
+	err = models.DeleteOrder(&order)
 
 	// result
 	if err != nil {
 		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 	} else {
-		services.Success(c, nil, prize)
+		services.Success(c, nil, order)
 	}
 }
 
