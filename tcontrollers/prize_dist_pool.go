@@ -18,7 +18,7 @@ import (
 // DistPool 종류 조회
 func GetDistPools(c *gin.Context) {
 	pools := make([]schema.PrizeDistPoolRow, 0, 100)
-	err := models.QueryDistPools(&pools)
+	err := models.QueryTbDistPools(&pools)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -77,7 +77,7 @@ func GetDistPool(c *gin.Context) {
 	pool := schema.PrizeDistPoolRow{
 		DistPoolId: reqId,
 	}
-	err = models.QueryDistPool(&pool)
+	err = models.QueryTbDistPool(&pool)
 
 	// result
 	if err != nil {

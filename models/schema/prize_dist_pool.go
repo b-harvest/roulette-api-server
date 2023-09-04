@@ -13,6 +13,9 @@ type PrizeDistPoolRow struct {
 	IsActive               bool      `json:"isActive" db:"is_active"`
 	CreatedAt              time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt              time.Time `json:"updatedAt" db:"updated_at"`
+	//temp
+	Name string `json:"prizeName" db:"name" gorm:"column:name"`
+	Type string `json:"prizeType" db:"type" gorm:"column:type"`
 }
 
 func (r *PrizeDistPoolRow) TableName() string {

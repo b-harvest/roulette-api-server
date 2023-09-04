@@ -18,7 +18,7 @@ import (
 // 프로모션 조회
 func GetPromotions(c *gin.Context) {
 	promotions := make([]schema.PromotionRow, 0, 100)
-	err := models.QueryPromotions(&promotions)
+	err := models.QueryTbPromotions(&promotions)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
 		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)

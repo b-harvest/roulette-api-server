@@ -1,13 +1,16 @@
 package models
 
 import (
+	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
+	"roulette-api-server/types"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func QueryPromotions(promotions *[]schema.PromotionRow) (err error) {
+func QueryTbPromotions(promotions *[]schema.PromotionRow) (err error) {
 	err = config.DB.Table("promotion").Find(promotions).Error
 	return
 }
@@ -32,3 +35,25 @@ func DeletePromotion(promotion *schema.PromotionRow) (err error) {
 	err = config.DB.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).Delete(promotion).Error
 	return
 }
+
+//---------------------------------------------------------
+
+func QueryPromotions(promotions *[](*types.ResGetPromotions)) (err error) {
+	//q := "SELECT P.*, D. FROM promotion P "
+	//err = config.DB.Table("promotion").Exec(q).Find(promotions).Error
+	if err = config.DB.Table("promotion").Find(promotions).Error; err != nil {
+		return
+	}
+	for _, v := range *promotions {
+		fmt.Printf("%+v\n", v)
+		if time.Now().After(v.PromotionEndAt) {
+			v.Status = "finished"
+		} else if time.Now().After(v.PromotionStartAt) {
+			v.Status = "in progress"
+		} else {
+			v.Status = "not started"
+		}
+	}
+	return
+}
+

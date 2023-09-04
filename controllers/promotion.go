@@ -15,9 +15,37 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO
+/*
+	- /promotions/live	(프론트에서 사용할 프로모션 정보)
+	- 유저용/어드민용 따로 /promotions 분리
+	- /promotions/{id} 에서 데이터 더 많이 포함
+		- 참여자수# account
+		- 당첨확률 dist_pool
+		- 총 주문 수 game_order
+		- 총 주문자 수 game_order
+		- 총 당첨 수 game_order
+		- 총 당첨자 수 game_order
+		- 총 claim 요청자 수 game_order
+		- 미처리 claim 수 game_order
+*/
+
+/*
+	1. promotion 테이블
+		- not started / in progress 여부
+		- 참여자 수
+	2. 프로모션에 속하는 distribution_pool 리스트
+	- 풀의 prize_denom 정보
+	- 풀에 속하는 prize 리스트
+	# query
+		- by 프로모션 title
+		- by 진행 중인지(기간)
+		- by
+	- order by promotion_start_at desc
+*/
 // 프로모션 조회
 func GetPromotions(c *gin.Context) {
-	promotions := make([]schema.PromotionRow, 0, 100)
+	promotions := make([]*types.ResGetPromotions, 0, 100)
 	err := models.QueryPromotions(&promotions)
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
@@ -25,8 +53,23 @@ func GetPromotions(c *gin.Context) {
 		return
 	}
 
+	// 각 프로모션의 풀 조회
+	for _, v := range promotions {
+		v.DistributionPools, err = models.QueryDistPoolsByPromId(v.PromotionId)
+		if err != nil {
+			fmt.Println(err)
+			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			return
+		}
+	}
+
+
 	services.Success(c, nil, promotions)
 }
+
+
+
+
 
 
 // 프로모션 생성

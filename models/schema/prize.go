@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// promotion 조회 시 sub 정보
 type PrizeRow struct {
 	PrizeId           int64     `json:"prizeId" db:"prize_id"`
 	DistPoolId        int64     `json:"distPoolId" db:"dist_pool_id"`

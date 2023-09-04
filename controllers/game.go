@@ -16,6 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO
+/*
+	- claim 리스트
+*/
+
 func GetRandom(c *gin.Context) {
 	rand.Seed(time.Now().UnixNano())
 	fmt.Println(rand.Intn(1000))
