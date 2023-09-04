@@ -48,7 +48,7 @@ func CreateVoucherBalance(c *gin.Context) {
 		Addr:                         req.Addr,
 		PromotionId:                  req.PromotionId,
 		CurrentAmount:                req.CurrentAmount,
-		TotalReceviedAmount:          req.TotalReceviedAmount,
+		TotalReceivedAmount:          req.TotalReceivedAmount,
 	}
 	err = models.CreateVoucherBalance(&bal)
 
@@ -112,7 +112,7 @@ func UpdateVoucherBalance(c *gin.Context) {
 	bal := schema.VoucherBalanceRow{
 		Id: reqId,
 		CurrentAmount: req.CurrentAmount,
-		TotalReceviedAmount: req.TotalReceviedAmount,
+		TotalReceivedAmount: req.TotalReceivedAmount,
 		UpdatedAt: time.Now(),
 	}
 	err = models.UpdateVoucherBalance(&bal)

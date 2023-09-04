@@ -10,7 +10,7 @@ type VoucherBalanceRow struct {
 	Addr 			           string    `json:"addr" db:"addr"`
 	PromotionId          int64     `json:"promotionId" db:"promotion_id"`
 	CurrentAmount        uint64     `json:"currentAmount" db:"current_amount"`
-	TotalReceviedAmount  uint64     `json:"totalReceviedAmount" db:"total_recevied_amount"`
+	TotalReceivedAmount  uint64     `json:"totalReceivedAmount" db:"total_received_amount"`
 	CreatedAt            time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt            time.Time `json:"updatedAt" db:"updated_at"`
 }

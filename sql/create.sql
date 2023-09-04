@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `user_voucher_balance` (
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `current_amount` bigint NOT NULL,
-  `total_recevied_amount` bigint NOT NULL,
+  `total_reiceved_amount` bigint NOT NULL,
   `created_at` timestamp,
   `updated_at` timestamp,
   PRIMARY KEY (`id`),

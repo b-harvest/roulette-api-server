@@ -22,6 +22,7 @@ type ResGetPromotions struct {
 	CreatedAt              time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt              time.Time `json:"updatedAt" db:"updated_at"`
 	// status: not started / in progress / finished
+	ParticipantCnt     uint64    `json:"participantCnt" db:"participant_cnt"`
 	Status string `json:"status" db:"status"`
 	DistributionPools *[]PrizeDistPool `json:"distribution_pools"`
 }

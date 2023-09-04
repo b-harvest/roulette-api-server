@@ -39,10 +39,15 @@ func DeletePromotion(promotion *schema.PromotionRow) (err error) {
 //---------------------------------------------------------
 
 func QueryPromotions(promotions *[](*types.ResGetPromotions)) (err error) {
-	//q := "SELECT P.*, D. FROM promotion P "
-	//err = config.DB.Table("promotion").Exec(q).Find(promotions).Error
-	if err = config.DB.Table("promotion").Find(promotions).Error; err != nil {
-		return
+	q := 
+		"SELECT P.*, IFNULL(CNT.participant_cnt, 0) as participant_cnt from promotion P " +
+		"LEFT JOIN " + 
+		"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " + 
+		"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id"
+	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
+	if err = config.DB.Raw(q).Scan(promotions).
+		Error; err != nil {
+			return
 	}
 	for _, v := range *promotions {
 		fmt.Printf("%+v\n", v)
