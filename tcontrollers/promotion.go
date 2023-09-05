@@ -86,7 +86,7 @@ func GetPromotion(c *gin.Context) {
 	promotion := schema.PromotionRow{
 		PromotionId: reqId,
 	}
-	err = models.QueryPromotion(&promotion)
+	err = models.QueryTbPromotion(&promotion)
 
 	// result
 	if err != nil {

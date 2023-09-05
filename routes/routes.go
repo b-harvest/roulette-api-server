@@ -12,6 +12,7 @@ import (
 )
 
 func SetupRouter() *gin.Engine {
+	//-- game_order -> status: 1(진행중) 2(꽝으로인한종료) 3(클레임전) 4(클레임중) 5(클레임성공) 6(클레임실패) 7(취소)
 	route := gin.Default()			// gin Engine 초기화
 
 	// CORS 설정
@@ -53,6 +54,7 @@ func SetupRouter() *gin.Engine {
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
 	route.GET   ("/promotions", controllers.GetPromotions)	// 프로모션 정보 조회
+	route.GET   ("/promotions/:promotion_id", controllers.GetPromotion)	
 	
 
 	//------------------------------------------------------------------------------

@@ -19,15 +19,6 @@ import (
 /*
 	- /promotions/live	(프론트에서 사용할 프로모션 정보)
 	- 유저용/어드민용 따로 /promotions 분리
-	- /promotions/{id} 에서 데이터 더 많이 포함
-		- 참여자수# account
-		- 당첨확률 dist_pool
-		- 총 주문 수 game_order
-		- 총 주문자 수 game_order
-		- 총 당첨 수 game_order
-		- 총 당첨자 수 game_order
-		- 총 claim 요청자 수 game_order
-		- 미처리 claim 수 game_order
 */
 
 /*
@@ -63,8 +54,54 @@ func GetPromotions(c *gin.Context) {
 		}
 	}
 
-
 	services.Success(c, nil, promotions)
+}
+
+// 특정 프로모션 조회
+func GetPromotion(c *gin.Context) {
+	// 파라미터 조회
+	strId := c.Param("promotion_id")
+	reqId, err := strconv.ParseUint(strId, 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	p := types.ResGetPromotion{
+		PromotionId: reqId,
+	}
+
+	// 프로모션 조회
+	err = models.QueryPromotion(&p)
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// 프로모션 Summary 조회
+	pSummary, err := models.QueryPromotionSummary(reqId)
+	if err != nil {
+		fmt.Printf("%+v\n",err.Error())
+		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	p.Summary = pSummary
+
+	p.DistributionPools, err = models.QueryDistPoolsDetailByPromId(reqId)
+	if err != nil {
+		fmt.Println(err)
+		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}	
+
+	// result
+	if err != nil {
+		//if err.Error() == "record not found" {
+		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+	} else {
+		services.Success(c, nil, p)
+	}
 }
 
 
@@ -117,28 +154,6 @@ func CreatePromotion(c *gin.Context) {
 	}
 }
 
-// 특정 프로모션 조회
-func GetPromotion(c *gin.Context) {
-	// 파라미터 조회
-	strId := c.Param("promotion_id")
-	reqId, err := strconv.ParseInt(strId, 10, 64)
-	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-		return
-	}
-	promotion := schema.PromotionRow{
-		PromotionId: reqId,
-	}
-	err = models.QueryPromotion(&promotion)
-
-	// result
-	if err != nil {
-		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-	} else {
-		services.Success(c, nil, promotion)
-	}
-}
 
 // 프로모션 정보 수정
 func UpdatePromotion(c *gin.Context) {
