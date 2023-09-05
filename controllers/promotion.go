@@ -104,11 +104,9 @@ func GetPromotion(c *gin.Context) {
 	}
 }
 
-
-
-
-
-
+/*
+	- 한번에 promotion, distribution_pool, prize 생성해야 함
+*/
 // 프로모션 생성
 func CreatePromotion(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
@@ -116,7 +114,7 @@ func CreatePromotion(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreatePromotion
+	var req types.ReqTbCreatePromotion
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -169,7 +167,7 @@ func UpdatePromotion(c *gin.Context) {
 			services.BadRequest(c, "Bad Body Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdatePromotion
+	var req types.ReqTbUpdatePromotion
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return

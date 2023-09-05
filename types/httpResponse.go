@@ -24,8 +24,8 @@ type ResGetPromotions struct {
 	// ---------- additional
 	ParticipantCnt         uint64    `json:"voucherReceivedUserCnt" db:"participant_cnt"`
 	// status: not started / in progress / finished
-	Status string `json:"status" db:"status"`
-	DistributionPools      *[]PrizeDistPool `json:"distribution_pools"`
+	Status                 string `json:"status" db:"status"`
+	DistributionPools      *[]PrizeDistPool `json:"distributionPools"`
 }
 
 type ResGetPromotion struct {
@@ -48,6 +48,6 @@ type ResGetPromotion struct {
 	// status: not started / in progress / finished
 	ParticipantCnt         uint64    `json:"voucherReceivedUserCnt" db:"participant_cnt"`
 	Status string `json:"status" db:"status"`
-	DistributionPools      *[]PrizeDistPoolDetail `json:"distribution_pools"`
+	DistributionPools      *[]PrizeDistPoolDetail `json:"distributionPools"`
 	Summary                PromotionSummary `json:"promotionSummary"`
 }

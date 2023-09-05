@@ -36,7 +36,7 @@ func CreatePrizeDenom(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreatePrizeDenom
+	var req types.ReqTbCreatePrizeDenom
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -101,7 +101,7 @@ func UpdatePrizeDenom(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdatePrizeDenom
+	var req types.ReqTbUpdatePrizeDenom
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return

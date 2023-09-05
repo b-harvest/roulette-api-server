@@ -36,7 +36,7 @@ func CreateGameOrder(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreateOrder
+	var req types.ReqTbCreateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -109,7 +109,7 @@ func UpdateGameOrder(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdateOrder
+	var req types.ReqTbUpdateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return

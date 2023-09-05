@@ -179,7 +179,7 @@ func CreateGame(c *gin.Context) {
 		services.BadRequest(c, "Bad Request", err)
 		return
 	}
-	var req types.ReqCreateGame
+	var req types.ReqTbCreateGame
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
@@ -245,7 +245,7 @@ func UpdateGame(c *gin.Context) {
 			services.BadRequest(c, "Bad Request", err)
 			return
 	}
-	var req types.ReqUpdateGame
+	var req types.ReqTbUpdateGame
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return

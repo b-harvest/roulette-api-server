@@ -55,16 +55,14 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	route.GET   ("/promotions", controllers.GetPromotions)	// 프로모션 정보 조회
 	route.GET   ("/promotions/:promotion_id", controllers.GetPromotion)	
-	
+	route.POST  ("/promotions", controllers.CreatePromotion)
 
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
 	//------------------------------------------------------------------------------
 
-	// promotion
-	// TODO: should query promotion, dist_pool, prize at once											
-	route.GET   ("/tb/promotions", tcontrollers.GetPromotions)
-	// TODO: should create promotion, dist_pool, prize at once											
+	// promotion								
+	route.GET   ("/tb/promotions", tcontrollers.GetPromotions)								
 	route.POST  ("/tb/promotions", tcontrollers.CreatePromotion)									
 	// TODO: should query promotion, dist_pool, prize at once											
 	route.GET   ("/tb/promotions/:promotion_id", tcontrollers.GetPromotion)						

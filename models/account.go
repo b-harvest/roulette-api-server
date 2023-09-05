@@ -13,7 +13,7 @@ func QueryAccounts(accs *[]schema.AccountRow) (err error) {
 	return
 }
 
-func CreateAccount(acc *types.ReqCreateAccount) (err error) {
+func CreateAccount(acc *types.ReqTbCreateAccount) (err error) {
 	err = config.DB.Table("account").Create(acc).Error
 	return
 }

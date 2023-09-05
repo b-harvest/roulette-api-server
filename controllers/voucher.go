@@ -35,7 +35,7 @@ func CreateVoucherBalance(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreateVoucherBalance
+	var req types.ReqTbCreateVoucherBalance
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -102,7 +102,7 @@ func UpdateVoucherBalance(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdateVoucherBalance
+	var req types.ReqTbUpdateVoucherBalance
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
@@ -176,7 +176,7 @@ func CreateVoucherSendEvent(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreateVoucherSendEvent
+	var req types.ReqTbCreateVoucherSendEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -243,7 +243,7 @@ func UpdateVoucherSendEvent(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdateVoucherSendEvent
+	var req types.ReqTbUpdateVoucherSendEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return
@@ -316,7 +316,7 @@ func CreateVoucherBurnEvent(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreateVoucherBurnEvent
+	var req types.ReqTbCreateVoucherBurnEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -384,7 +384,7 @@ func UpdateVoucherBurnEvent(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdateVoucherBurnEvent
+	var req types.ReqTbUpdateVoucherBurnEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return

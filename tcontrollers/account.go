@@ -35,7 +35,7 @@ func CreateAccount(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqCreateAccount
+	var req types.ReqTbCreateAccount
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(string(jsonData))
 		fmt.Println(err.Error())
@@ -95,7 +95,7 @@ func UpdateAccount(c *gin.Context) {
 			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 			return
 	}
-	var req types.ReqUpdateAccount
+	var req types.ReqTbUpdateAccount
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request Unmarshal error", err)
 		return

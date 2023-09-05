@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   -- `voucher_id` bigint unsigned NOT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 0, -- 진행 중/일시 중지 여부
   `is_whitelisted` tinyint(1) NOT NULL DEFAULT 0, -- 프론트에서 보여줄지 여부
   `voucher_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, -- 상품 이름
