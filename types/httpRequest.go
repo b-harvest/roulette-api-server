@@ -185,7 +185,20 @@ type ReqCreatePromotion struct {
 	PromotionEndAt         time.Time `json:"promotionEndAt" db:"promotion_end_at"`
 	ClaimStartAt           time.Time `json:"claimStartAt" db:"claim_start_at"`
 	ClaimEndAt             time.Time `json:"claimEndAt" db:"claim_end_at"`
+	DistributionPools      []ReqCreateDistPool `json:"distributionPools"`
 }
 
+type ReqCreateDistPool struct {
+	PrizeDenomId           int64     `json:"prizeDenomId" db:"prize_denom_id"`
+	TotalSupply            uint64    `json:"totalSupply" db:"total_supply"`
+	Prizes                 []ReqCreatePrize `json:"prizes"`
+}
 
-
+type ReqCreatePrize struct {
+	Amount            uint64    `json:"amount" db:"amount"`
+	Odds              float64   `json:"odds" db:"odds"`
+	WinImageUrl 			string    `json:"winImageUrl" db:"win_image_url"`
+	MaxDailyWinLimit  uint64    `json:"maxDailyWinLimit" db:"max_daily_win_limit"`
+	MaxTotalWinLimit  uint64    `json:"maxTotalWinLimit" db:"max_total_win_limit"`
+	// IsActive          bool      `json:"isActive" db:"is_active"`
+}

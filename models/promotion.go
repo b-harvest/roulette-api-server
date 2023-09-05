@@ -16,7 +16,7 @@ func QueryTbPromotions(promotions *[]schema.PromotionRow) (err error) {
 	return
 }
 
-func CreatePromotion(promotion *schema.PromotionRow) (err error) {
+func CreateTbPromotion(promotion *schema.PromotionRow) (err error) {
 	err = config.DB.Table("promotion").Create(promotion).Error
 	return
 }
@@ -170,7 +170,6 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	"  SELECT account_id FROM game_order         " +
 	"  WHERE promotion_id =? AND status >= 4 group by account_id "
 	if err = config.DB.Raw(q, promotionId).Count(&promSummary.TotalClaimedUserNum).Error; err != nil {
-		fmt.Println(err.Error())
 		if strings.Contains(err.Error(), "no rows") {
 			promSummary.TotalOrderUserNum = 0
 		} else {
@@ -187,6 +186,14 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	}
 
 	err = nil
+	return
+}
+
+// 프로모션 생성
+func CreatePromotion(promotion *schema.PromotionRow) (err error) {
+	if err = config.DB.Table("promotion").Create(promotion).Error; err != nil {
+		return
+	}
 	return
 }
 

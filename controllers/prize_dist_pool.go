@@ -50,7 +50,7 @@ func CreateDistPool(c *gin.Context) {
 		TotalSupply:  req.TotalSupply,
 		IsActive:     req.IsActive,
 	}
-	err = models.CreateDistPool(&pool)
+	err = models.CreateTbDistPool(&pool)
 
 	// result
 	if err != nil {

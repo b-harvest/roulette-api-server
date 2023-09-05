@@ -59,7 +59,7 @@ func CreatePromotion(c *gin.Context) {
 		ClaimStartAt: req.ClaimStartAt,
 		ClaimEndAt: req.ClaimEndAt,
 	}
-	err = models.CreatePromotion(&promotion)
+	err = models.CreateTbPromotion(&promotion)
 
 	// result
 	if err != nil {

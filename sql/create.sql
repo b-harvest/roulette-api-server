@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `prize` (
   `promotion_id` bigint unsigned NOT NULL, -- option
   `prize_denom_id` bigint unsigned NOT NULL, -- option
   `amount` bigint NOT NULL DEFAULT 1,  -- 100개
-  `odds` decimal(3,3) NOT NULL,
+  `odds` decimal(5,3) NOT NULL,
   `win_cnt` int unsigned NOT NULL DEFAULT 0,
   `win_image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `max_daily_win_limit` int,

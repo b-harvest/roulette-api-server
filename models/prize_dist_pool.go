@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
@@ -13,8 +14,9 @@ func QueryTbDistPools(pools *[]schema.PrizeDistPoolRow) (err error) {
 	return
 }
 
-func CreateDistPool(pool *schema.PrizeDistPoolRow) (err error) {
+func CreateTbDistPool(pool *schema.PrizeDistPoolRow) (err error) {
 	err = config.DB.Table("distribution_pool").Create(pool).Error
+	fmt.Printf("pool created %+v\n", pool.DistPoolId)
 	return
 }
 
@@ -30,6 +32,11 @@ func UpdateDistPool(pool *schema.PrizeDistPoolRow) (err error) {
 
 func DeleteDistPool(pool *schema.PrizeDistPoolRow) (err error) {
 	err = config.DB.Table("distribution_pool").Where("dist_pool_id = ?", pool.DistPoolId).Delete(pool).Error
+	return
+}
+
+func QueryDistPool(pool *schema.PrizeDistPoolRow) (err error) {
+	err = config.DB.Table("distribution_pool").Where("dist_pool_id = ?", pool.DistPoolId).First(pool).Error
 	return
 }
 
@@ -91,3 +98,8 @@ func QueryDistPoolsDetailByPromId(id uint64) (*[]types.PrizeDistPoolDetail, erro
 	return &pools, err
 }
 
+func CreateDistPool(pool *schema.PrizeDistPoolInsertRow) (err error) {
+	err = config.DB.Table("distribution_pool").Create(pool).Error
+	fmt.Printf("pool created %+v\n", pool.ID)
+	return
+}

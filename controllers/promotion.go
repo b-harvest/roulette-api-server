@@ -114,17 +114,18 @@ func CreatePromotion(c *gin.Context) {
 		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
-	var req types.ReqTbCreatePromotion
+	var req types.ReqCreatePromotion
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
 		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
-	// data handling
+	// create promotion
 	promotion := schema.PromotionRow{
 		Title: req.Title,
 		Desc: req.Desc,
+		Url: req.Url,
 		IsActive: req.IsActive,
 		IsWhitelisted: req.IsWhitelisted,
 		VoucherName: req.VoucherName,
@@ -138,18 +139,79 @@ func CreatePromotion(c *gin.Context) {
 		ClaimEndAt: req.ClaimEndAt,
 	}
 	err = models.CreatePromotion(&promotion)
-
-	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
 		if strings.Contains(err.Error(),"1062") {
 			services.NotAcceptable(c, "data already exists", err)
+			return
 		} else {
 			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			return
 		}
-	} else {
-		services.Success(c, nil, promotion)
 	}
+
+	// create dist pools
+	for _, v := range req.DistributionPools {
+		creatingPool := schema.PrizeDistPoolInsertRow{
+			PromotionId:  promotion.ID,
+			PrizeDenomId: v.PrizeDenomId,
+			TotalSupply:  v.TotalSupply,
+			RemainingQty:  v.TotalSupply,	// default
+			IsActive:     true,	// default
+		}
+		err = models.CreateDistPool(&creatingPool)
+	
+		// result
+		if err != nil {
+			fmt.Printf("%+v\n",err.Error())
+			if strings.Contains(err.Error(),"1062") {
+				services.NotAcceptable(c, "data already exists", err)
+			} else {
+				services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			}
+		}
+
+		fmt.Println(creatingPool.ID)
+		// 생성한 pool 조회
+		pool := schema.PrizeDistPoolRow {
+			DistPoolId: creatingPool.ID,
+		}
+		err = models.QueryDistPool(&pool)
+		if err != nil {
+			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			return
+		}
+
+		// create prizes
+		for _, reqPrize := range v.Prizes {
+			// prize 생성
+			prize := schema.PrizeRow{
+				DistPoolId:       pool.DistPoolId,
+				PromotionId:      pool.PromotionId,
+				PrizeDenomId:     pool.PrizeDenomId,
+				Amount:           reqPrize.Amount,
+				Odds:             reqPrize.Odds,
+				WinImageUrl:      reqPrize.WinImageUrl,
+				MaxDailyWinLimit: reqPrize.MaxDailyWinLimit,
+				MaxTotalWinLimit: reqPrize.MaxTotalWinLimit,
+				IsActive:         true, //default
+			}
+			err = models.CreatePrize(&prize)
+
+			// result
+			if err != nil {
+				fmt.Printf("%+v\n",err.Error())
+				if strings.Contains(err.Error(),"1062") {
+					services.NotAcceptable(c, "data already exists", err)
+				} else {
+					services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+				}
+			} else {
+				services.Success(c, nil, prize)
+			}
+		}
+	}
+
+	services.Success(c, nil, promotion)	
 }
 
 
