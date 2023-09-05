@@ -174,6 +174,7 @@ type ReqTbUpdateVoucherBurnEvent struct {
 type ReqCreatePromotion struct {
 	Title 			           string    `json:"title" db:"title"`
 	Desc 			             string    `json:"desc" db:"desc"`
+	Url 			             string    `json:"url" db:"url"`
 	IsActive               bool      `json:"isActive" db:"is_active"`
 	IsWhitelisted          bool      `json:"isWhitelisted" db:"is_whitelisted"`
 	VoucherName 			     string    `json:"voucherName" db:"voucher_name"`
