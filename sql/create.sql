@@ -174,22 +174,22 @@ CREATE TABLE IF NOT EXISTS `voucher_burn_event` (
 
 -- 이벤트: 지갑 접속
 -- 향후 고려사항: is_mobile, browser_type, ip, location...
-CREATE TABLE IF NOT EXISTS `event_wallet_conn` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `addr_type` int NOT NULL DEFAULT 0,
-  `promotion_id` bigint NOT NULL DEFAULT 0,
-  `created_at` timestamp,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+create table if not exists `event_wallet_conn` (
+  `id` bigint unsigned not null auto_increment,
+  `addr` varchar(255) character set utf8mb4 collate utf8mb4_unicode_ci,
+  `addr_type` int not null default 0,
+  `promotion_id` bigint not null default 0,
+  `created_at`   timestamp not null default current_timestamp,
+  primary key (`id`)
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci;
 
 -- 이벤트: 링크 클릭
-CREATE TABLE IF NOT EXISTS `event_flip_link` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `type` int NOT NULL DEFAULT 0,
-  `promotion_id` bigint NOT NULL DEFAULT 0,
-  `created_at` timestamp,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+create table if not exists `event_flip_link` (
+  `id` bigint unsigned not null auto_increment,
+  `addr` varchar(255) character set utf8mb4 collate utf8mb4_unicode_ci not null default "0",
+  `addr_type` int not null default 0,
+  `promotion_id` bigint not null default 0,
+  `created_at`    timestamp not null default current_timestamp,
+  primary key (`id`)
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci;
 

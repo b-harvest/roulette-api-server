@@ -187,5 +187,8 @@ type ReqCreatePromotion struct {
 	ClaimEndAt             time.Time `json:"claimEndAt" db:"claim_end_at"`
 }
 
-
-
+type ReqPostEvent struct {
+	PromotionId int64     `json:"promotionId" db:"promotion_id"`
+	Addr        string    `json:"addr" db:"addr"`
+	AddrType    int64     `json:"addrType" db:"addr_type"`
+}

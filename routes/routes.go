@@ -136,5 +136,14 @@ func SetupRouter() *gin.Engine {
 	route.PATCH ("/tb/voucher-mgmt/events/burn/:id", tcontrollers.UpdateVoucherBurnEvent) // for test
 	route.DELETE("/tb/voucher-mgmt/evenets/burn/:id", tcontrollers.DeleteVoucherBurnEvent) // for test
 
+	// metrics
+	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)
+	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount)
+	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)
+
+	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)
+	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)
+	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)
+
 	return route
 }
