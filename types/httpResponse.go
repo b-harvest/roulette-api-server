@@ -54,6 +54,14 @@ type ResGetPromotion struct {
 	Summary           PromotionSummary       `json:"promotionSummary"`
 }
 
+type ResGetAccBalance struct {
+	PromotionID                uint64 `json:"promotionId" db:"promotion_id"`
+	Addr                       string `json:"addr" db:"addr"`
+	TicketAmount               uint64 `json:"ticketAmount" db:"ticket_amount"`
+	VoucherAmount              uint64 `json:"voucherAmount" db:"voucher_amount"`
+	TotalReicevedVoucherAmount uint64 `json:"totalReicevedVoucherAmount" db:"total_reiceved_voucher_amount"`
+}
+
 type ResGetEventCount struct {
 	Cnt uint64 `json:"cnt" db:"cnt"`
 }

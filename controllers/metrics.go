@@ -38,8 +38,8 @@ func GetEventWalletConnCount(c *gin.Context) {
 	startDate := c.Query("start-date")
 	endDate := c.Query("end-date")
 
-	var cnt types.ResGetEventCount
-	err := models.QueryEventWalletConnCount(&cnt, promotionId, addr, startDate, endDate)
+	var resp types.ResGetEventCount
+	err := models.QueryEventWalletConnCount(&resp, promotionId, addr, startDate, endDate)
 
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
@@ -47,7 +47,7 @@ func GetEventWalletConnCount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, cnt)
+	services.Success(c, nil, resp)
 }
 
 func PostEventWalletConn(c *gin.Context) {
@@ -99,8 +99,8 @@ func GetEventFlipLinkCount(c *gin.Context) {
 	startDate := c.Query("start-date")
 	endDate := c.Query("end-date")
 
-	var cnt types.ResGetEventCount
-	err := models.QueryEventFlipLinkCount(&cnt, promotionId, addr, startDate, endDate)
+	var resp types.ResGetEventCount
+	err := models.QueryEventFlipLinkCount(&resp, promotionId, addr, startDate, endDate)
 
 	if err != nil {
 		fmt.Printf("%+v\n",err.Error())
@@ -108,7 +108,7 @@ func GetEventFlipLinkCount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, cnt)
+	services.Success(c, nil, resp)
 }
 
 func PostEventFlipLinks(c *gin.Context) {

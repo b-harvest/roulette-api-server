@@ -57,6 +57,21 @@ func SetupRouter() *gin.Engine {
 	route.GET   ("/promotions/:promotion_id", controllers.GetPromotion)	
 	route.POST  ("/promotions", controllers.CreatePromotion)
 
+	// account
+	route.PUT("/accounts/:address", controllers.PutAccount)
+	route.GET("/accounts/:address/balance", controllers.GetAccBalance)
+
+	// metrics
+	// wallet-connects
+	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)
+	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount)
+	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)
+
+	// flip-links
+	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)
+	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)
+	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)
+
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
 	//------------------------------------------------------------------------------
@@ -135,15 +150,6 @@ func SetupRouter() *gin.Engine {
 	route.GET   ("/tb/voucher-mgmt/events/burn/:id", tcontrollers.GetVoucherBurnEvent) // for test
 	route.PATCH ("/tb/voucher-mgmt/events/burn/:id", tcontrollers.UpdateVoucherBurnEvent) // for test
 	route.DELETE("/tb/voucher-mgmt/evenets/burn/:id", tcontrollers.DeleteVoucherBurnEvent) // for test
-
-	// metrics
-	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)
-	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount)
-	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)
-
-	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)
-	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)
-	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)
 
 	return route
 }

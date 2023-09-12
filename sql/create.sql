@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS `account` (
   `type` varchar(32),
   `is_blacklisted` tinyint(1) NOT NULL DEFAULT 0,
   `last_login_at` timestamp NULL,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`uid`),
   UNIQUE KEY `addr` (`addr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
