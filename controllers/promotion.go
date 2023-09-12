@@ -125,6 +125,7 @@ func CreatePromotion(c *gin.Context) {
 	promotion := schema.PromotionRow{
 		Title: req.Title,
 		Desc: req.Desc,
+		Url:                   req.Url,
 		IsActive: req.IsActive,
 		IsWhitelisted: req.IsWhitelisted,
 		VoucherName: req.VoucherName,
@@ -181,6 +182,7 @@ func UpdatePromotion(c *gin.Context) {
 		PromotionId: reqId,
 		Title: req.Title,
 		Desc: req.Desc,
+		Url:                   req.Url,
 		IsActive: req.IsActive,
 		IsWhitelisted: req.IsWhitelisted,
 		VoucherName: req.VoucherName,
