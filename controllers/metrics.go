@@ -29,7 +29,7 @@ func GetEventWalletConn(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, events)
+	services.Success(c, nil, &events)
 }
 
 func GetEventWalletConnCount(c *gin.Context) {
@@ -47,7 +47,7 @@ func GetEventWalletConnCount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, resp)
+	services.Success(c, nil, &resp)
 }
 
 func PostEventWalletConn(c *gin.Context) {
@@ -90,7 +90,7 @@ func GetEventFlipLink(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, events)
+	services.Success(c, nil, &events)
 }
 
 func GetEventFlipLinkCount(c *gin.Context) {
@@ -108,7 +108,7 @@ func GetEventFlipLinkCount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, resp)
+	services.Success(c, nil, &resp)
 }
 
 func PostEventFlipLinks(c *gin.Context) {

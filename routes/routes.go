@@ -59,7 +59,10 @@ func SetupRouter() *gin.Engine {
 
 	// account
 	route.PUT("/accounts/:address", controllers.PutAccount)
-	route.GET("/accounts/:address/balance", controllers.GetAccBalance)
+	route.GET("/accounts/:address/balance", controllers.GetBalanceByAcc)
+	route.GET("/accounts/:address/game-orders", controllers.GetGameOrdersByAddr)
+	route.GET("/accounts/:address/winning-records", controllers.GetWinTotalByAcc)
+	route.PATCH("/accounts/:address/claim/:order-id", controllers.PatchClaim)
 
 	// metrics
 	// wallet-connects

@@ -190,3 +190,7 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	return
 }
 
+
+func QueryPromotionById(promotion *schema.PromotionRow) error {
+	return config.DB.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).First(promotion).Error
+}

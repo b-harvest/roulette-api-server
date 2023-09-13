@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,22 +29,131 @@ func PutAccount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, account)
+	services.Success(c, nil, &account)
 }
 
-func GetAccBalance(c *gin.Context) {
-	resp := types.ResGetAccBalance{
+func GetBalanceByAcc(c *gin.Context) {
+	resp := types.ResGetBalanceByAcc{
 		Addr: c.Param("address"),
 	}
 
-	err := models.QueryAccBalance(&resp)
+	err := models.QueryBalanceByAcc(&resp)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
-	services.Success(c, nil, resp)
+	services.Success(c, nil, &resp)
+}
+
+func GetGameOrdersByAddr(c *gin.Context) {
+	var orders []schema.OrderRow
+
+	err := models.QueryOrdersByAcc(&orders, c.Param("address"))
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, &orders)
+}
+
+func GetWinTotalByAcc(c *gin.Context) {
+	var resp []types.ResGetWinTotalByAcc
+
+	err := models.QueryWinTotalByAcc(&resp, c.Param("address"))
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, &resp)
+}
+
+// SELECT order_id, addr, is_win, promotion_id, claimed_at, claim_finished_at
+// FROM game_order
+// WHERE order_id = 9;
+// if is_win == 1, claimed_at == null, claim_finished_at == null
+// 	then (promotion_id 아래 sql 실행)
+// 	else (errors.New("Can't claim (Not win or Already caimed)"))
+
+// SELECT promotion_id, claim_start_at, claim_end_at
+// FROM promotion
+// WHERE promotion_id = 2;
+
+// if now.After(b) && now.Before(a) || b == now || now == a {
+// 	fmt.Println("true")
+// }
+
+// if claim_start_at <= now() <= claim_end_at
+// 	then (아래 sql 실행)
+// 	else (errors.New("Can't claim due to not claimable period"))
+
+// UPDATE game_order
+// SET claimed_at = now()
+// WHERE order_id = ?
+
+func PatchClaim(c *gin.Context) {
+	orderId, err := strconv.ParseInt(c.Param("order-id"), 10, 64)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	order := schema.OrderRow{
+		OrderId: orderId,
+	}
+	err = models.QueryOrderById(&order)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Claimable only in below condition
+	// status: before claim(3), win(true) and claimed(null), claim(null) finished not yet
+	if order.Status != 3 && !order.IsWin || !order.ClaimedAt.IsZero() || !order.ClaimFinishedAt.IsZero() {
+		err = errors.New("Can't claim due to not win or already claimed.")
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	promotion := schema.PromotionRow{
+		PromotionId: order.PromotionId,
+	}
+	err = models.QueryPromotionById(&promotion)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Claimable only in below condition
+	// claim-start <= now <= claim-end
+	now := time.Now()
+	if now.Before(promotion.ClaimStartAt) || now.After(promotion.ClaimEndAt) {
+		err = errors.New("Can't claim due to not claimable period")
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	order.Status = 4
+	order.ClaimedAt = now
+
+	err = models.UpdateOrder(&order)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, nil)
 }
 
 // accounts 조회

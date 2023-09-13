@@ -7,6 +7,16 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func QueryOrderById(order *schema.OrderRow) (err error) {
+	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Find(order).Error
+	return
+}
+
+func UpdateOrder(order *schema.OrderRow) (err error) {
+	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Update(order).Error
+	return
+}
+
 func QueryOrders(orders *[]schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Find(orders).Error
 	return
@@ -19,11 +29,6 @@ func CreateOrder(order *schema.OrderRow) (err error) {
 
 func QueryOrder(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).First(order).Error
-	return
-}
-
-func UpdateOrder(order *schema.OrderRow) (err error) {
-	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Update(order).Error
 	return
 }
 

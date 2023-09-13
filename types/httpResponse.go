@@ -54,12 +54,17 @@ type ResGetPromotion struct {
 	Summary           PromotionSummary       `json:"promotionSummary"`
 }
 
-type ResGetAccBalance struct {
+type ResGetBalanceByAcc struct {
 	PromotionID                uint64 `json:"promotionId" db:"promotion_id"`
 	Addr                       string `json:"addr" db:"addr"`
 	TicketAmount               uint64 `json:"ticketAmount" db:"ticket_amount"`
 	VoucherAmount              uint64 `json:"voucherAmount" db:"voucher_amount"`
 	TotalReicevedVoucherAmount uint64 `json:"totalReicevedVoucherAmount" db:"total_reiceved_voucher_amount"`
+}
+
+type ResGetWinTotalByAcc struct {
+	PrizeName   string `json:"prizeName" db:"prize_name"`
+	TotalAmount int    `json:"totalAmount" db:"total_amount"`
 }
 
 type ResGetEventCount struct {
