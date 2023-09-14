@@ -3,6 +3,7 @@ package models
 import (
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
+	"roulette-api-server/types"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -29,5 +30,21 @@ func UpdateVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 
 func DeleteVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 	err = config.DB.Table("user_voucher_balance").Where("id = ?", bal.Id).Delete(bal).Error
+	return
+}
+
+func QueryAvailableVouchers(promotions *[](*types.ResGetAvailableVouchers)) (err error) {
+	q :=
+		"SELECT promotion_id, title, voucher_name, voucher_total_supply, voucher_remaining_qty " +
+			"FROM promotion  " +
+			"WHERE is_active = 1 " +
+			"AND is_whitelisted = 1  " +
+			"AND promotion_end_at > NOW()"
+
+	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
+	if err = config.DB.Raw(q).Scan(promotions).
+		Error; err != nil {
+		return
+	}
 	return
 }

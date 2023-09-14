@@ -431,3 +431,18 @@ func DeleteVoucherBurnEvent(c *gin.Context) {
 		services.Success(c, nil, event)
 	}
 }
+
+// 현재 가용한 Voucher 목록 조회 ( Status : In progress, Not started )
+func GetAvailableVouchers(c *gin.Context) {
+
+	vouchers := make([]*types.ResGetAvailableVouchers, 0, 100)
+	err := models.QueryAvailableVouchers(&vouchers)
+
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, vouchers)
+}

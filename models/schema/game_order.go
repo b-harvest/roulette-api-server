@@ -22,5 +22,5 @@ type OrderRow struct {
 }
 
 func (r *OrderRow) TableName() string {
-	return "promotion"
+	return "game_order"
 }

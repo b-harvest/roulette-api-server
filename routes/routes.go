@@ -78,6 +78,7 @@ func SetupRouter() *gin.Engine {
 
 	// voucher-mgmt
 	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)
+	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)
 
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs

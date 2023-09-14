@@ -72,10 +72,19 @@ type ResGetEventCount struct {
 }
 
 type ResGetVoucherSendEvents struct {
+	Id            int64     `json:"id" db:"id"`
 	AccountId     int64     `json:"accountId" db:"account_id"`
 	RecipientAddr string    `json:"recipientAddr" db:"recipient_addr"`
 	PromotionID   uint64    `json:"promotionId" db:"promotion_id"`
 	VoucherName   string    `json:"voucherName" db:"voucher_name"`
 	Amount        uint64    `json:"amount" db:"amount"`
 	SentAt        time.Time `json:"sentAt" db:"sent_at"`
+}
+
+type ResGetAvailableVouchers struct {
+	PromotionId         uint64 `json:"promotionId" db:"promotion_id"`
+	Title               string `json:"title" db:"title"`
+	VoucherName         string `json:"voucherName" db:"voucher_name"`
+	VoucherTotalSupply  uint64 `json:"voucherTotalSupply" db:"voucher_total_supply"`
+	VoucherRemainingQty uint64 `json:"voucherRemainingQty" db:"voucher_remaining_qty"`
 }
