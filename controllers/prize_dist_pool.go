@@ -20,26 +20,25 @@ func GetDistPools(c *gin.Context) {
 	pools := make([]schema.PrizeDistPoolRow, 0, 100)
 	err := models.QueryTbDistPools(&pools)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	services.Success(c, nil, pools)
 }
 
-
 // DistPool 종류 생성
 func CreateDistPool(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var req types.ReqTbCreateDistPool
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -54,11 +53,11 @@ func CreateDistPool(c *gin.Context) {
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, pool)
@@ -71,7 +70,7 @@ func GetDistPool(c *gin.Context) {
 	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	pool := schema.PrizeDistPoolRow{
@@ -82,7 +81,7 @@ func GetDistPool(c *gin.Context) {
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, pool)
 	}
@@ -94,13 +93,13 @@ func UpdateDistPool(c *gin.Context) {
 	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-			return
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
 	var req types.ReqTbUpdateDistPool
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -110,27 +109,26 @@ func UpdateDistPool(c *gin.Context) {
 
 	// handler data
 	pool := schema.PrizeDistPoolRow{
-		DistPoolId: reqId,
-		TotalSupply: req.TotalSupply,
+		DistPoolId:   reqId,
+		TotalSupply:  req.TotalSupply,
 		RemainingQty: req.RemainingQty,
-		IsActive: req.IsActive,
-		UpdatedAt: time.Now(),
+		IsActive:     req.IsActive,
+		UpdatedAt:    time.Now(),
 	}
 	err = models.UpdateDistPool(&pool)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, pool)
 	}
 }
-
 
 // DistPool 삭제
 func DeleteDistPool(c *gin.Context) {
@@ -138,7 +136,7 @@ func DeleteDistPool(c *gin.Context) {
 	strId := c.Param("dist_pool_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -150,12 +148,8 @@ func DeleteDistPool(c *gin.Context) {
 
 	// result
 	if err != nil {
-		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, pool)
 	}
 }
-
-
-
-

@@ -70,3 +70,12 @@ type ResGetWinTotalByAcc struct {
 type ResGetEventCount struct {
 	Cnt uint64 `json:"cnt" db:"cnt"`
 }
+
+type ResGetVoucherSendEvents struct {
+	AccountId     int64     `json:"accountId" db:"account_id"`
+	RecipientAddr string    `json:"recipientAddr" db:"recipient_addr"`
+	PromotionID   uint64    `json:"promotionId" db:"promotion_id"`
+	VoucherName   string    `json:"voucherName" db:"voucher_name"`
+	Amount        uint64    `json:"amount" db:"amount"`
+	SentAt        time.Time `json:"sentAt" db:"sent_at"`
+}
