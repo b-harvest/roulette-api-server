@@ -170,7 +170,7 @@ func GetVoucherSendEvents(c *gin.Context) {
 }
 
 // voucher_send_history 생성
-func CreateVoucherSendEvent(c *gin.Context) {
+func CreateTbVoucherSendEvent(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -445,4 +445,149 @@ func GetAvailableVouchers(c *gin.Context) {
 	}
 
 	services.Success(c, nil, vouchers)
+}
+
+// voucher_send_history 생성
+func CreateVoucherSendEvents(c *gin.Context) {
+	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var req types.ReqCreateVoucherSendEvent
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// data handling
+	// event := schema.VoucherSendEventRow{
+	// 	AccountId:     req.AccountId,
+	// 	RecipientAddr: req.RecipientAddr,
+	// 	PromotionId:   req.PromotionId,
+	// 	Amount:        req.Amount,
+	// 	SentAt:        time.Now(),
+	// }
+	// err = models.CreateVoucherSendEvent(&event)
+
+	for _, addr := range req.RecipientAddrs {
+
+		fmt.Printf("addr : %s\n", addr)
+
+		// 사용자 Account Id 조회
+		acc := schema.AccountRow{
+			Addr: addr,
+		}
+
+		err := models.QueryAccount(&acc)
+		if err != nil {
+			fmt.Printf("QueryAccount 485 : %+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+		fmt.Printf("acc : %+v\n", acc)
+		// 바우처 전송 이벤트 생성
+		err = models.CreateVoucherSendEvent(&schema.VoucherSendEventRow{
+			AccountId:     acc.Uid,
+			RecipientAddr: addr,
+			PromotionId:   req.PromotionId,
+			Amount:        req.Amount,
+			SentAt:        time.Now(),
+		})
+
+		if err != nil {
+			fmt.Printf("CreateVoucherSendEvent 500 : %+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		// 사용자 바우처 잔고 조회
+		voucherBalance := schema.VoucherBalanceRow{
+			Addr:        addr,
+			PromotionId: req.PromotionId,
+		}
+
+		err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
+		if err != nil && err.Error() != "record not found" {
+			fmt.Printf("QueryVoucherBalanceByAddrPromotionId 515 : %+v\n", err.Error())
+			voucherBalance.Id = 0
+		}
+
+		if voucherBalance.Id == 0 {
+			// 사용자 바우처 잔고 레코드 생성
+			err = models.CreateVoucherBalance(&schema.VoucherBalanceRow{
+				AccountId:           acc.Uid,
+				Addr:                addr,
+				PromotionId:         req.PromotionId,
+				CurrentAmount:       req.Amount,
+				TotalReceivedAmount: req.Amount,
+				UpdatedAt:           time.Now(),
+			})
+			if err != nil {
+				fmt.Printf("CreateVoucherBalance 529 : %+v\n", err.Error())
+				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				return
+			}
+		} else {
+			// 사용자 바우처 잔고 업데이트
+			err = models.UpdateVoucherBalance(&schema.VoucherBalanceRow{
+				Id:                  voucherBalance.Id,
+				CurrentAmount:       voucherBalance.CurrentAmount + req.Amount,
+				TotalReceivedAmount: voucherBalance.TotalReceivedAmount + req.Amount,
+				UpdatedAt:           time.Now(),
+			})
+			if err != nil {
+				fmt.Printf("UpdateVoucherBalance 542 : %+v\n", err.Error())
+				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				return
+			}
+		}
+
+		// 프로모션 조회
+
+		// convert req.PromotionId to uint64
+		strPromotionId := fmt.Sprintf("%d", req.PromotionId)
+		promotionId, err := strconv.ParseUint(strPromotionId, 10, 64)
+		if err != nil {
+			services.BadRequest(c, "Bad Request Id path parameter", err)
+			return
+		}
+
+		promotion := types.ResGetPromotion{
+			PromotionId: promotionId,
+		}
+
+		err = models.QueryPromotion(&promotion)
+		if err != nil {
+			fmt.Printf("QueryPromotion 564 : %+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		// 프로모션 Remainint Qty 업데이트
+		err = models.UpdatePromotion(&schema.PromotionRow{
+			PromotionId:         req.PromotionId,
+			VoucherTotalSupply:  promotion.VoucherTotalSupply + req.Amount,
+			VoucherRemainingQty: promotion.VoucherRemainingQty - req.Amount,
+			UpdatedAt:           time.Now(),
+		})
+		if err != nil {
+			fmt.Printf("UpdatePromotion 577 : %+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}
+
+	// result
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "data already exists", err)
+		} else {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		}
+	} else {
+		services.Created(c, nil, nil)
+	}
 }

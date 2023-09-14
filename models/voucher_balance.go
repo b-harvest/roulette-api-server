@@ -23,6 +23,11 @@ func QueryVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 	return
 }
 
+func QueryVoucherBalanceByAddrPromotionId(bal *schema.VoucherBalanceRow) (err error) {
+	err = config.DB.Table("user_voucher_balance").Where("addr = ? and promotion_id = ?", bal.Addr, bal.PromotionId).First(bal).Error
+	return
+}
+
 func UpdateVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 	err = config.DB.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
 	return

@@ -212,7 +212,7 @@ func CreateAccount(c *gin.Context) {
 // 특정 Account 조회
 func GetAccount(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("addr")
+	strId := c.Param("address")
 	acc := schema.AccountRow{
 		Addr: strId,
 	}
@@ -230,7 +230,7 @@ func GetAccount(c *gin.Context) {
 // Account 정보 수정
 func UpdateAccount(c *gin.Context) {
 	// 파라미터 조회 -> body 조회 -> 언마샬
-	strId := c.Param("addr")
+	strId := c.Param("address")
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -269,7 +269,7 @@ func UpdateAccount(c *gin.Context) {
 // Account 삭제
 func DeleteAccount(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("addr")
+	strId := c.Param("address")
 
 	// handler data
 	acc := schema.AccountRow{
