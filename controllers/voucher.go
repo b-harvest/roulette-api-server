@@ -568,7 +568,6 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		// 프로모션 Remainint Qty 업데이트
 		err = models.UpdatePromotion(&schema.PromotionRow{
 			PromotionId:         req.PromotionId,
-			VoucherTotalSupply:  promotion.VoucherTotalSupply + req.Amount,
 			VoucherRemainingQty: promotion.VoucherRemainingQty - req.Amount,
 			UpdatedAt:           time.Now(),
 		})
