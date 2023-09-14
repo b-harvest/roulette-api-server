@@ -1,6 +1,6 @@
 [config_db]
-host="121.78.209.29"
+host="localhost"
 port=3306
-user="devops"
-password="passw0rd!"
+user="root"
+password="password"
 db_name="crescent_roulette_db"
