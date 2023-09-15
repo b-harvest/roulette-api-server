@@ -461,16 +461,6 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		return
 	}
 
-	// data handling
-	// event := schema.VoucherSendEventRow{
-	// 	AccountId:     req.AccountId,
-	// 	RecipientAddr: req.RecipientAddr,
-	// 	PromotionId:   req.PromotionId,
-	// 	Amount:        req.Amount,
-	// 	SentAt:        time.Now(),
-	// }
-	// err = models.CreateVoucherSendEvent(&event)
-
 	for _, addr := range req.RecipientAddrs {
 
 		fmt.Printf("addr : %s\n", addr)
