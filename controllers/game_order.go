@@ -198,22 +198,19 @@ func UpdateGameOrderStatus(c *gin.Context) {
 
 	// 1(진행중) 2(꽝으로인한종료) 3(클레임전) 4(클레임중) 5(클레임성공) 6(클레임실패) 7(취소)
 	// 1~4 는 claim_finished_at = null
-	if req.Status > 4 {
-		// handler data
-		order := schema.OrderRow{
-			OrderId:         reqId,
-			Status:          req.Status,
-			ClaimFinishedAt: time.Now(),
-		}
-		err = models.UpdateOrder(&order)
+	order := schema.OrderRow{
+		OrderId: reqId,
+		Status:  req.Status,
+	}
+
+	if req.Status <= 3 {
+		err = models.UpdateOrderStatusReset(&order)
+	} else if req.Status == 4 {
+		order.ClaimedAt = time.Now()
+		err = models.UpdateOrderStatusClaimed(&order)
 	} else {
-		// handler data
-		order := types.GameOrderStatusRow{
-			OrderId:         reqId,
-			Status:          req.Status,
-			ClaimFinishedAt: nil,
-		}
-		err = models.UpdateOrderStatus(&order)
+		order.ClaimFinishedAt = time.Now()
+		err = models.UpdateOrder(&order)
 	}
 
 	// result

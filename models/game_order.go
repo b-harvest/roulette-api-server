@@ -59,10 +59,21 @@ func QueryGameWinningResults(results *[](*types.ResGetGameWinningResults)) (err 
 	return
 }
 
-func UpdateOrderStatus(order *types.GameOrderStatusRow) (err error) {
+func UpdateOrderStatusReset(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).
 		UpdateColumns(map[string]interface{}{
 			"status":            order.Status,
+			"claimed_at":        nil,
+			"claim_finished_at": nil,
+		}).Error
+	return
+}
+
+func UpdateOrderStatusClaimed(order *schema.OrderRow) (err error) {
+	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).
+		UpdateColumns(map[string]interface{}{
+			"status":            order.Status,
+			"claimed_at":        order.ClaimedAt,
 			"claim_finished_at": nil,
 		}).Error
 	return
