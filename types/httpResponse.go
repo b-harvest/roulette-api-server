@@ -88,3 +88,19 @@ type ResGetAvailableVouchers struct {
 	VoucherTotalSupply  uint64 `json:"voucherTotalSupply" db:"voucher_total_supply"`
 	VoucherRemainingQty uint64 `json:"voucherRemainingQty" db:"voucher_remaining_qty"`
 }
+
+type ResGetGameWinningResults struct {
+	OrderId         uint64    `json:"orderId" db:"order_id"`
+	AccountId       int64     `json:"accountId" db:"account_id"`
+	Addr            string    `json:"addr" db:"addr"`
+	Title           string    `json:"title" db:"title"`
+	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
+	PrizeName       string    `json:"prizeName" db:"prize_name"`
+	PrizeAmount     uint64    `json:"prizeAmount" db:"prize_amount"`
+	Status          string    `json:"status" db:"status"`
+	ClaimedAt       time.Time `json:"claimedAt" db:"claimed_at"`
+	ClaimFinishedAt time.Time `json:"claimFinishedAt" db:"claim_finished_at"`
+	PrizeType       string    `json:"prizeType" db:"prize_type"`
+	PrizeDenomId    uint64    `json:"prizeDenomId" db:"prize_denom_id"`
+	PrizeId         uint64    `json:"prizeId" db:"prize_id"`
+}

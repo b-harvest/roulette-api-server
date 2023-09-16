@@ -20,52 +20,51 @@ func GetGameOrders(c *gin.Context) {
 	orders := make([]schema.OrderRow, 0, 100)
 	err := models.QueryOrders(&orders)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	services.Success(c, nil, orders)
 }
 
-
 // Order 생성
 func CreateGameOrder(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var req types.ReqTbCreateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	// UsedTicketQty, IsWin 계산 필요
-	// ClaimedAt. ClaimFinishedAt, 
+	// ClaimedAt. ClaimFinishedAt,
 
 	// data handling
 	order := schema.OrderRow{
-		AccountId:       req.AccountId,
-		Addr:            req.Addr,
-		PromotionId:     req.PromotionId,
-		GameId:          req.GameId,
-		Status:          req.Status,
-		UsedTicketQty:   req.UsedTicketQty,
-		PrizeId:         req.PrizeId,
-		StartedAt:       time.Now(),
+		AccountId:     req.AccountId,
+		Addr:          req.Addr,
+		PromotionId:   req.PromotionId,
+		GameId:        req.GameId,
+		Status:        req.Status,
+		UsedTicketQty: req.UsedTicketQty,
+		PrizeId:       req.PrizeId,
+		StartedAt:     time.Now(),
 	}
 	err = models.CreateOrder(&order)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, order)
@@ -78,7 +77,7 @@ func GetGameOrder(c *gin.Context) {
 	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	order := schema.OrderRow{
@@ -89,7 +88,7 @@ func GetGameOrder(c *gin.Context) {
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, order)
 	}
@@ -101,13 +100,13 @@ func UpdateGameOrder(c *gin.Context) {
 	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-			return
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
 	var req types.ReqTbUpdateOrder
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -117,29 +116,28 @@ func UpdateGameOrder(c *gin.Context) {
 
 	// handler data
 	order := schema.OrderRow{
-		OrderId: reqId,
-		IsWin: req.IsWin,
-		Status: req.Status,
-		UsedTicketQty: req.UsedTicketQty,
-		ClaimedAt: req.ClaimedAt,
+		OrderId:         reqId,
+		IsWin:           req.IsWin,
+		Status:          req.Status,
+		UsedTicketQty:   req.UsedTicketQty,
+		ClaimedAt:       req.ClaimedAt,
 		ClaimFinishedAt: req.ClaimFinishedAt,
-		UpdatedAt: time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 	err = models.UpdateOrder(&order)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, order)
 	}
 }
-
 
 // Order 삭제
 func DeleteGameOrder(c *gin.Context) {
@@ -147,7 +145,7 @@ func DeleteGameOrder(c *gin.Context) {
 	strId := c.Param("order_id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -159,12 +157,22 @@ func DeleteGameOrder(c *gin.Context) {
 
 	// result
 	if err != nil {
-		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, order)
 	}
 }
 
+func GetGameWinningResults(c *gin.Context) {
 
+	results := make([]*types.ResGetGameWinningResults, 0, 100)
+	err := models.QueryGameWinningResults(&results)
 
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
 
+	services.Success(c, nil, results)
+}
