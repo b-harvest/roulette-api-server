@@ -176,3 +176,55 @@ func GetGameWinningResults(c *gin.Context) {
 
 	services.Success(c, nil, results)
 }
+
+func UpdateGameOrderStatus(c *gin.Context) {
+	// 파라미터 조회 -> body 조회 -> 언마샬
+	strId := c.Param("order_id")
+	reqId, err := strconv.ParseInt(strId, 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var req types.ReqUpdateOrderStatus
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		services.BadRequest(c, "Bad Request Unmarshal error", err)
+		return
+	}
+
+	// 1(진행중) 2(꽝으로인한종료) 3(클레임전) 4(클레임중) 5(클레임성공) 6(클레임실패) 7(취소)
+	// 1~4 는 claim_finished_at = null
+	if req.Status > 4 {
+		// handler data
+		order := schema.OrderRow{
+			OrderId:         reqId,
+			Status:          req.Status,
+			ClaimFinishedAt: time.Now(),
+		}
+		err = models.UpdateOrder(&order)
+	} else {
+		// handler data
+		order := types.GameOrderStatusRow{
+			OrderId:         reqId,
+			Status:          req.Status,
+			ClaimFinishedAt: nil,
+		}
+		err = models.UpdateOrderStatus(&order)
+	}
+
+	// result
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		} else {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		}
+	} else {
+		services.Success(c, nil, nil)
+	}
+}

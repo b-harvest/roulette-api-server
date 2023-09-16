@@ -202,3 +202,7 @@ type ReqCreateVoucherSendEvent struct {
 	NumAccounts    uint64   `json:"NumAccounts"`
 	RecipientAddrs []string `json:"recipientAddrs"`
 }
+
+type ReqUpdateOrderStatus struct {
+	Status int `json:"status" db:"status"`
+}

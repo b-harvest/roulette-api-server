@@ -83,7 +83,8 @@ func SetupRouter() *gin.Engine {
 	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)
 
 	// game-mgmt
-	route.GET("/game-mgmt/winning-results", controllers.GetGameWinningResults)
+	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)
+	route.PATCH("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus)
 
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
