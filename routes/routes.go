@@ -86,6 +86,19 @@ func SetupRouter() *gin.Engine {
 	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)
 	route.PATCH("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus)
 
+	route.GET("/game-mgmt/games", controllers.GetGames)
+	route.POST("/game-mgmt/games", controllers.CreateGame)
+	route.GET("/game-mgmt/games/:game_id", controllers.GetGame)
+	route.PATCH("/game-mgmt/games/:game_id", controllers.UpdateGame)
+	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)
+
+	// prize-mgmt
+	route.GET("/prize-mgmt/denoms", controllers.GetPrizeDenoms)
+	route.POST("/prize-mgmt/denoms", controllers.CreatePrizeDenom)
+	route.GET("/prize-mgmt/denoms/:prize_denom_id", controllers.GetPrizeDenom)
+	route.PATCH("/prize-mgmt/denoms/:prize_denom_id", controllers.UpdatePrizeDenom)
+	route.DELETE("/prize-mgmt/denoms/:prize_denom_id", controllers.DeletePrizeDenom)
+
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
 	//------------------------------------------------------------------------------
