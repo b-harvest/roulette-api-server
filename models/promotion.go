@@ -40,15 +40,15 @@ func DeletePromotion(promotion *schema.PromotionRow) (err error) {
 //---------------------------------------------------------
 
 func QueryPromotions(promotions *[](*types.ResGetPromotions)) (err error) {
-	q := 
+	q :=
 		"SELECT P.*, IFNULL(CNT.participant_cnt, 0) as participant_cnt from promotion P " +
-		"LEFT JOIN " + 
-		"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " + 
-		"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id"
+			"LEFT JOIN " +
+			"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " +
+			"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id"
 	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
 	if err = config.DB.Raw(q).Scan(promotions).
 		Error; err != nil {
-			return
+		return
 	}
 	for _, v := range *promotions {
 		fmt.Printf("%+v\n", v)
@@ -64,16 +64,16 @@ func QueryPromotions(promotions *[](*types.ResGetPromotions)) (err error) {
 }
 
 func QueryPromotion(promotion *types.ResGetPromotion) (err error) {
-	q := 
+	q :=
 		"SELECT P.*, IFNULL(CNT.participant_cnt, 0) as participant_cnt from promotion P " +
-		"LEFT JOIN " + 
-		"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " + 
-		"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id " +
-		"WHERE P.promotion_id=?"
+			"LEFT JOIN " +
+			"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " +
+			"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id " +
+			"WHERE P.promotion_id=?"
 	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
 	if err = config.DB.Raw(q, promotion.PromotionId).Scan(promotion).
 		Error; err != nil {
-			return
+		return
 	}
 
 	if time.Now().After(promotion.PromotionEndAt) {
@@ -89,26 +89,26 @@ func QueryPromotion(promotion *types.ResGetPromotion) (err error) {
 // 프로모션 요약 정보
 func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSummary, err error) {
 	// TotalOdds
-	q := 
-	"  SELECT sum(P.odds) as total_odds FROM distribution_pool DP " +
-	"  LEFT JOIN prize P ON DP.dist_pool_id=P.dist_pool_id        " +
-	"  WHERE DP.promotion_id=? "
+	q :=
+		"  SELECT sum(P.odds) as total_odds FROM distribution_pool DP " +
+			"  LEFT JOIN prize P ON DP.dist_pool_id=P.dist_pool_id        " +
+			"  WHERE DP.promotion_id=? "
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
-			return
+		return
 	}
 
 	// TotalOrderNum
-	q = 
-	"  SELECT count(*) as total_order_num FROM game_order " +
-	"  WHERE promotion_id=? "
+	q =
+		"  SELECT count(*) as total_order_num FROM game_order " +
+			"  WHERE promotion_id=? "
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
 		return
 	}
 
 	// TotalOrderUserNum
-	q = 
-	"  SELECT account_id FROM game_order         " +
-	"  WHERE promotion_id =? group by account_id "
+	q =
+		"  SELECT account_id FROM game_order         " +
+			"  WHERE promotion_id =? group by account_id "
 	if err = config.DB.Raw(q, promotionId).Count(&promSummary.TotalOrderUserNum).Error; err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			promSummary.TotalOrderUserNum = 0
@@ -118,17 +118,17 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	}
 
 	// TotalWinNum
-	q = 
-	"  SELECT count(*) as total_win_num FROM game_order " +
-  "  WHERE promotion_id=? AND is_win=true "
+	q =
+		"  SELECT count(*) as total_win_num FROM game_order " +
+			"  WHERE promotion_id=? AND is_win=true "
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
 		return
 	}
 
 	// TotalWinUserNum
-	q = 
-	"  SELECT account_id FROM game_order         " +
-	"  WHERE promotion_id =? AND is_win=true group by account_id "
+	q =
+		"  SELECT account_id FROM game_order         " +
+			"  WHERE promotion_id =? AND is_win=true group by account_id "
 	if err = config.DB.Raw(q, promotionId).Count(&promSummary.TotalWinUserNum).Error; err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			promSummary.TotalOrderUserNum = 0
@@ -138,17 +138,17 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	}
 
 	// TotalWinNum
-	q = 
-	"  SELECT count(*) as total_win_num FROM game_order " +
-  "  WHERE promotion_id=? AND is_win=true "
+	q =
+		"  SELECT count(*) as total_win_num FROM game_order " +
+			"  WHERE promotion_id=? AND is_win=true "
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
 		return
 	}
 
 	// TotalWinUserNum
-	q = 
-	"  SELECT account_id FROM game_order         " +
-	"  WHERE promotion_id =? AND is_win=true group by account_id "
+	q =
+		"  SELECT account_id FROM game_order         " +
+			"  WHERE promotion_id =? AND is_win=true group by account_id "
 	if err = config.DB.Raw(q, promotionId).Count(&promSummary.TotalWinUserNum).Error; err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			promSummary.TotalOrderUserNum = 0
@@ -158,17 +158,17 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	}
 
 	// TotalClaimedNum
-	q = 
-	"  SELECT count(*) as total_claimed_num FROM game_order " +
-  "  WHERE promotion_id=? AND status >= 4"
+	q =
+		"  SELECT count(*) as total_claimed_num FROM game_order " +
+			"  WHERE promotion_id=? AND status >= 4"
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
 		return
 	}
 
 	// TotalClaimedUserNum
-	q = 
-	"  SELECT account_id FROM game_order         " +
-	"  WHERE promotion_id =? AND status >= 4 group by account_id "
+	q =
+		"  SELECT account_id FROM game_order         " +
+			"  WHERE promotion_id =? AND status >= 4 group by account_id "
 	if err = config.DB.Raw(q, promotionId).Count(&promSummary.TotalClaimedUserNum).Error; err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			promSummary.TotalOrderUserNum = 0
@@ -178,9 +178,9 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 	}
 
 	// InProgressClaimNum
-	q = 
-	"  SELECT count(*) as in_progress_claim_num FROM game_order " +
-  "  WHERE promotion_id=? AND status = 4"
+	q =
+		"  SELECT count(*) as in_progress_claim_num FROM game_order " +
+			"  WHERE promotion_id=? AND status = 4"
 	if err = config.DB.Raw(q, promotionId).Scan(&promSummary).Error; err != nil {
 		return
 	}
@@ -197,3 +197,6 @@ func CreatePromotion(promotion *schema.PromotionRow) (err error) {
 	return
 }
 
+func QueryPromotionById(promotion *schema.PromotionRow) error {
+	return config.DB.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).First(promotion).Error
+}

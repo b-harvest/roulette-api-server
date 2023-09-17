@@ -20,8 +20,8 @@ func GetVoucherBalances(c *gin.Context) {
 	bals := make([]schema.VoucherBalanceRow, 0, 100)
 	err := models.QueryVoucherBalances(&bals)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -32,33 +32,33 @@ func GetVoucherBalances(c *gin.Context) {
 func CreateVoucherBalance(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var req types.ReqTbCreateVoucherBalance
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	// data handling
 	bal := schema.VoucherBalanceRow{
-		AccountId:                    req.AccountId,
-		Addr:                         req.Addr,
-		PromotionId:                  req.PromotionId,
-		CurrentAmount:                req.CurrentAmount,
-		TotalReceivedAmount:          req.TotalReceivedAmount,
+		AccountId:           req.AccountId,
+		Addr:                req.Addr,
+		PromotionId:         req.PromotionId,
+		CurrentAmount:       req.CurrentAmount,
+		TotalReceivedAmount: req.TotalReceivedAmount,
 	}
 	err = models.CreateVoucherBalance(&bal)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, bal)
@@ -71,7 +71,7 @@ func GetVoucherBalance(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	bal := schema.VoucherBalanceRow{
@@ -82,7 +82,7 @@ func GetVoucherBalance(c *gin.Context) {
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, bal)
 	}
@@ -94,13 +94,13 @@ func UpdateVoucherBalance(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-			return
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
 	var req types.ReqTbUpdateVoucherBalance
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -110,20 +110,20 @@ func UpdateVoucherBalance(c *gin.Context) {
 
 	// handler data
 	bal := schema.VoucherBalanceRow{
-		Id: reqId,
-		CurrentAmount: req.CurrentAmount,
+		Id:                  reqId,
+		CurrentAmount:       req.CurrentAmount,
 		TotalReceivedAmount: req.TotalReceivedAmount,
-		UpdatedAt: time.Now(),
+		UpdatedAt:           time.Now(),
 	}
 	err = models.UpdateVoucherBalance(&bal)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, bal)
@@ -136,7 +136,7 @@ func DeleteVoucherBalance(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -148,21 +148,19 @@ func DeleteVoucherBalance(c *gin.Context) {
 
 	// result
 	if err != nil {
-		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, bal)
 	}
 }
 
-
-
 // voucher_send_history 전체 조회
 func GetVoucherSendEvents(c *gin.Context) {
 	events := make([]schema.VoucherSendEventRow, 0, 100)
-	err := models.QueryVoucherSendEvents(&events)
+	err := models.QueryTbVoucherSendEvents(&events)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -173,33 +171,33 @@ func GetVoucherSendEvents(c *gin.Context) {
 func CreateVoucherSendEvent(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var req types.ReqTbCreateVoucherSendEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	// data handling
 	event := schema.VoucherSendEventRow{
-		AccountId:       req.AccountId,
-		RecipientAddr:   req.RecipientAddr,
-		PromotionId:     req.PromotionId,
-		Amount:          req.Amount,
-		SentAt:          time.Now(),
+		AccountId:     req.AccountId,
+		RecipientAddr: req.RecipientAddr,
+		PromotionId:   req.PromotionId,
+		Amount:        req.Amount,
+		SentAt:        time.Now(),
 	}
 	err = models.CreateVoucherSendEvent(&event)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, event)
@@ -212,7 +210,7 @@ func GetVoucherSendEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	event := schema.VoucherSendEventRow{
@@ -223,7 +221,7 @@ func GetVoucherSendEvent(c *gin.Context) {
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, event)
 	}
@@ -235,13 +233,13 @@ func UpdateVoucherSendEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-			return
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
 	var req types.ReqTbUpdateVoucherSendEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -251,18 +249,18 @@ func UpdateVoucherSendEvent(c *gin.Context) {
 
 	// handler data
 	event := schema.VoucherSendEventRow{
-		Id: reqId,
+		Id:     reqId,
 		Amount: req.Amount,
 	}
 	err = models.UpdateVoucherSendEvent(&event)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, event)
@@ -275,7 +273,7 @@ func DeleteVoucherSendEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -287,22 +285,19 @@ func DeleteVoucherSendEvent(c *gin.Context) {
 
 	// result
 	if err != nil {
-		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, event)
 	}
 }
-
-
-
 
 // voucher_burn_event 전체 조회
 func GetVoucherBurnEvents(c *gin.Context) {
 	events := make([]schema.VoucherBurnEventRow, 0, 100)
 	err := models.QueryVoucherBurnEvents(&events)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -313,34 +308,34 @@ func GetVoucherBurnEvents(c *gin.Context) {
 func CreateVoucherBurnEvent(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var req types.ReqTbCreateVoucherBurnEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	// data handling
 	event := schema.VoucherBurnEventRow{
-		AccountId:                   req.AccountId,
-		Addr:                        req.Addr,
-		PromotionId:                 req.PromotionId,
-		BurnedVoucherAmount:         req.BurnedVoucherAmount,
-		MintedTicketAmount:          req.MintedTicketAmount,
-		BurnedAt:                    time.Now(),
+		AccountId:           req.AccountId,
+		Addr:                req.Addr,
+		PromotionId:         req.PromotionId,
+		BurnedVoucherAmount: req.BurnedVoucherAmount,
+		MintedTicketAmount:  req.MintedTicketAmount,
+		BurnedAt:            time.Now(),
 	}
 	err = models.CreateVoucherBurnEvent(&event)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, event)
@@ -353,7 +348,7 @@ func GetVoucherBurnEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	event := schema.VoucherBurnEventRow{
@@ -364,7 +359,7 @@ func GetVoucherBurnEvent(c *gin.Context) {
 	// result
 	if err != nil {
 		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, event)
 	}
@@ -376,13 +371,13 @@ func UpdateVoucherBurnEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Body request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-			return
+		services.BadRequest(c, "Bad Body request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
 	var req types.ReqTbUpdateVoucherBurnEvent
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -392,7 +387,7 @@ func UpdateVoucherBurnEvent(c *gin.Context) {
 
 	// handler data
 	event := schema.VoucherBurnEventRow{
-		Id: reqId,
+		Id:                  reqId,
 		BurnedVoucherAmount: req.BurnedVoucherAmount,
 		MintedTicketAmount:  req.MintedTicketAmount,
 	}
@@ -400,11 +395,11 @@ func UpdateVoucherBurnEvent(c *gin.Context) {
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
+			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		} else {
-			services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
 		services.Success(c, nil, event)
@@ -417,7 +412,7 @@ func DeleteVoucherBurnEvent(c *gin.Context) {
 	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -429,7 +424,7 @@ func DeleteVoucherBurnEvent(c *gin.Context) {
 
 	// result
 	if err != nil {
-		services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, event)
 	}

@@ -34,8 +34,5 @@ type PrizeDistPoolInsertRow struct {
 }
 
 func (r *PrizeDistPoolRow) TableName() string {
-	return "promotion"
+	return "distribution_pool"
 }
-
-
-

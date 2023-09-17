@@ -48,14 +48,14 @@ func StartGame(c *gin.Context) {
 	var account schema.Account
 	err = models.QueryBalanceByAddr(&account, iAddr)
 	if err != nil {
-		if err.Error() == "record not found" {	// if addr not exists
+		if err.Error() == "record not found" { // if addr not exists
 			services.NotAcceptable(c, "user does not exists. game can not be started", err)
 		} else {
 			services.NotAcceptable(c, "Something went wrong! Can not query user balance", err)
 		}
 		return
 	}
-	if account.Ticket == 0 {	// 티켓이 1개만 필요하다고 가정
+	if account.Ticket == 0 { // 티켓이 1개만 필요하다고 가정
 		services.NotAcceptable(c, "you dont have any ticket", err)
 		return
 	}
@@ -87,16 +87,16 @@ func StartGame(c *gin.Context) {
 	// 3상품: 131 ~ 630
 	// 꽝: 631 ~ 999
 
-	if resultNum > 500 {	// 꽝
+	if resultNum > 500 { // 꽝
 		isWin = false
 		prizeID = 0
-	} else {	//당첨
+	} else { //당첨
 		isWin = true
 		prizeID = 1
 	}
 
 	// 게임 저장
-	game.IsWin  = isWin
+	game.IsWin = isWin
 	game.PrizeID = int64(prizeID)
 	game.PaidTicketNum = int64(1)
 	err = models.StartNewGame(&game, iAddr)
@@ -125,7 +125,7 @@ func StopGame(c *gin.Context) {
 		if err.Error() != "record not found" {
 			services.NotAcceptable(c, "Something went wrong! Can not query user game", err)
 			return
-		} else {		// 진행 중인 게임이 없다면
+		} else { // 진행 중인 게임이 없다면
 			services.NotAcceptable(c, "Ongoing game no exists", err)
 			return
 		}
@@ -152,7 +152,7 @@ func GetOngoingGame(c *gin.Context) {
 		if err.Error() != "record not found" {
 			services.NotAcceptable(c, "Something went wrong! Can not query user game", err)
 			return
-		} else {		// 진행 중인 게임이 없다면
+		} else { // 진행 중인 게임이 없다면
 			services.Success(c, nil, game)
 			//services.NotAcceptable(c, "Ongoing game no exists", err)
 			return
@@ -169,7 +169,7 @@ func GetGames(c *gin.Context) {
 	games := make([]schema.Game, 0, 100)
 	err := models.QueryGameTypes(&games)
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
+		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "GetGame fail", err)
 		return
 	}
@@ -192,17 +192,17 @@ func CreateGame(c *gin.Context) {
 
 	// handler data
 	game := schema.Game{
-		Title: req.Title,
-		Desc: req.Desc,
+		Title:    req.Title,
+		Desc:     req.Desc,
 		IsActive: req.IsActive,
-		Url: req.Url,
+		Url:      req.Url,
 	}
 	err = models.CreateGame(&game)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "data already exists", err)
 		} else {
 			services.NotAcceptable(c, "CreateGame Fail", err)
@@ -226,7 +226,7 @@ func GetGame(c *gin.Context) {
 	err = models.QueryGameType(&game)
 
 	if err != nil {
-		if err.Error() == "record not found" {	// if addr not exists
+		if err.Error() == "record not found" { // if addr not exists
 			services.NotAcceptable(c, "record not found", err)
 		} else {
 			services.NotAcceptable(c, "failed GetGame", err)
@@ -247,8 +247,8 @@ func UpdateGame(c *gin.Context) {
 	}
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-			services.BadRequest(c, "Bad Request", err)
-			return
+		services.BadRequest(c, "Bad Request", err)
+		return
 	}
 	var req types.ReqTbUpdateGame
 	if err = json.Unmarshal(jsonData, &req); err != nil {
@@ -258,19 +258,19 @@ func UpdateGame(c *gin.Context) {
 
 	// handler data
 	game := schema.Game{
-		GameId: gameId,
-		Title: req.Title,
-		Desc: req.Desc,
-		IsActive: req.IsActive,
-		Url: req.Url,
+		GameId:    gameId,
+		Title:     req.Title,
+		Desc:      req.Desc,
+		IsActive:  req.IsActive,
+		Url:       req.Url,
 		UpdatedAt: time.Now(),
 	}
 	err = models.UpdateGame(&game)
 
 	// result
 	if err != nil {
-		fmt.Printf("%+v\n",err.Error())
-		if strings.Contains(err.Error(),"1062") {
+		fmt.Printf("%+v\n", err.Error())
+		if strings.Contains(err.Error(), "1062") {
 			services.NotAcceptable(c, "Title already exists", err)
 		} else {
 			services.NotAcceptable(c, "UpdateGame Fail", err)
@@ -279,7 +279,6 @@ func UpdateGame(c *gin.Context) {
 		services.Success(c, nil, game)
 	}
 }
-
 
 // 게임 정보 삭제
 func DeleteGame(c *gin.Context) {
