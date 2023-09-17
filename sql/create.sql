@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `user_voucher_balance` (
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `current_amount` bigint NOT NULL,
-  `total_reiceved_amount` bigint NOT NULL,
+  `total_received_amount` bigint NOT NULL,
   `created_at` timestamp,
   `updated_at` timestamp,
   PRIMARY KEY (`id`),
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `voucher_burn_event` (
 create table if not exists `event_wallet_conn` (
   `id` bigint unsigned not null auto_increment,
   `addr` varchar(255) character set utf8mb4 collate utf8mb4_unicode_ci,
-  `addr_type` int not null default 0,
+  `addr_type` varchar(64),
   `promotion_id` bigint not null default 0,
   `created_at`   timestamp not null default current_timestamp,
   primary key (`id`)

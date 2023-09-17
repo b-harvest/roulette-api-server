@@ -59,7 +59,7 @@ type ResGetBalanceByAcc struct {
 	Addr                       string `json:"addr" db:"addr"`
 	TicketAmount               uint64 `json:"ticketAmount" db:"ticket_amount"`
 	VoucherAmount              uint64 `json:"voucherAmount" db:"voucher_amount"`
-	TotalReicevedVoucherAmount uint64 `json:"totalReicevedVoucherAmount" db:"total_reiceved_voucher_amount"`
+	TotalreceivedVoucherAmount uint64 `json:"totalreceivedVoucherAmount" db:"total_received_voucher_amount"`
 }
 
 type ResGetWinTotalByAcc struct {

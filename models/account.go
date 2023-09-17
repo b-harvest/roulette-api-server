@@ -19,7 +19,7 @@ func QueryBalanceByAcc(accBalance *types.ResGetBalanceByAcc) (err error) {
 		ACC.addr as addr,
 		ACC.ticket_amount as ticket_amount,
 		UVB.current_amount as voucher_amount,
-		UVB.total_reiceved_amount as total_reiceved_voucher_amount
+		UVB.total_received_amount as total_received_voucher_amount
 	FROM account as ACC
 		JOIN user_voucher_balance as UVB
 			ON ACC.addr = UVB.addr

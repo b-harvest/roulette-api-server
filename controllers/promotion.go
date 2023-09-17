@@ -64,7 +64,7 @@ func validateAndSaveQuery(
 func GetPromotions(c *gin.Context) {
 	var err error
 	// Query filter 조회
-	// promotion_id, title, url, status, isWhitelisted
+	// promotion-id, title, url, status, is-whitelisted, is-active
 	// status: "not-started", "in-progress", "finished"
 	qMap := make(types.QueryFilterMap, 100)
 	qMap, err = validateAndSaveQuery(c, "promotion-id", "promotion_id", qMap, "uint64")
