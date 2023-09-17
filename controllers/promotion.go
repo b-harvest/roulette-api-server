@@ -151,7 +151,7 @@ func CreatePromotion(c *gin.Context) {
 	// create dist pools
 	for _, v := range req.DistributionPools {
 		creatingPool := schema.PrizeDistPoolInsertRow{
-			PromotionId:  promotion.ID,
+			PromotionId:  promotion.PromotionId,
 			PrizeDenomId: v.PrizeDenomId,
 			TotalSupply:  v.TotalSupply,
 			RemainingQty:  v.TotalSupply,	// default
