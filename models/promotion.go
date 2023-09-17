@@ -62,12 +62,14 @@ func QueryPromotions(promotions *[](*types.ResGetPromotions), qMap types.QueryFi
 			if cnt == 0 {
 				q += " WHERE P."
 			} else {
-				q += " AND "
+				q += " AND P."
 			}
 			fmt.Printf("key:%+v val:%+v\n", k, v)
-			q += k + " = " + v
+			q += k + " = " + v + " "
+			cnt++
 		}
 	}
+	fmt.Println(q)
 	sql := config.DB.Raw(q)
 	if err = sql.Scan(promotions).Error; err != nil {
 		return
