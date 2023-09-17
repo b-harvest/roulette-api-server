@@ -61,24 +61,24 @@ func SetupRouter() *gin.Engine {
 
 	// account
 	route.GET("/accounts", controllers.GetAccounts)	// TODO: 상세 정보, paging
-	route.GET("/accounts/:address", controllers.GetAccount)	// TODO: 상세 정보
-	route.PUT("/accounts/:address", controllers.PutAccount)
-	route.GET("/accounts/:address/balance", controllers.GetBalanceByAcc)
-	route.GET("/accounts/:address/game-orders", controllers.GetGameOrdersByAddr)
-	route.GET("/accounts/:address/winning-records", controllers.GetWinTotalByAcc)
-	route.PATCH("/accounts/:address/claim/:order-id", controllers.PatchClaim)
+	route.GET("/accounts/:addr", controllers.GetAccount)	// TODO: 상세 정보
+	route.PUT("/accounts/:addr", controllers.PutAccount)	// 완료
+	route.GET("/accounts/:addr/balances", controllers.GetBalancesByAddr) // 완료
+	route.GET("/accounts/:addr/game-orders", controllers.GetGameOrdersByAddr)
+	route.GET("/accounts/:addr/winning-records", controllers.GetWinTotalByAcc)
+	route.PATCH("/accounts/:addr/claim/:order-id", controllers.PatchClaim)
 
 	// metrics
 	// wallet-connects
-	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)
-	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount)
-	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)
+	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn) // 완료
+	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount) // 완료
+	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn) // 완료
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// flip-links
-	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)
-	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)
-	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)
+	route.GET("/metrics/flip-links", controllers.GetEventFlipLink) // 완료
+	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount) // 완료
+	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks) // 완료
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt

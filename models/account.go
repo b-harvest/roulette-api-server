@@ -13,7 +13,7 @@ func QueryOrCreateAccount(acc *schema.AccountRow) (err error) {
 	return
 }
 
-func QueryBalanceByAcc(accBalance *types.ResGetBalanceByAcc) (err error) {
+func QueryBalancesByAddr(bals *[]types.ResGetBalanceByAcc, addr string) (err error) {
 	sql := `
 	SELECT UVB.promotion_id as promotion_id,
 		ACC.addr as addr,
@@ -25,7 +25,7 @@ func QueryBalanceByAcc(accBalance *types.ResGetBalanceByAcc) (err error) {
 			ON ACC.addr = UVB.addr
 	WHERE ACC.addr = ?;
 	`
-	err = config.DB.Raw(sql, accBalance.Addr).Scan(accBalance).Error
+	err = config.DB.Raw(sql, addr).Scan(bals).Error
 	return
 }
 

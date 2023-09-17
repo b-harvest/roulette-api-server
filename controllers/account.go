@@ -30,7 +30,7 @@ func PutAccount(c *gin.Context) {
 		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-	req.Addr         = c.Param("address")
+	req.Addr         = c.Param("addr")
 	req.LastLoginAt  = time.Now()
 	req.TicketAmount = 0
 
@@ -44,19 +44,20 @@ func PutAccount(c *gin.Context) {
 	services.Success(c, nil, &req)
 }
 
-func GetBalanceByAcc(c *gin.Context) {
-	resp := types.ResGetBalanceByAcc{
-		Addr: c.Param("address"),
-	}
+func GetBalancesByAddr(c *gin.Context) {
+	addr := c.Param("addr")
+	bals := make([]types.ResGetBalanceByAcc, 0, 100)
 
-	err := models.QueryBalanceByAcc(&resp)
+	err := models.QueryBalancesByAddr(&bals, addr)
 	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
+		if err.Error() != "record not found" {
+			fmt.Printf("%+v\n", err.Error())
+			services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
 	}
 
-	services.Success(c, nil, &resp)
+	services.Success(c, nil, &bals)
 }
 
 func GetGameOrdersByAddr(c *gin.Context) {
@@ -75,7 +76,7 @@ func GetGameOrdersByAddr(c *gin.Context) {
 func GetWinTotalByAcc(c *gin.Context) {
 	var resp []types.ResGetWinTotalByAcc
 
-	err := models.QueryWinTotalByAcc(&resp, c.Param("address"))
+	err := models.QueryWinTotalByAcc(&resp, c.Param("addr"))
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -224,7 +225,7 @@ func CreateAccount(c *gin.Context) {
 // 특정 Account 조회
 func GetAccount(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("address")
+	strId := c.Param("addr")
 	acc := schema.AccountRow{
 		Addr: strId,
 	}
