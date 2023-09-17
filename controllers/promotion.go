@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"roulette-api-server/models"
@@ -17,8 +18,8 @@ import (
 
 // TODO
 /*
-	- /promotions/live	(프론트에서 사용할 프로모션 정보)
-	- 유저용/어드민용 따로 /promotions 분리
+	- optional: /promotions/live	(프론트에서 사용할 프로모션 정보)
+	- optional: 유저용/어드민용 따로 /promotions 분리
 */
 
 /*
@@ -31,7 +32,6 @@ import (
 	# query
 		- by 프로모션 title
 		- by 진행 중인지(기간)
-		- by
 	- order by promotion_start_at desc
 */
 // 프로모션 조회
@@ -104,9 +104,6 @@ func GetPromotion(c *gin.Context) {
 	}
 }
 
-/*
-	- 한번에 promotion, distribution_pool, prize 생성해야 함
-*/
 // 프로모션 생성
 func CreatePromotion(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
@@ -239,13 +236,45 @@ func UpdatePromotion(c *gin.Context) {
 		services.BadRequest(c, "Bad Body Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-	var req types.ReqTbUpdatePromotion
+	var req types.ReqUpdatePromotion
 	if err = json.Unmarshal(jsonData, &req); err != nil {
 		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
-	// TotalSupply 가 변경된 경우 remainingQty 계산
+	// 현재 프로모션 정보 조회
+	p := types.ResGetPromotion{
+		PromotionId: uint64(reqId),
+	}
+	err = models.QueryPromotion(&p)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail QueryPromotion"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// TotalSupply 가 변경된 경우 v 계산
+	// TotalSupply 는 사용량(cur_TotalSupply - cur_remain) 보다 작을 수 없다.
+	// 이미 사용한 양이 공급량(TotalSupply) 보다 클 수 없기 때문이다.
+	var remainingQty uint64
+	if p.VoucherTotalSupply != req.VoucherTotalSupply {
+		usedQty := p.VoucherTotalSupply - p.VoucherRemainingQty
+		if req.VoucherTotalSupply < usedQty {
+			err := errors.New("total supply can not be smaller than used #")
+			fmt.Printf("%+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+		remainingQty = req.VoucherTotalSupply - usedQty
+	}
+
+	// create transaction
+	tx, err := models.CreateTxInstance()
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "tx error : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
 
 	// handler data
 	promotion := schema.PromotionRow{
@@ -259,48 +288,106 @@ func UpdatePromotion(c *gin.Context) {
 		VoucherExchangeRatio0: req.VoucherExchangeRatio0,
 		VoucherExchangeRatio1: req.VoucherExchangeRatio1,
 		VoucherTotalSupply:    req.VoucherTotalSupply,
-		VoucherRemainingQty:   req.VoucherRemainingQty,
+		VoucherRemainingQty:   remainingQty,
 		PromotionStartAt:      req.PromotionStartAt,
 		PromotionEndAt:        req.PromotionEndAt,
 		ClaimStartAt:          req.ClaimStartAt,
 		ClaimEndAt:            req.ClaimEndAt,
 		UpdatedAt:             time.Now(),
 	}
-	err = models.UpdatePromotion(&promotion)
-
-	// result
+	err = models.UpdatePromotionWithTx(tx, &promotion)
 	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
+		tx.Rollback()
 		if strings.Contains(err.Error(), "1062") {
-			services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			services.NotAcceptable(c, "data already exists", err)
+			return
 		} else {
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			services.NotAcceptable(c, "fail UpdatePromotionWithTx "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
 		}
-	} else {
-		services.Success(c, nil, promotion)
 	}
-}
 
-// 프로모션 정보 삭제
-func DeletePromotion(c *gin.Context) {
-	// 파라미터 조회
-	strId := c.Param("promotion_id")
-	reqId, err := strconv.ParseInt(strId, 10, 64)
+	fmt.Println("프로모션 업데이트 성공")
+
+	// update dist pools
+	for _, v := range req.DistributionPools {
+		// 현재 dPool 정보 조회
+		dp := schema.PrizeDistPoolRow{
+			DistPoolId: v.DistPoolId,
+		}
+		err = models.QueryDistPool(&dp)
+		if err != nil {
+			fmt.Printf("%+v\n", err.Error())
+			services.NotAcceptable(c, "fail QueryDistPool"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		// remainingQty 조회 및 계산
+		var rQty uint64
+		if v.TotalSupply != dp.TotalSupply {
+			usedQty := dp.TotalSupply - dp.RemainingQty
+			if v.TotalSupply < usedQty {
+				err := errors.New("dist pool total_supply can not be smaller than used #")
+				fmt.Printf("%+v\n", err.Error())
+				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				return
+			}
+			rQty = req.VoucherTotalSupply - usedQty
+		}
+
+		// handler data
+		pool := schema.PrizeDistPoolRow{
+			DistPoolId:   v.DistPoolId,
+			TotalSupply:  v.TotalSupply,
+			RemainingQty: rQty,
+			IsActive:     v.IsActive,
+			UpdatedAt:    time.Now(),
+		}
+		err = models.UpdateDistPoolWithTx(tx, &pool)
+		// result
+		if err != nil {
+			tx.Rollback()
+			fmt.Printf("%+v\n", err.Error())
+			if strings.Contains(err.Error(), "1062") {
+				services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			} else {
+				services.NotAcceptable(c, "fail UpdateDistPoolWithTx"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			}
+			return
+		}
+
+		// update prizes
+		for _, pr := range v.Prizes {
+			// handler data
+			prize := schema.PrizeRow{
+				PrizeId:          pr.PrizeId,
+				Odds:             pr.Odds,
+				MaxDailyWinLimit: pr.MaxDailyWinLimit,
+				MaxTotalWinLimit: pr.MaxTotalWinLimit,
+				IsActive:         pr.IsActive,
+				UpdatedAt:        time.Now(),
+			}
+			err = models.UpdatePrize(&prize)
+
+			// result
+			if err != nil {
+				tx.Rollback()
+				fmt.Printf("%+v\n",err.Error())
+				if strings.Contains(err.Error(),"1062") {
+					services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+				} else {
+					services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+				}
+				return
+			}
+		}
+	}
+		
+	err = tx.Commit().Error
 	if err != nil {
-		services.NotAcceptable(c, "Bad Request Id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "commit failed", err)
 		return
 	}
-
-	// handler data
-	promotion := schema.PromotionRow{
-		PromotionId: reqId,
-	}
-	err = models.DeletePromotion(&promotion)
-
-	// result
-	if err != nil {
-		services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-	} else {
-		services.Success(c, nil, promotion)
-	}
+	services.Success(c, nil, nil)
 }
+

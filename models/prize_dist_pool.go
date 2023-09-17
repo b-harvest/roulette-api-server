@@ -31,6 +31,11 @@ func UpdateDistPool(pool *schema.PrizeDistPoolRow) (err error) {
 	return
 }
 
+func UpdateDistPoolWithTx(tx *gorm.DB, pool *schema.PrizeDistPoolRow) (err error) {
+	err = tx.Table("distribution_pool").Where("dist_pool_id = ?", pool.DistPoolId).Update(pool).Error
+	return
+}
+
 func DeleteDistPool(pool *schema.PrizeDistPoolRow) (err error) {
 	err = config.DB.Table("distribution_pool").Where("dist_pool_id = ?", pool.DistPoolId).Delete(pool).Error
 	return

@@ -28,8 +28,13 @@ func QueryTbPromotion(promotion *schema.PromotionRow) (err error) {
 }
 
 func UpdatePromotion(promotion *schema.PromotionRow) (err error) {
-	// TBD: TotalSupply 가 변경된 경우 remainingQty 계산을 백앤드에서?
 	err = config.DB.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).Update(promotion).Error
+	return
+}
+
+// 프로모션 업데이트 with tx
+func UpdatePromotionWithTx(tx *gorm.DB, promotion *schema.PromotionRow) (err error) {
+	err = tx.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).Update(promotion).Error
 	return
 }
 

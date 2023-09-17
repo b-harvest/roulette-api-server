@@ -53,9 +53,11 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
-	route.GET ("/promotions",               controllers.GetPromotions)			// 프로모션 정보 조회
-	route.GET ("/promotions/:promotion_id", controllers.GetPromotion)				// 특정 프로모션 조회
-	route.POST("/promotions",               controllers.CreatePromotion)		// 프로모션 생성 (promotion + dPools + prizes)
+	route.GET  ("/promotions",               controllers.GetPromotions)			// 프로모션 정보 조회
+	route.GET  ("/promotions/:promotion_id", controllers.GetPromotion)			// 특정 프로모션 조회
+	route.POST ("/promotions",               controllers.CreatePromotion)		// 프로모션 생성 (promotion + dPools + prizes)
+	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion)		// 프로모션 수정 (promotion + dPools + prizes)
+	
 
 	// account
 	route.GET("/accounts", controllers.GetAccounts)

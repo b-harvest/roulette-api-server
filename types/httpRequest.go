@@ -206,6 +206,41 @@ type ReqCreatePrize struct {
 	// IsActive          bool      `json:"isActive" db:"is_active"`
 }
 
+type ReqUpdatePromotion struct {
+	Title 			           string    `json:"title" db:"title"`
+	Desc 			             string    `json:"desc" db:"desc"`
+	Url 			             string    `json:"url" db:"url"`
+	IsActive               bool      `json:"isActive" db:"is_active"`
+	IsWhitelisted          bool      `json:"isWhitelisted" db:"is_whitelisted"`
+	VoucherName 			     string    `json:"voucherName" db:"voucher_name"`
+	VoucherExchangeRatio0  int       `json:"voucherExchangeRatio0" db:"voucher_exchange_ratio_0"`
+	VoucherExchangeRatio1  int       `json:"voucherExchangeRatio1" db:"voucher_exchange_ratio_1"`
+	VoucherTotalSupply     uint64    `json:"voucherTotalSupply" db:"voucher_total_supply"`
+	PromotionStartAt       time.Time `json:"promotionStartAt" db:"promotion_start_at"`
+	PromotionEndAt         time.Time `json:"promotionEndAt" db:"promotion_end_at"`
+	ClaimStartAt           time.Time `json:"claimStartAt" db:"claim_start_at"`
+	ClaimEndAt             time.Time `json:"claimEndAt" db:"claim_end_at"`
+	DistributionPools      []ReqUpdateDistPool `json:"distributionPools"`
+}
+
+type ReqUpdateDistPool struct {
+	DistPoolId             int64     `json:"distPoolId" db:"dist_pool_id"`
+	// PrizeDenomId           int64     `json:"prizeDenomId" db:"prize_denom_id"`
+	TotalSupply            uint64           `json:"totalSupply" db:"total_supply"`
+	IsActive               bool             `json:"isActive" db:"is_active"`
+	Prizes                 []ReqUpdatePrize `json:"prizes"`
+}
+
+type ReqUpdatePrize struct {
+	PrizeId           int64     `json:"prizeId" db:"prize_id"`
+	// Amount            uint64    `json:"amount" db:"amount"`
+	Odds              float64   `json:"odds" db:"odds"`
+	WinImageUrl 			string    `json:"winImageUrl" db:"win_image_url"`
+	MaxDailyWinLimit  uint64    `json:"maxDailyWinLimit" db:"max_daily_win_limit"`
+	MaxTotalWinLimit  uint64    `json:"maxTotalWinLimit" db:"max_total_win_limit"`
+	IsActive          bool      `json:"isActive" db:"is_active"`
+}
+
 type ReqPostEvent struct {
 	PromotionId int64  `json:"promotionId" db:"promotion_id"`
 	Addr        string `json:"addr" db:"addr"`
