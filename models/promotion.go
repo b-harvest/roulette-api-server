@@ -46,30 +46,20 @@ func DeletePromotion(promotion *schema.PromotionRow) (err error) {
 //---------------------------------------------------------
 
 func QueryPromotions(promotions *[](*types.ResGetPromotions), qMap types.QueryFilterMap) (r [](*types.ResGetPromotions), err error) {
-	fmt.Printf("%+v\n", qMap)
 	q :=
 		"SELECT P.*, IFNULL(CNT.participant_cnt, 0) as participant_cnt from promotion P " +
 			"LEFT JOIN " +
 			"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " +
 			"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id "
-	// if err = config.DB.Raw(q).Scan(promotions).
-	// 	Error; err != nil {
-	// 	return
-	// }
-	cnt := 0
+	var conditions []string
 	for k, v := range qMap {
 		if k != "status" {
-			if cnt == 0 {
-				q += " WHERE P."
-			} else {
-				q += " AND P."
-			}
-			fmt.Printf("key:%+v val:%+v\n", k, v)
-			q += k + " = " + v + " "
-			cnt++
+			conditions = append(conditions, fmt.Sprintf("%s = %s", k, v))
 		}
 	}
-	fmt.Println(q)
+	if len(conditions) != 0 {
+		q += " WHERE " + strings.Join(conditions, " AND ")
+	}
 	sql := config.DB.Raw(q)
 	if err = sql.Scan(promotions).Error; err != nil {
 		return

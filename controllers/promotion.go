@@ -35,27 +35,9 @@ import (
 	- order by promotion_start_at desc
 */
 
-func validateAndSaveQuery(
-	c *gin.Context, key string, col string, qMap types.QueryFilterMap,
-	valType string) (rMap types.QueryFilterMap, err error) {
+func validateQuery(c *gin.Context, key string, col string, qMap types.QueryFilterMap) (rMap types.QueryFilterMap, err error) {
 	if c.Query(key) != "" {
 		qMap[col] = c.Query(key)
-		// switch valType {
-		// 	case "uint64":
-		// 		val, err := strconv.ParseUint(c.Query(key), 10, 64)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		// 		qMap[key] = val
-		// 	case "string":
-		// 		qMap[key] = c.Query(key)
-		// 	case "bool":
-		// 		val, err := strconv.ParseBool(c.Query(key))
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		// 		qMap[col] = val
-		// }
 	}
 	return qMap, nil
 }
@@ -67,12 +49,12 @@ func GetPromotions(c *gin.Context) {
 	// promotion-id, title, url, status, is-whitelisted, is-active
 	// status: "not-started", "in-progress", "finished"
 	qMap := make(types.QueryFilterMap, 100)
-	qMap, err = validateAndSaveQuery(c, "promotion-id", "promotion_id", qMap, "uint64")
-	qMap, err = validateAndSaveQuery(c, "title", "title", qMap, "string")
-	qMap, err = validateAndSaveQuery(c, "url", "url", qMap, "string")
-	qMap, err = validateAndSaveQuery(c, "is-whitelisted", "is_whitelisted", qMap, "bool")
-	qMap, err = validateAndSaveQuery(c, "is-active", "is_active", qMap, "bool")
-	qMap, err = validateAndSaveQuery(c, "status", "status", qMap, "string")
+	qMap, err = validateQuery(c, "promotion-id", "promotion_id", qMap)
+	qMap, err = validateQuery(c, "title", "title", qMap)
+	qMap, err = validateQuery(c, "url", "url", qMap)
+	qMap, err = validateQuery(c, "is-whitelisted", "is_whitelisted", qMap)
+	qMap, err = validateQuery(c, "is-active", "is_active", qMap)
+	qMap, err = validateQuery(c, "status", "status", qMap)
 	
 	promotions := make([]*types.ResGetPromotions, 0, 100)
 	promotions, err = models.QueryPromotions(&promotions, qMap)

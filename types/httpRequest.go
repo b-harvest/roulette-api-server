@@ -242,9 +242,9 @@ type ReqUpdatePrize struct {
 }
 
 type ReqPostEvent struct {
-	PromotionId int64  `json:"promotionId" db:"promotion_id"`
-	Addr        string `json:"addr" db:"addr"`
-	AddrType    int64  `json:"addrType" db:"addr_type"`
+	PromotionId int64   `json:"promotionId" db:"promotion_id"`
+	Addr        string  `json:"addr" db:"addr"`
+	AddrType    string  `json:"addrType" db:"addr_type"`
 }
 
 type ReqCreateVoucherSendEvent struct {
