@@ -45,27 +45,57 @@ func DeletePromotion(promotion *schema.PromotionRow) (err error) {
 
 //---------------------------------------------------------
 
-func QueryPromotions(promotions *[](*types.ResGetPromotions)) (err error) {
+func QueryPromotions(promotions *[](*types.ResGetPromotions), qMap types.QueryFilterMap) (r [](*types.ResGetPromotions), err error) {
+	fmt.Printf("%+v\n", qMap)
 	q :=
 		"SELECT P.*, IFNULL(CNT.participant_cnt, 0) as participant_cnt from promotion P " +
 			"LEFT JOIN " +
 			"  (select promotion_id, count(*) as participant_cnt from user_voucher_balance " +
-			"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id"
-	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
-	if err = config.DB.Raw(q).Scan(promotions).
-		Error; err != nil {
+			"   group by promotion_id) CNT ON P.promotion_id = CNT.promotion_id "
+	// if err = config.DB.Raw(q).Scan(promotions).
+	// 	Error; err != nil {
+	// 	return
+	// }
+	cnt := 0
+	for k, v := range qMap {
+		if k != "status" {
+			if cnt == 0 {
+				q += " WHERE P."
+			} else {
+				q += " AND "
+			}
+			fmt.Printf("key:%+v val:%+v\n", k, v)
+			q += k + " = " + v
+		}
+	}
+	sql := config.DB.Raw(q)
+	if err = sql.Scan(promotions).Error; err != nil {
 		return
 	}
+
+	// status 처리
 	for _, v := range *promotions {
-		fmt.Printf("%+v\n", v)
 		if time.Now().After(v.PromotionEndAt) {
 			v.Status = "finished"
 		} else if time.Now().After(v.PromotionStartAt) {
-			v.Status = "in progress"
+			v.Status = "in-progress"
 		} else {
-			v.Status = "not started"
+			v.Status = "not-started"
 		}
 	}
+
+	// status filter 처리
+	if val, OK := qMap["status"]; OK {
+		r = make([]*types.ResGetPromotions, 0, 100)
+		for _, v := range *promotions {
+			if v.Status == val {
+				r = append(r, v)
+			}
+		}
+	} else {
+		r = *promotions
+	}
+	
 	return
 }
 
@@ -85,9 +115,9 @@ func QueryPromotion(promotion *types.ResGetPromotion) (err error) {
 	if time.Now().After(promotion.PromotionEndAt) {
 		promotion.Status = "finished"
 	} else if time.Now().After(promotion.PromotionStartAt) {
-		promotion.Status = "in progress"
+		promotion.Status = "in-progress"
 	} else {
-		promotion.Status = "not started"
+		promotion.Status = "not-started"
 	}
 	return
 }
