@@ -53,9 +53,9 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
-	route.GET("/promotions", controllers.GetPromotions) // 프로모션 정보 조회
-	route.GET("/promotions/:promotion_id", controllers.GetPromotion)
-	route.POST("/promotions", controllers.CreatePromotion)
+	route.GET ("/promotions",               controllers.GetPromotions)			// 프로모션 정보 조회
+	route.GET ("/promotions/:promotion_id", controllers.GetPromotion)				// 특정 프로모션 조회
+	route.POST("/promotions",               controllers.CreatePromotion)		// 프로모션 생성 (promotion + dPools + prizes)
 
 	// account
 	route.GET("/accounts", controllers.GetAccounts)
@@ -99,6 +99,8 @@ func SetupRouter() *gin.Engine {
 	route.PATCH("/prize-mgmt/denoms/:prize_denom_id", controllers.UpdatePrizeDenom)
 	route.DELETE("/prize-mgmt/denoms/:prize_denom_id", controllers.DeletePrizeDenom)
 
+
+
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
 	//------------------------------------------------------------------------------
@@ -106,10 +108,8 @@ func SetupRouter() *gin.Engine {
 	// promotion
 	route.GET("/tb/promotions", tcontrollers.GetPromotions)
 	route.POST("/tb/promotions", tcontrollers.CreatePromotion)
-	// TODO: should query promotion, dist_pool, prize at once
 	route.GET("/tb/promotions/:promotion_id", tcontrollers.GetPromotion)
 	route.PATCH("/tb/promotions/:promotion_id/info", tcontrollers.UpdatePromotion)
-	// TODO: seperate promotion only & all promotion data including dist_pool, prize
 	route.DELETE("/tb/promotions/:promotion_id", tcontrollers.DeletePromotion)
 
 	// prize denom
@@ -121,7 +121,6 @@ func SetupRouter() *gin.Engine {
 	route.DELETE("/tb/prize-mgmt/denoms/:prize_denom_id", tcontrollers.DeletePrizeDenom)
 
 	// prize distribution pool
-	// TODO: pool 별 속하는 prize 정보 함께 제공
 	route.GET("/tb/prize-mgmt/pools", tcontrollers.GetDistPools)              // for test
 	route.POST("/tb/prize-mgmt/pools", tcontrollers.CreateDistPool)           // for test
 	route.GET("/tb/prize-mgmt/pools/:dist_pool_id", tcontrollers.GetDistPool) // for test
@@ -171,7 +170,7 @@ func SetupRouter() *gin.Engine {
 	route.PATCH("/tb/voucher-mgmt/events/send/:id", tcontrollers.UpdateVoucherSendEvent)  // for test
 	route.DELETE("/tb/voucher-mgmt/events/send/:id", tcontrollers.DeleteVoucherSendEvent) // for test
 
-	// voucher send history
+	// voucher burn history
 	route.GET("/tb/voucher-mgmt/events/burn", tcontrollers.GetVoucherBurnEvents)
 	route.POST("/tb/voucher-mgmt/events/burn", tcontrollers.CreateVoucherBurnEvent)        // for test
 	route.GET("/tb/voucher-mgmt/events/burn/:id", tcontrollers.GetVoucherBurnEvent)        // for test

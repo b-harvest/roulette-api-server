@@ -7,6 +7,7 @@ import (
 	"roulette-api-server/types"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryTbDistPools(pools *[]schema.PrizeDistPoolRow) (err error) {
@@ -100,6 +101,13 @@ func QueryDistPoolsDetailByPromId(id uint64) (*[]types.PrizeDistPoolDetail, erro
 
 func CreateDistPool(pool *schema.PrizeDistPoolInsertRow) (err error) {
 	err = config.DB.Table("distribution_pool").Create(pool).Error
+	fmt.Printf("pool created %+v\n", pool.ID)
+	return
+}
+
+// dPool 생성 with TX
+func CreateDistPoolWithTx(tx *gorm.DB, pool *schema.PrizeDistPoolInsertRow) (err error) {
+	err = tx.Table("distribution_pool").Create(pool).Error
 	fmt.Printf("pool created %+v\n", pool.ID)
 	return
 }

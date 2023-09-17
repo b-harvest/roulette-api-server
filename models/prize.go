@@ -5,6 +5,7 @@ import (
 	"roulette-api-server/models/schema"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryPrizes(prizes *[]schema.PrizeRow) (err error) {
@@ -14,6 +15,12 @@ func QueryPrizes(prizes *[]schema.PrizeRow) (err error) {
 
 func CreatePrize(prize *schema.PrizeRow) (err error) {
 	err = config.DB.Table("prize").Create(prize).Error
+	return
+}
+
+// Prize 생성 with Tx
+func CreatePrizeWithTx(tx *gorm.DB, prize *schema.PrizeRow) (err error) {
+	err = tx.Table("prize").Create(prize).Error
 	return
 }
 

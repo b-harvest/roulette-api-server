@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryTbPromotions(promotions *[]schema.PromotionRow) (err error) {
@@ -192,6 +193,14 @@ func QueryPromotionSummary(promotionId uint64) (promSummary types.PromotionSumma
 // 프로모션 생성
 func CreatePromotion(promotion *schema.PromotionRow) (err error) {
 	if err = config.DB.Table("promotion").Create(promotion).Error; err != nil {
+		return
+	}
+	return
+}
+
+// 프로모션 생성 with TX
+func CreatePromotionWithTx(tx *gorm.DB, promotion *schema.PromotionRow) (err error) {
+	if err = tx.Table("promotion").Create(promotion).Error; err != nil {
 		return
 	}
 	return
