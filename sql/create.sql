@@ -187,7 +187,8 @@ create table if not exists `event_wallet_conn` (
 create table if not exists `event_flip_link` (
   `id` bigint unsigned not null auto_increment,
   `addr` varchar(255) character set utf8mb4 collate utf8mb4_unicode_ci not null default "0",
-  `addr_type` int not null default 0,
+  `addr_type` varchar(64),
+  `link_path` varchar(128),
   `promotion_id` bigint not null default 0,
   `created_at`    timestamp not null default current_timestamp,
   primary key (`id`)

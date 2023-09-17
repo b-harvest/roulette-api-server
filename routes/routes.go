@@ -60,8 +60,8 @@ func SetupRouter() *gin.Engine {
 	
 
 	// account
-	route.GET("/accounts", controllers.GetAccounts)
-	route.GET("/accounts/:address", controllers.GetAccount)
+	route.GET("/accounts", controllers.GetAccounts)	// TODO: 상세 정보, paging
+	route.GET("/accounts/:address", controllers.GetAccount)	// TODO: 상세 정보
 	route.PUT("/accounts/:address", controllers.PutAccount)
 	route.GET("/accounts/:address/balance", controllers.GetBalanceByAcc)
 	route.GET("/accounts/:address/game-orders", controllers.GetGameOrdersByAddr)
@@ -73,11 +73,13 @@ func SetupRouter() *gin.Engine {
 	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)
 	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount)
 	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)
+	// TODO: 통계 정보: 유저 별, daily 등
 
 	// flip-links
 	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)
 	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)
 	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)
+	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt
 	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)

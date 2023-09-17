@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
@@ -17,19 +18,30 @@ import (
 )
 
 func PutAccount(c *gin.Context) {
-	account := schema.AccountRow{
-		Addr:        c.Param("address"),
-		LastLoginAt: time.Now(),
+	// type
+	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
+	var req schema.AccountRow
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	req.Addr         = c.Param("address")
+	req.LastLoginAt  = time.Now()
+	req.TicketAmount = 0
 
-	err := models.QueryOrCreateAccount(&account)
+	err = models.QueryOrCreateAccount(&req)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
-	services.Success(c, nil, &account)
+	services.Success(c, nil, &req)
 }
 
 func GetBalanceByAcc(c *gin.Context) {
