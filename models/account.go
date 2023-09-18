@@ -6,6 +6,7 @@ import (
 	"roulette-api-server/types"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryOrCreateAccount(acc *schema.AccountRow) (err error) {
@@ -54,6 +55,20 @@ func QueryWinTotalByAcc(winTotals *[]types.ResGetWinTotalByAcc, addr string) (er
 	`
 	err = config.DB.Raw(sql, addr).Scan(winTotals).Error
 	return
+}
+
+func QueryAccountByAddr(acc *schema.AccountRow) (err error) {
+	err = config.DB.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
+	return
+}
+
+func UpdateAccountById(tx *gorm.DB, acc *schema.AccountRow) error {
+	err := tx.Table("account").Where("id = ?", acc.Id).Update(acc).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
 }
 
 func QueryAccounts(accs *[]schema.AccountRow) (err error) {

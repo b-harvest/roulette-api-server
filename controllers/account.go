@@ -86,29 +86,6 @@ func GetWinTotalByAcc(c *gin.Context) {
 	services.Success(c, nil, &resp)
 }
 
-// SELECT order_id, addr, is_win, promotion_id, claimed_at, claim_finished_at
-// FROM game_order
-// WHERE order_id = 9;
-// if is_win == 1, claimed_at == null, claim_finished_at == null
-// 	then (promotion_id 아래 sql 실행)
-// 	else (errors.New("Can't claim (Not win or Already caimed)"))
-
-// SELECT promotion_id, claim_start_at, claim_end_at
-// FROM promotion
-// WHERE promotion_id = 2;
-
-// if now.After(b) && now.Before(a) || b == now || now == a {
-// 	fmt.Println("true")
-// }
-
-// if claim_start_at <= now() <= claim_end_at
-// 	then (아래 sql 실행)
-// 	else (errors.New("Can't claim due to not claimable period"))
-
-// UPDATE game_order
-// SET claimed_at = now()
-// WHERE order_id = ?
-
 func PatchClaim(c *gin.Context) {
 	orderId, err := strconv.ParseInt(c.Param("order-id"), 10, 64)
 	if err != nil {

@@ -8,6 +8,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+func QueryPrizesByPromotionId(prizes *[]schema.PrizeRow, promotionId int64) (err error) {
+	err = config.DB.Table("prize").Where("promotion_id = ?", promotionId).Find(prizes).Error
+	return
+}
+
 func QueryPrizes(prizes *[]schema.PrizeRow) (err error) {
 	err = config.DB.Table("prize").Find(prizes).Error
 	return
