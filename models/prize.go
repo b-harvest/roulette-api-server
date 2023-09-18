@@ -36,6 +36,13 @@ func QueryPrize(prize *schema.PrizeRow) (err error) {
 
 func UpdatePrize(prize *schema.PrizeRow) (err error) {
 	err = config.DB.Table("prize").Where("prize_id = ?", prize.PrizeId).Update(prize).Error
+	if err != nil {
+		return err
+	}
+	err = config.DB.Table("prize").Where("prize_id = ?", prize.PrizeId).UpdateColumn("is_active", prize.IsActive).Error
+	if err != nil {
+		return err
+	}
 	return
 }
 

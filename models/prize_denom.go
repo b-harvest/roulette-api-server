@@ -24,6 +24,13 @@ func QueryPrizeDenom(denom *schema.PrizeDenomRow) (err error) {
 
 func UpdatePrizeDenomn(denom *schema.PrizeDenomRow) (err error) {
 	err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", denom.PrizeDenomId).Update(denom).Error
+	if err != nil {
+		return err
+	}
+	err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", denom.PrizeDenomId).UpdateColumn("is_active", denom.IsActive).Error
+	if err != nil {
+		return err
+	}
 	return
 }
 

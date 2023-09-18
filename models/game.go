@@ -56,6 +56,13 @@ func QueryGameType(game *schema.Game) (err error) {
 
 func UpdateGame(game *schema.Game) (err error) {
 	err = config.DB.Table("game_type").Where("game_id = ?", game.GameId).Update(game).Error
+	if err != nil {
+		return err
+	}
+	err = config.DB.Table("game_type").Where("game_id = ?", game.GameId).UpdateColumn("is_active", game.IsActive).Error
+	if err != nil {
+		return err
+	}
 	return
 }
 
