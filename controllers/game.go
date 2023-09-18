@@ -40,15 +40,15 @@ func init() {
 	gamesInMem = GamesInMem{
 		Games: map[int64](*PrizeInfoInMem){},
 	}
-	maxNum = 1000
+	maxNum = 100000
 }
 
 func getPrizeInfo(promotionId int64) (*PrizeInfoInMem, error) {
 	// hit
 	// Check gameId is exists in GamesInMem
-	if gamesInMem.Games[promotionId] != nil {
-		return gamesInMem.Games[promotionId], nil
-	}
+	// if gamesInMem.Games[promotionId] != nil {
+	// 	return gamesInMem.Games[promotionId], nil
+	// }
 
 	// miss
 	// create prize Info
@@ -63,11 +63,11 @@ func getPrizeInfo(promotionId int64) (*PrizeInfoInMem, error) {
 		[]uint64{},
 	}
 
-	var accum uint64 = 0
+	var accum uint64 = 1
 	for _, prize := range prizes {
 		gamesInMem.Games[promotionId].PrizeIds = append(gamesInMem.Games[promotionId].PrizeIds, prize.PrizeId)
 
-		accum += uint64(prize.Odds * float64(maxNum))
+		accum += uint64(prize.Odds * float64(1000))
 		gamesInMem.Games[promotionId].ProbabilityList = append(gamesInMem.Games[promotionId].ProbabilityList, accum)
 	}
 	
@@ -89,7 +89,7 @@ func inGame(promotionId int64) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	var prevNum uint64 = 0
+	var prevNum uint64 = 1
 	for i, probability := range prizeInfo.ProbabilityList {
 		// preNum <= randNum < n
 		if prevNum <= randNum && randNum < probability {
@@ -215,6 +215,9 @@ func PostGameStart(c *gin.Context) {
 		return
 	}
 
+	//결과는 숨긴다.
+	// order.IsWin
+	// order.PrizeId
 	services.Success(c, nil, &order)
 }
 

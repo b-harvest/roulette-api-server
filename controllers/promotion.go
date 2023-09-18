@@ -199,7 +199,7 @@ func CreatePromotion(c *gin.Context) {
 			}
 		}
 
-		fmt.Println(creatingPool.ID)
+		// fmt.Println(creatingPool.ID)
 		// 생성한 pool 조회
 		pool := creatingPool
 
@@ -327,76 +327,203 @@ func UpdatePromotion(c *gin.Context) {
 		}
 	}
 
-	// update dist pools
-	for _, v := range req.DistributionPools {
-		// 현재 dPool 정보 조회
-		dp := schema.PrizeDistPoolRow{
-			DistPoolId: v.DistPoolId,
-		}
-		err = models.QueryDistPool(&dp)
-		if err != nil {
-			fmt.Printf("%+v\n", err.Error())
-			services.NotAcceptable(c, "fail QueryDistPool"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-
-		// remainingQty 조회 및 계산
-		var rQty uint64
-		if v.TotalSupply != dp.TotalSupply {
-			usedQty := dp.TotalSupply - dp.RemainingQty
-			if v.TotalSupply < usedQty {
-				err := errors.New("dist pool total_supply can not be smaller than used #")
+	// update or insert or delete dist pools
+	for _, dPool := range req.DistributionPools {
+		switch dPool.UpdateType {
+		case "":	// normal update
+			// 현재 dPool 정보 조회
+			dp := schema.PrizeDistPoolRow{
+				DistPoolId: dPool.DistPoolId,
+			}
+			err = models.QueryDistPool(&dp)
+			if err != nil {
 				fmt.Printf("%+v\n", err.Error())
-				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				services.NotAcceptable(c, "fail QueryDistPool"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 				return
 			}
-			rQty = req.VoucherTotalSupply - usedQty
-		}
 
-		// handler data
-		pool := schema.PrizeDistPoolRow{
-			DistPoolId:   v.DistPoolId,
-			TotalSupply:  v.TotalSupply,
-			RemainingQty: rQty,
-			IsActive:     v.IsActive,
-			UpdatedAt:    time.Now(),
-		}
-		err = models.UpdateDistPoolWithTx(tx, &pool)
-		// result
-		if err != nil {
-			tx.Rollback()
-			fmt.Printf("%+v\n", err.Error())
-			if strings.Contains(err.Error(), "1062") {
-				services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			} else {
-				services.NotAcceptable(c, "fail UpdateDistPoolWithTx"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			// remainingQty 조회 및 계산
+			var rQty uint64
+			if dPool.TotalSupply != dp.TotalSupply {
+				usedQty := dp.TotalSupply - dp.RemainingQty
+				if dPool.TotalSupply < usedQty {
+					err := errors.New("dist pool total_supply can not be smaller than used #")
+					fmt.Printf("%+v\n", err.Error())
+					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+					return
+				}
+				rQty = req.VoucherTotalSupply - usedQty
 			}
-			return
-		}
 
-		// update prizes
-		for _, pr := range v.Prizes {
 			// handler data
-			prize := schema.PrizeRow{
-				PrizeId:          pr.PrizeId,
-				Odds:             pr.Odds,
-				MaxDailyWinLimit: pr.MaxDailyWinLimit,
-				MaxTotalWinLimit: pr.MaxTotalWinLimit,
-				IsActive:         pr.IsActive,
-				UpdatedAt:        time.Now(),
+			pool := schema.PrizeDistPoolRow{
+				DistPoolId:   dPool.DistPoolId,
+				TotalSupply:  dPool.TotalSupply,
+				RemainingQty: rQty,
+				IsActive:     dPool.IsActive,
+				UpdatedAt:    time.Now(),
 			}
-			err = models.UpdatePrize(&prize)
+			err = models.UpdateDistPoolWithTx(tx, &pool)
+			// result
+			if err != nil {
+				tx.Rollback()
+				fmt.Printf("%+v\n", err.Error())
+				if strings.Contains(err.Error(), "1062") {
+					services.NotAcceptable(c, "something duplicated. already exists. fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				} else {
+					services.NotAcceptable(c, "fail UpdateDistPoolWithTx"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+				}
+				return
+			}
 
+			// update prizes
+			for _, pr := range dPool.Prizes {
+				switch pr.UpdateType {
+				case "":	// normal update
+					// handler data
+					prize := schema.PrizeRow{
+						PrizeId:          pr.PrizeId,
+						Odds:             pr.Odds,
+						MaxDailyWinLimit: pr.MaxDailyWinLimit,
+						MaxTotalWinLimit: pr.MaxTotalWinLimit,
+						IsActive:         pr.IsActive,
+						UpdatedAt:        time.Now(),
+					}
+					err = models.UpdatePrize(&prize)
+
+					// result
+					if err != nil {
+						tx.Rollback()
+						fmt.Printf("%+v\n",err.Error())
+						if strings.Contains(err.Error(),"1062") {
+							services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+						} else {
+							services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+						}
+						return
+					}
+					
+				case "insert":
+					// prize 생성
+					prize := schema.PrizeRow{
+						DistPoolId:       dPool.DistPoolId,
+						PromotionId:      reqId,
+						PrizeDenomId:     dPool.PrizeDenomId,
+						Amount:           pr.Amount,
+						Odds:             pr.Odds,
+						WinImageUrl:      pr.WinImageUrl,
+						MaxDailyWinLimit: pr.MaxDailyWinLimit,
+						MaxTotalWinLimit: pr.MaxTotalWinLimit,
+						IsActive:         true, //default
+					}
+					err = models.CreatePrizeWithTx(tx, &prize)
+
+					// result
+					if err != nil {
+						tx.Rollback()
+						fmt.Printf("%+v\n",err.Error())
+						if strings.Contains(err.Error(),"1062") {
+							services.NotAcceptable(c, "data already exists", err)
+							return
+						} else {
+							services.NotAcceptable(c, "fail CreatePrizeWithTx " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+							return
+						}
+					}
+				case "delete":
+					if p.Status != "not-started" {
+						// handler data
+						prize := schema.PrizeRow{
+							PrizeId: pr.PrizeId,
+						}
+						err = models.DeletePrize(&prize)
+						// result
+						if err != nil {
+							services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+							return
+						} 
+					}
+				}
+			}
+		case "insert":
+			creatingPool := schema.PrizeDistPoolInsertRow{
+				PromotionId:  reqId,
+				PrizeDenomId: dPool.PrizeDenomId,
+				TotalSupply:  dPool.TotalSupply,
+				RemainingQty: dPool.TotalSupply,	// default
+				IsActive:     true,	// default
+			}
+			err = models.CreateDistPoolWithTx(tx, &creatingPool)
+		
 			// result
 			if err != nil {
 				tx.Rollback()
 				fmt.Printf("%+v\n",err.Error())
 				if strings.Contains(err.Error(),"1062") {
-					services.NotAcceptable(c, "something duplicated. already exists. fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+					services.NotAcceptable(c, "data already exists", err)
+					return
 				} else {
-					services.NotAcceptable(c, "fail " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+					services.NotAcceptable(c, "fail CreateDistPoolWithTx " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+					return
 				}
+			}
+	
+			// fmt.Println(creatingPool.ID)
+			// 생성한 pool 조회
+			pool := creatingPool
+	
+			// create prizes
+			for _, reqPrize := range dPool.Prizes {
+				// prize 생성
+				prize := schema.PrizeRow{
+					DistPoolId:       pool.ID,
+					PromotionId:      pool.PromotionId,
+					PrizeDenomId:     pool.PrizeDenomId,
+					Amount:           reqPrize.Amount,
+					Odds:             reqPrize.Odds,
+					WinImageUrl:      reqPrize.WinImageUrl,
+					MaxDailyWinLimit: reqPrize.MaxDailyWinLimit,
+					MaxTotalWinLimit: reqPrize.MaxTotalWinLimit,
+					IsActive:         true, //default
+				}
+				err = models.CreatePrizeWithTx(tx, &prize)
+	
+				// result
+				if err != nil {
+					tx.Rollback()
+					fmt.Printf("%+v\n",err.Error())
+					if strings.Contains(err.Error(),"1062") {
+						services.NotAcceptable(c, "data already exists", err)
+						return
+					} else {
+						services.NotAcceptable(c, "fail CreatePrizeWithTx " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+						return
+					}
+				}
+			}
+		case "delete":
+			// handler data
+			pool := schema.PrizeDistPoolRow{
+				DistPoolId: dPool.DistPoolId,
+			}
+			err = models.DeleteDistPool(&pool)
+			// result
+			if err != nil {
+				services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 				return
+			}
+
+			for _, pr := range dPool.Prizes {
+				// handler data
+				prize := schema.PrizeRow{
+					PrizeId: pr.PrizeId,
+				}
+				err = models.DeletePrize(&prize)
+				// result
+				if err != nil {
+					services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+					return
+				} 
 			}
 		}
 	}

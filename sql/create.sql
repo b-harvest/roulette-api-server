@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS `prize` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp not null default current_timestamp on update current_timestamp,
-  PRIMARY KEY (`prize_id`)
+  PRIMARY KEY (`prize_id`),
+  UNIQUE KEY `unique_key` (`promotion_id`, `dist_pool_id`, `amount`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 유저 테이블

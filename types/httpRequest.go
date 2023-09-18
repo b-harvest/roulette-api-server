@@ -224,21 +224,25 @@ type ReqUpdatePromotion struct {
 }
 
 type ReqUpdateDistPool struct {
-	DistPoolId             int64     `json:"distPoolId" db:"dist_pool_id"`
-	// PrizeDenomId           int64     `json:"prizeDenomId" db:"prize_denom_id"`
+	DistPoolId             int64            `json:"distPoolId" db:"dist_pool_id"`
+	// PrizeDenomId can not be modified
+	PrizeDenomId           int64     `json:"prizeDenomId" db:"prize_denom_id"`
 	TotalSupply            uint64           `json:"totalSupply" db:"total_supply"`
 	IsActive               bool             `json:"isActive" db:"is_active"`
 	Prizes                 []ReqUpdatePrize `json:"prizes"`
+	UpdateType 			       string           `json:"updateType" db:"update_type"` // 'insert' or 'delete'
 }
 
 type ReqUpdatePrize struct {
 	PrizeId           int64     `json:"prizeId" db:"prize_id"`
-	// Amount            uint64    `json:"amount" db:"amount"`
+	// Amount can not be modified
+	Amount            uint64    `json:"amount" db:"amount"`
 	Odds              float64   `json:"odds" db:"odds"`
 	WinImageUrl 			string    `json:"winImageUrl" db:"win_image_url"`
 	MaxDailyWinLimit  uint64    `json:"maxDailyWinLimit" db:"max_daily_win_limit"`
 	MaxTotalWinLimit  uint64    `json:"maxTotalWinLimit" db:"max_total_win_limit"`
 	IsActive          bool      `json:"isActive" db:"is_active"`
+	UpdateType 			  string    `json:"updateType" db:"update_type"` // 'insert' or 'delete'
 }
 
 type ReqPostEvent struct {
