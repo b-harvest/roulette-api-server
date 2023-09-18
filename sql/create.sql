@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `prize_denom` (
   `prize_denom_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, -- 상품 이름
   `type` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL, -- cre (name 과 중복인지 애매함)
+  `usd_price` double unsigned DEFAULT NULL default 0,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp not null default current_timestamp on update current_timestamp,
