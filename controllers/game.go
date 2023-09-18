@@ -172,7 +172,10 @@ func PostGameStart(c *gin.Context) {
 
 	// if account has insufficient ticket amount
 	// then error
-	if account.TicketAmount < order.UsedTicketQty {
+	// TODO: calculate required ticket amount for game start
+	//if account.TicketAmount < order.UsedTicketQty {
+	ticketQtyForGame := uint64(1)
+	if account.TicketAmount < ticketQtyForGame {
 		err = errors.New("Insufficient ticket amount")
 		fmt.Printf("%+v\n", err.Error())
 		services.BadRequest(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -180,7 +183,7 @@ func PostGameStart(c *gin.Context) {
 	}
 
 	// update account
-	account.TicketAmount -= order.UsedTicketQty
+	account.TicketAmount -= ticketQtyForGame
 	err = models.UpdateAccountById(tx, &account)
 	if err != nil {
 		fmt.Println(err.Error())

@@ -53,41 +53,41 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
-	route.GET  ("/promotions",               controllers.GetPromotions)			// 프로모션 정보 조회
-	route.GET  ("/promotions/:promotion_id", controllers.GetPromotion)			// 특정 프로모션 조회
-	route.POST ("/promotions",               controllers.CreatePromotion)		// 프로모션 생성 (promotion + dPools + prizes)
-	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion)		// 프로모션 수정 (promotion + dPools + prizes)
+	route.GET  ("/promotions",               controllers.GetPromotions)			// [USER] 완료: 프로모션 정보 조회
+	route.GET  ("/promotions/:promotion_id", controllers.GetPromotion)			// [USER] 완료: 프로모션 조회
+	route.POST ("/promotions",               controllers.CreatePromotion)		// 완료: 프로모션 생성 (promotion + dPools + prizes)
+	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion)		// TODO: 생성/삭제 프로모션 수정 (promotion + dPools + prizes)
 
 	// games
-	route.POST("/game-mgmt/start", controllers.PostGameStart)
-	route.PATCH("/game-mgmt/:order_id/stop", controllers.PatchGameStop)
+	route.POST ("/game-mgmt/start",          controllers.PostGameStart) // [USER]
+	route.PATCH("/game-mgmt/stop/:order_id", controllers.PatchGameStop) // [USER]
 
 	// account
-	route.GET("/accounts", controllers.GetAccounts)	// TODO: 상세 정보, paging
-	route.GET("/accounts/:addr", controllers.GetAccount)	// TODO: 상세 정보
-	route.PUT("/accounts/:addr", controllers.PutAccount)	// 완료
-	route.GET("/accounts/:addr/balances", controllers.GetBalancesByAddr) // 완료
-	route.GET("/accounts/:addr/game-orders", controllers.GetGameOrdersByAddr)
-	route.GET("/accounts/:addr/winning-records", controllers.GetWinTotalByAcc)
+	route.GET  ("/accounts", controllers.GetAccounts)				// TODO: 상세 정보, paging
+	route.GET  ("/accounts/:addr", controllers.GetAccount)	// [USER] TODO: 상세 정보
+	route.PUT  ("/accounts/:addr", controllers.PutAccount)	// [USER] 완료
+	route.GET  ("/accounts/:addr/balances", controllers.GetBalancesByAddr) // [USER] TODO: ticket 포함
+	route.GET  ("/accounts/:addr/game-orders", controllers.GetGameOrdersByAddr)
+	route.GET  ("/accounts/:addr/winning-records", controllers.GetWinTotalByAcc)
 	route.PATCH("/accounts/:addr/claim/:order-id", controllers.PatchClaim)
 
 	// metrics
 	// wallet-connects
-	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn) // 완료
+	route.GET("/metrics/wallet-connects", controllers.GetEventWalletConn)            // 완료
 	route.GET("/metrics/wallet-connects/count", controllers.GetEventWalletConnCount) // 완료
-	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn) // 완료
+	route.POST("/metrics/wallet-connects", controllers.PostEventWalletConn)          // 완료
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// flip-links
-	route.GET("/metrics/flip-links", controllers.GetEventFlipLink) // 완료
+	route.GET("/metrics/flip-links", controllers.GetEventFlipLink)            // 완료
 	route.GET("/metrics/flip-links/count", controllers.GetEventFlipLinkCount) // 완료
-	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks) // 완료
+	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)         // 완료
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt
-	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)
-	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)
-	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)
+	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)        // [USER] TODO: addr 별 filter by 호철
+	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)    // 완료
+	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 완료
 
 	// game-mgmt
 	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)

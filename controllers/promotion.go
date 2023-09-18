@@ -327,8 +327,6 @@ func UpdatePromotion(c *gin.Context) {
 		}
 	}
 
-	fmt.Println("프로모션 업데이트 성공")
-
 	// update dist pools
 	for _, v := range req.DistributionPools {
 		// 현재 dPool 정보 조회

@@ -35,6 +35,17 @@ func UpdatePromotion(promotion *schema.PromotionRow) (err error) {
 // 프로모션 업데이트 with tx
 func UpdatePromotionWithTx(tx *gorm.DB, promotion *schema.PromotionRow) (err error) {
 	err = tx.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).Update(promotion).Error
+	if err != nil {
+		return err
+	}
+	err = tx.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).UpdateColumn("is_active", promotion.IsActive).Error
+	if err != nil {
+		return err
+	}
+	err = tx.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).UpdateColumn("is_whitelisted", promotion.IsWhitelisted).Error
+	if err != nil {
+		return err
+	}
 	return
 }
 
