@@ -57,7 +57,10 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/promotions/:promotion_id", controllers.GetPromotion)			// 특정 프로모션 조회
 	route.POST ("/promotions",               controllers.CreatePromotion)		// 프로모션 생성 (promotion + dPools + prizes)
 	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion)		// 프로모션 수정 (promotion + dPools + prizes)
-	
+
+	// games
+	route.POST("/game-mgmt/start", controllers.PostGameStart)
+	route.PATCH("/game-mgmt/:order_id/stop", controllers.PatchGameStop)
 
 	// account
 	route.GET("/accounts", controllers.GetAccounts)	// TODO: 상세 정보, paging

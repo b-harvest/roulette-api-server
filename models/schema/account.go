@@ -14,7 +14,8 @@ type Account struct {
 }
 
 type AccountRow struct {
-	Uid           int64     `json:"uid" db:"uid"`
+	Id            int64     `json:"id" db:"id"`
+	UserId        int64     `json:"userId" db:"user_id"`
 	Addr          string    `json:"addr" db:"addr"`
 	TicketAmount  uint64    `json:"ticketAmount" db:"ticket_amount"`
 	AdminMemo     string    `json:"adminMemo" db:"admin_memo"`

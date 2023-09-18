@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS `game_type` (
   `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 0, -- 진행 중/일시 중지 여부
   `url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`game_id`),
   UNIQUE KEY `title` (`title`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   `promotion_end_at` timestamp NOT NULL,
   `claim_start_at` timestamp NOT NULL,
   `claim_end_at` timestamp NOT NULL,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`promotion_id`),
   UNIQUE KEY `title` (`title`),
   UNIQUE KEY `voucher_name` (`voucher_name`)
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS `prize_denom` (
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, -- 상품 이름
   `type` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL, -- cre (name 과 중복인지 애매함)
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`prize_denom_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS `distribution_pool` (
   `total_supply` int NOT NULL DEFAULT 0,
   `remaining_qty` int NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`dist_pool_id`),
   UNIQUE KEY `promotion_denom` (`promotion_id`, `prize_denom_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -77,14 +77,15 @@ CREATE TABLE IF NOT EXISTS `prize` (
   `max_daily_win_limit` int,
   `max_total_win_limit` int,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`prize_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 유저 테이블
 CREATE TABLE IF NOT EXISTS `account` (
-  `uid` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NOT NULL,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ticket_amount` int NOT NULL DEFAULT 0,
   `admin_memo` tinytext COLLATE utf8mb4_unicode_ci,
@@ -93,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `account` (
   `last_login_at` timestamp NULL,
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp not null default current_timestamp on update current_timestamp,
-  PRIMARY KEY (`uid`),
+  PRIMARY KEY (`id`),
   UNIQUE KEY `addr` (`addr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -112,8 +113,8 @@ CREATE TABLE IF NOT EXISTS `game_order` (
   `started_at` timestamp,
   `claimed_at` timestamp,
   `claim_finished_at` timestamp,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -125,8 +126,8 @@ CREATE TABLE IF NOT EXISTS `user_voucher_balance` (
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `current_amount` bigint NOT NULL,
   `total_received_amount` bigint NOT NULL,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`id`),
   UNIQUE KEY `addr_voucher` (`addr`, `promotion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -140,8 +141,8 @@ CREATE TABLE IF NOT EXISTS `temp_voucher` (
   `voucher_exchange_ratio_1` int unsigned NOT NULL default 1,
   `voucher_total_supply` int NOT NULL DEFAULT 0,
   `voucher_remaining_qty` int NOT NULL DEFAULT 0,
-  `created_at` timestamp,
-  `updated_at` timestamp,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`voucher_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

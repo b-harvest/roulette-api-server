@@ -479,7 +479,7 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		fmt.Printf("acc : %+v\n", acc)
 		// 바우처 전송 이벤트 생성
 		err = models.CreateVoucherSendEvent(&schema.VoucherSendEventRow{
-			AccountId:     acc.Uid,
+			AccountId:     acc.Id,
 			RecipientAddr: addr,
 			PromotionId:   req.PromotionId,
 			Amount:        req.Amount,
@@ -507,7 +507,7 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		if voucherBalance.Id == 0 {
 			// 사용자 바우처 잔고 레코드 생성
 			err = models.CreateVoucherBalance(&schema.VoucherBalanceRow{
-				AccountId:           acc.Uid,
+				AccountId:           acc.Id,
 				Addr:                addr,
 				PromotionId:         req.PromotionId,
 				CurrentAmount:       req.Amount,

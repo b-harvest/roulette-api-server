@@ -1,14 +1,19 @@
 package controllers
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
+	"roulette-api-server/config"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -16,15 +21,265 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type (
+	GamesInMem struct {
+		// promotion id => prize info
+		Games map[int64](*PrizeInfoInMem)
+	}
+
+	PrizeInfoInMem struct {
+		PrizeIds []int64
+		ProbabilityList []uint64
+	}
+)
+var gamesInMem GamesInMem
+var maxNum int64
+
+func init() {
+	// Initialization
+	gamesInMem = GamesInMem{
+		Games: map[int64](*PrizeInfoInMem){},
+	}
+	maxNum = 1000
+}
+
+func getPrizeInfo(promotionId int64) (*PrizeInfoInMem, error) {
+	// hit
+	// Check gameId is exists in GamesInMem
+	if gamesInMem.Games[promotionId] != nil {
+		return gamesInMem.Games[promotionId], nil
+	}
+
+	// miss
+	// create prize Info
+	var prizes []schema.PrizeRow
+	err := models.QueryPrizesByPromotionId(&prizes, promotionId)
+	if err != nil {
+		return nil, err
+	}
+
+	gamesInMem.Games[promotionId] = &PrizeInfoInMem{
+		[]int64{},
+		[]uint64{},
+	}
+
+	var accum uint64 = 0
+	for _, prize := range prizes {
+		gamesInMem.Games[promotionId].PrizeIds = append(gamesInMem.Games[promotionId].PrizeIds, prize.PrizeId)
+
+		accum += uint64(prize.Odds * float64(maxNum))
+		gamesInMem.Games[promotionId].ProbabilityList = append(gamesInMem.Games[promotionId].ProbabilityList, accum)
+	}
+	
+	return gamesInMem.Games[promotionId], nil
+}
+
+// return prizeId and error
+// if prizeId == 0
+// then not win
+func inGame(promotionId int64) (int64, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(maxNum))
+	if err != nil {
+		return -1, err
+	}
+	// 1 ~ maxNum
+	randNum := n.Uint64() + 1
+
+	prizeInfo, err := getPrizeInfo(promotionId)
+	if err != nil {
+		return -1, err
+	}
+	var prevNum uint64 = 0
+	for i, probability := range prizeInfo.ProbabilityList {
+		// preNum <= randNum < n
+		if prevNum <= randNum && randNum < probability {
+			return prizeInfo.PrizeIds[i], nil
+		}
+		prevNum = probability
+	}
+	return 0, nil
+}
+
+func genOrders(order *schema.OrderRow) error {
+	order.StartedAt = time.Now()
+
+	var err error
+	order.PrizeId, err = inGame(order.PromotionId)
+	if err != nil {
+		return err
+	}
+	if order.PrizeId == 0 {
+		// not win
+		order.IsWin = false
+	} else {
+		order.IsWin = true
+	}
+
+	// Game in progress
+	order.Status = 1
+
+	return nil
+}
+
+func PostGameStart(c *gin.Context) {
+	// Fetch body
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r!= nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err = errors.New("panic")
+			debug.PrintStack()
+			services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+			return
+		}
+	}()
+	err = tx.Error
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// 1. whether exists account
+	account := schema.AccountRow{
+		Addr: order.Addr,
+	}
+	err = models.QueryAccountByAddr(&account)
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	order.AccountId = account.Id
+
+	// 2. subtract account ticket
+
+	// if account has insufficient ticket amount
+	// then error
+	if account.TicketAmount < order.UsedTicketQty {
+		err = errors.New("Insufficient ticket amount")
+		fmt.Printf("%+v\n", err.Error())
+		services.BadRequest(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// update account
+	account.TicketAmount -= order.UsedTicketQty
+	err = models.UpdateAccountById(tx, &account)
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// 3. do game
+	err = genOrders(&order)
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// create orders (insert as batch)
+	err = models.CreateOrderWithTx(tx, &order)
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	// Commit transaction
+	err = tx.Commit().Error
+	if err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, &order)
+}
+
+func PatchGameStop(c *gin.Context) {
+	orderId, err := strconv.ParseInt(c.Param("order_id"), 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request order_id path parameter", err)
+		return
+	}
+
+	order := schema.OrderRow{
+		OrderId: orderId,
+	}
+	err = models.QueryOrderById(&order)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Status가 1인지확인 (게임 중 인지 확인)
+	if order.Status != 1 {
+		err = errors.New("Game not in progress")
+		fmt.Printf("%+v\n", err.Error())
+		services.BadRequest(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	if order.IsWin {
+		// 당첨으로인한종료
+		order.Status = 3
+	} else {
+		// 꽝으로인한종료
+		order.Status = 2
+	}
+
+	err = models.UpdateOrder(&order)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	
+
+	resp := types.ResPatchGameStop{
+		OrderId: order.OrderId,
+		Addr: order.Addr,
+		PrizeId: order.PrizeId,
+	}
+
+	services.Success(c, nil, &resp)
+}
+
+
 // TODO
 /*
 	- claim 리스트
 */
 
 func GetRandom(c *gin.Context) {
-	rand.Seed(time.Now().UnixNano())
-	fmt.Println(rand.Intn(1000))
-	services.Success(c, nil, rand.Intn(1000))
+	n, err := rand.Int(rand.Reader, big.NewInt(maxNum))
+	if err != nil {
+		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	// 1 ~ maxNum
+	randNum := n.Uint64() + 1
+	services.Success(c, nil, randNum)
 }
 
 func StartGame(c *gin.Context) {
@@ -69,8 +324,13 @@ func StartGame(c *gin.Context) {
 	// 게임 계산
 	// 게임의 정책이 변경될 수 있으므로 시작 시점을 기준으로 결과를 계산한다.
 	// math.Random
-	rand.Seed(time.Now().UnixNano())
-	resultNum := rand.Intn(1000)
+	n, err := rand.Int(rand.Reader, big.NewInt(maxNum))
+	if err = models.BurnUserTicket(&account, iAddr, int64(1)); err != nil {
+		services.NotAcceptable(c, "ticket burn error. can not start game", err)
+		return
+	}
+	// 1 ~ maxNum
+	resultNum := n.Uint64() + 1
 	var isWin bool
 	var prizeID int
 	fmt.Println(resultNum)

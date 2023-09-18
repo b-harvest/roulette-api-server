@@ -6,6 +6,7 @@ import (
 	"roulette-api-server/types"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryOrderById(order *schema.OrderRow) (err error) {
@@ -17,6 +18,16 @@ func UpdateOrder(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Update(order).Error
 	return
 }
+
+func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRow) error {
+	err := config.DB.Table("game_order").Create(order).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
 
 func QueryOrders(orders *[]schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Find(orders).Error

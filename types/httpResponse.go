@@ -54,6 +54,13 @@ type ResGetPromotion struct {
 	Summary           PromotionSummary       `json:"promotionSummary"`
 }
 
+type ResPatchGameStop struct {
+	OrderId int64 `json:"orderId" db:"order_id"`
+	Addr string `json:"addr" db:"addr"`
+	PrizeId int64 `json:"prizeId" db:"prize_id"`
+}
+
+
 type ResGetBalanceByAcc struct {
 	PromotionID                uint64 `json:"promotionId" db:"promotion_id"`
 	Addr                       string `json:"addr" db:"addr"`
