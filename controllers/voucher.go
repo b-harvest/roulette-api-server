@@ -461,16 +461,55 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		return
 	}
 
+	// 프로모션 조회
+	// convert req.PromotionId to uint64
+	strPromotionId := fmt.Sprintf("%d", req.PromotionId)
+	promotionId, err := strconv.ParseUint(strPromotionId, 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request Id path parameter", err)
+		return
+	}
+	promotion := types.ResGetPromotion{
+		PromotionId: promotionId,
+	}
+	err = models.QueryPromotion(&promotion)
+	if err != nil {
+		fmt.Printf("QueryPromotion 564 : %+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// 잔고 체크
+	req.TotalAmount = uint64(len(req.RecipientAddrs) * int(req.Amount))
+	if promotion.VoucherRemainingQty < req.TotalAmount {
+		services.NotAcceptable(c, "remainingQty is smaller than totalSendAmount "+c.Request.Method+" "+c.Request.RequestURI, nil)
+		return
+	}
+	// 프로모션 Remainint Qty 업데이트
+	err = models.UpdatePromotion(&schema.PromotionRow{
+		PromotionId:         req.PromotionId,
+		VoucherRemainingQty: promotion.VoucherRemainingQty - req.Amount,
+		UpdatedAt:           time.Now(),
+	})
+	if err != nil {
+		fmt.Printf("UpdatePromotion 577 : %+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+
 	for _, addr := range req.RecipientAddrs {
 
 		fmt.Printf("addr : %s\n", addr)
 
 		// 사용자 Account Id 조회
+		
+		addrType := services.GetAddressType(addr)
 		acc := schema.AccountRow{
 			Addr: addr,
+			Type: addrType,
 		}
 
-		err := models.QueryAccount(&acc)
+		err := models.QueryOrCreateAccount(&acc)
 		if err != nil {
 			fmt.Printf("QueryAccount 485 : %+v\n", err.Error())
 			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -533,39 +572,6 @@ func CreateVoucherSendEvents(c *gin.Context) {
 				return
 			}
 		}
-
-		// 프로모션 조회
-
-		// convert req.PromotionId to uint64
-		strPromotionId := fmt.Sprintf("%d", req.PromotionId)
-		promotionId, err := strconv.ParseUint(strPromotionId, 10, 64)
-		if err != nil {
-			services.BadRequest(c, "Bad Request Id path parameter", err)
-			return
-		}
-
-		promotion := types.ResGetPromotion{
-			PromotionId: promotionId,
-		}
-
-		err = models.QueryPromotion(&promotion)
-		if err != nil {
-			fmt.Printf("QueryPromotion 564 : %+v\n", err.Error())
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-
-		// 프로모션 Remainint Qty 업데이트
-		err = models.UpdatePromotion(&schema.PromotionRow{
-			PromotionId:         req.PromotionId,
-			VoucherRemainingQty: promotion.VoucherRemainingQty - req.Amount,
-			UpdatedAt:           time.Now(),
-		})
-		if err != nil {
-			fmt.Printf("UpdatePromotion 577 : %+v\n", err.Error())
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
 	}
 
 	// result
@@ -577,6 +583,6 @@ func CreateVoucherSendEvents(c *gin.Context) {
 			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		}
 	} else {
-		services.Created(c, nil, nil)
+		services.Success(c, nil, nil)
 	}
 }

@@ -21,7 +21,7 @@ type AccountRow struct {
 	AdminMemo     string    `json:"adminMemo" db:"admin_memo"`
 	Type          string    `json:"type" db:"type"`
 	IsBlacklisted bool      `json:"isBlacklisted" db:"is_blacklisted"`
-	LastLoginAt   time.Time `json:"lastLoginAt" db:"last_login_at"`
+	LastLoginAt   time.Time `json:"lastLoginAt" db:"last_login_at" gorm:"default:null"`
 	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt     time.Time `json:"updatedAt" db:"updated_at"`
 }
