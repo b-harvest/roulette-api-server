@@ -54,10 +54,36 @@ type ResGetPromotion struct {
 	Summary           PromotionSummary       `json:"promotionSummary"`
 }
 
-type ResPatchGameStop struct {
-	OrderId int64 `json:"orderId" db:"order_id"`
-	Addr string `json:"addr" db:"addr"`
-	PrizeId int64 `json:"prizeId" db:"prize_id"`
+// TBD
+type ResGetLatestOrderByAddr struct {
+	OrderId         int64     `json:"orderId" db:"order_id"`
+	Addr            string    `json:"addr" db:"addr"`
+	PromotionId     int64     `json:"promotionId" db:"promotion_id"`
+	GameId          int64     `json:"gameId" db:"game_id"`
+	IsWin           bool      `json:"isWin" db:"is_win"`
+	Status          int       `json:"status" db:"status"`
+	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
+	PrizeId         int64     `json:"prizeId" db:"prize_id"`
+	StartedAt       time.Time `json:"startedAt" db:"started_at"`
+	ClaimedAt       time.Time `json:"claimedAt" db:"claimed_at" gorm:"column:claimed_at; type:timestamp; default:null"`
+	ClaimFinishedAt time.Time `json:"claimFinishedAt" db:"claim_finished_at" gorm:"default:null"`
+	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt       time.Time `json:"updatedAt" db:"updated_at"`
+	Prize           ResOrderPrize `json:"prize"`
+}
+
+type ResOrderPrize struct {
+	PrizeId          int64     `json:"prizeId" db:"prize_id"`
+	PrizeDenomId     int64     `json:"prizeDenomId" db:"dist_pool_id"`
+	Amount           uint64    `json:"amount" db:"amount"`
+	WinImageUrl      string    `json:"winImageUrl" db:"win_image_url"`
+	PrizeDenom       ResOrderPrizeDenom `json:"prizeDenom"`
+}
+
+type ResOrderPrizeDenom struct {
+	PrizeDenomId int64     `json:"prizeDenomId" db:"prize_denom_id"`
+	Name         string    `json:"name" db:"name"`
+	Type         string    `json:"type" db:"type"`
 }
 
 
