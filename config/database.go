@@ -7,6 +7,8 @@ import (
 )
 
 var DB *gorm.DB
+var PriceUrl string
+
 type DBConfig struct {
 	Host     string
 	Port     int
@@ -27,6 +29,9 @@ func BuildDBConfig() *DBConfig {
 		Password: cfg.DBConf.Password,
 		DBName:   cfg.DBConf.DBName,
 	}
+
+	PriceUrl = cfg.PriceConf.Url
+
 	return &dbConfig
 }
 

@@ -14,6 +14,7 @@ var (
 // Config defines all necessary configuration parameters.
 type tomlConfig struct {
 	DBConf        TomlDBConf                  `toml:"config_db"`
+	PriceConf     TomlPriceConf               `toml:"price"`
 }
 
 type TomlDBConf struct {
@@ -22,6 +23,9 @@ type TomlDBConf struct {
 	User string `toml:"user"`
 	Password string `toml:"password"`
 	DBName string `toml:"db_name"`
+}
+type TomlPriceConf struct {
+	Url string `toml:"url"`
 }
 
 func Load(configPath string) (*tomlConfig, error) {

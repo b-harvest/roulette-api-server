@@ -115,7 +115,7 @@ func UpdatePrizeDenom(c *gin.Context) {
 		IsActive: req.IsActive,
 		UpdatedAt: time.Now(),
 	}
-	err = models.UpdatePrizeDenomn(&denom)
+	err = models.UpdatePrizeDenom(&denom)
 
 	// result
 	if err != nil {

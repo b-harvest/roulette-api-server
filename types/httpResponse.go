@@ -169,8 +169,8 @@ type ResGetAccount struct {
 }
 
 type ResGetAccountSummary struct {
-	TotalWinUsd               uint64 `json:"totalWinUsd" db:"total_win_usd"`
-	TotalClaimbleUsd          uint64 `json:"totalClaimbleUsd" db:"total_claimble_usd"`
+	TotalWinUsd               float64 `json:"totalWinUsd" db:"total_win_usd"`
+	TotalClaimbleUsd          float64 `json:"totalClaimbleUsd" db:"total_claimble_usd"`
 	TotalCurrentVoucherNum    uint64 `json:"totalCurrentVoucherCnt" db:"total_current_voucher_num"`
 	TotalReceivedVoucherNum   uint64 `json:"totalReceivedVoucherCnt" db:"total_received_voucher_num"`
 	TotalConnectNum           uint64 `json:"totalConnectCnt" db:"total_connect_num"`
