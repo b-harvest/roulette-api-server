@@ -338,6 +338,7 @@ func UpdatePromotion(c *gin.Context) {
 			err = models.QueryDistPool(&dp)
 			if err != nil {
 				fmt.Printf("%+v\n", err.Error())
+				tx.Rollback()
 				services.NotAcceptable(c, "fail QueryDistPool"+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 				return
 			}
@@ -349,10 +350,12 @@ func UpdatePromotion(c *gin.Context) {
 				if dPool.TotalSupply < usedQty {
 					err := errors.New("dist pool total_supply can not be smaller than used #")
 					fmt.Printf("%+v\n", err.Error())
+					tx.Rollback()
 					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 					return
 				}
-				rQty = req.VoucherTotalSupply - usedQty
+				rQty = dPool.TotalSupply - usedQty
+				fmt.Printf("요청totalSupply: %+v, 사용한Qty: %+v, 변경되는 remainQty: %+v", dPool.TotalSupply, usedQty, rQty)
 			}
 
 			// handler data
@@ -431,7 +434,7 @@ func UpdatePromotion(c *gin.Context) {
 						}
 					}
 				case "delete":
-					if p.Status != "not-started" {
+					if p.Status == "not-started" {
 						// handler data
 						prize := schema.PrizeRow{
 							PrizeId: pr.PrizeId,
@@ -439,6 +442,7 @@ func UpdatePromotion(c *gin.Context) {
 						err = models.DeletePrize(&prize)
 						// result
 						if err != nil {
+							tx.Rollback()
 							services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 							return
 						} 
@@ -502,6 +506,12 @@ func UpdatePromotion(c *gin.Context) {
 				}
 			}
 		case "delete":
+			if p.Status != "not-started" {
+				tx.Rollback()
+				services.NotAcceptable(c, "cat not delete dPool because promotion already started " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), errors.New("started"))
+				return
+			}
+
 			// handler data
 			pool := schema.PrizeDistPoolRow{
 				DistPoolId: dPool.DistPoolId,
@@ -509,6 +519,7 @@ func UpdatePromotion(c *gin.Context) {
 			err = models.DeleteDistPool(&pool)
 			// result
 			if err != nil {
+				tx.Rollback()
 				services.NotAcceptable(c, "failed "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 				return
 			}
@@ -521,6 +532,7 @@ func UpdatePromotion(c *gin.Context) {
 				err = models.DeletePrize(&prize)
 				// result
 				if err != nil {
+					tx.Rollback()
 					services.NotAcceptable(c, "failed " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 					return
 				} 
@@ -530,6 +542,7 @@ func UpdatePromotion(c *gin.Context) {
 		
 	err = tx.Commit().Error
 	if err != nil {
+		tx.Rollback()
 		services.NotAcceptable(c, "commit failed", err)
 		return
 	}
