@@ -3,10 +3,12 @@ package controllers
 import (
 	// "encoding/json"
 	"fmt"
+	"strconv"
 
 	// "io"
 	"roulette-api-server/models"
 	"roulette-api-server/services"
+	"roulette-api-server/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,6 +54,29 @@ func GetFlipLinkStat(c *gin.Context) {
 	startDate := c.Query("start-date")
 	endDate := c.Query("end-date")
 
+	if startDate == "" || endDate == "" {
+		reqId, err := strconv.ParseUint(strId, 10, 64)
+		if err != nil {
+			services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		p := types.ResGetPromotion{
+			PromotionId: reqId,
+		}
+
+		// 프로모션 조회
+		err = models.QueryPromotion(&p)
+		if err != nil {
+			fmt.Printf("%+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		startDate = p.PromotionStartAt.Format("2006-01-02")
+		endDate = p.PromotionEndAt.Format("2006-01-02")
+	}
+
 	stat, err := models.QueryFlipLinkStat(strId, startDate, endDate)
 
 	if err != nil {
@@ -67,8 +92,32 @@ func GetFlipLinkStat(c *gin.Context) {
 func GetWalletConnectStat(c *gin.Context) {
 
 	strId := c.Param("promotion_id")
+
 	startDate := c.Query("start-date")
 	endDate := c.Query("end-date")
+
+	if startDate == "" || endDate == "" {
+		reqId, err := strconv.ParseUint(strId, 10, 64)
+		if err != nil {
+			services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		p := types.ResGetPromotion{
+			PromotionId: reqId,
+		}
+
+		// 프로모션 조회
+		err = models.QueryPromotion(&p)
+		if err != nil {
+			fmt.Printf("%+v\n", err.Error())
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+
+		startDate = p.PromotionStartAt.Format("2006-01-02")
+		endDate = p.PromotionEndAt.Format("2006-01-02")
+	}
 
 	stat, err := models.QueryWalletConnectStat(strId, startDate, endDate)
 
