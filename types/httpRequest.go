@@ -54,15 +54,17 @@ type ReqTbUpdatePromotion struct {
 }
 
 type ReqTbCreatePrizeDenom struct {
-	Name     string `json:"name" db:"name"`
-	Type     string `json:"type" db:"type"`
-	IsActive bool   `json:"isActive" db:"is_active"`
+	Name     string    `json:"name" db:"name"`
+	Type     string    `json:"type" db:"type"`
+	UsdPrice float64   `json:"usdPrice" db:"usd_price"`
+	IsActive bool      `json:"isActive" db:"is_active"`
 }
 
 type ReqTbUpdatePrizeDenom struct {
-	Name     string `json:"name" db:"name"`
-	Type     string `json:"type" db:"type"`
-	IsActive bool   `json:"isActive" db:"is_active"`
+	Name     string   `json:"name" db:"name"`
+	Type     string   `json:"type" db:"type"`
+	UsdPrice float64  `json:"usdPrice" db:"usd_price"`
+	IsActive bool     `json:"isActive" db:"is_active"`
 }
 
 type ReqTbCreateDistPool struct {

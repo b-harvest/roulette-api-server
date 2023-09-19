@@ -4,6 +4,7 @@ import (
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -61,11 +62,41 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 	`
 	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
 
+	// get simple Promotion
+	config.DB.Table("promotion").Where("promotion_id=?", order.PromotionId).First(&order.Promotion)
+	order.IsClaimable = false
+	order.RemainingTime = 0
+
+	if order.Status == 3 && time.Now().After(order.Promotion.ClaimStartAt) && time.Now().Before(order.Promotion.ClaimEndAt) {
+		order.IsClaimable = true
+	}
+	if order.Status == 3 && time.Now().Before(order.Promotion.ClaimStartAt) {
+		// order.RemainingTime = time.Now().Sub(order.Promotion.ClaimStartAt)
+		order.RemainingTime = order.Promotion.ClaimStartAt.Sub(time.Now())
+	}
+
+
 	if order.Status == 1 {
 		order.IsWin = false
 		order.PrizeId = 0
 		order.Prize = types.ResOrderPrize{}
 	}
+	return
+}
+
+func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string) (err error) {
+	sql := `
+		SELECT * FROM game_order
+		WHERE addr=?
+	`
+	if err = config.DB.Raw(sql, addr).Scan(orders).Error; err != nil {return}
+	
+	for _, order := range *orders {
+		if err = QueryLatestOrderByAddr(order); err !=nil {
+			return
+		}
+	}
+
 	return
 }
 

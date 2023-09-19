@@ -51,7 +51,7 @@ func QueryWinTotalByAcc(winTotals *[]types.ResGetWinTotalByAcc, addr string) (er
 		) as GOP
 		JOIN prize_denom as PD
 			ON GOP.prize_denom_id = PD.prize_denom_id
-	GROUP BY GOP.prize_id;
+	GROUP BY GOP.prize_denom_id;
 	`
 	err = config.DB.Raw(sql, addr).Scan(winTotals).Error
 	return
@@ -86,11 +86,13 @@ func QueryAccount(acc *schema.AccountRow) (err error) {
 	return
 }
 
+// Accounts 에 대해 각각 QueryAccountDetail 조회하기 전에 Account 기본 정보 세팅
 func QueryAccountsDetailPrepare(accs *[]types.ResGetAccount) (err error) {
 	err = config.DB.Table("account").Find(accs).Error
 	return
 }
 
+// Account 상세 정보
 func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
 	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {return}
 	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).First(&acc.Vouchers).Error
@@ -144,6 +146,34 @@ func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
 	`
 	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
 	
+	// usd_of_win_order = (당첨 prize 의 amount * prize_denom_id 의 usd_value)
+	// total_usd = usd_of_win_order 총합
+	sql = `
+	SELECT
+		sum(P.amount*D.usd_price) as total_win_usd
+	FROM game_order A
+	LEFT JOIN prize P ON A.prize_id=P.prize_id
+	LEFT JOIN prize_denom D ON P.prize_denom_id=D.prize_denom_id
+	WHERE A.addr = ? AND A.is_win = true AND A.status in (3,4,5)
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+
+	sql = `
+	SELECT
+		IFNULL(sum(P.amount*D.usd_price), 0) as total_claimble_usd
+	FROM game_order A
+	LEFT JOIN prize P ON A.prize_id=P.prize_id
+	LEFT JOIN prize_denom D ON P.prize_denom_id=D.prize_denom_id
+	LEFT JOIN promotion PROM ON A.promotion_id=PROM.promotion_id
+	WHERE 
+	A.addr = ? AND 
+			A.is_win = true AND 
+			A.status = 3 AND
+			PROM.claim_start_at < NOW() AND
+			PROM.claim_end_at > NOW()
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+
 	return
 }
 

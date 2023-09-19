@@ -61,9 +61,9 @@ func GetBalancesByAddr(c *gin.Context) {
 }
 
 func GetGameOrdersByAddr(c *gin.Context) {
-	var orders []schema.OrderRow
+	var orders []*types.ResGetLatestOrderByAddr
 
-	err := models.QueryOrdersByAcc(&orders, c.Param("address"))
+	err := models.QueryOrdersByAddr(&orders, c.Param("addr"))
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -240,13 +240,21 @@ func GetAccount(c *gin.Context) {
 	}
 
 	err := models.QueryAccountDetail(&acc)
-
-	// result
 	if err != nil {
 		services.NotAcceptable(c, "fail QueryAccountDetail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-	} else {
-		services.Success(c, nil, acc)
+		return
 	}
+
+	winPrizes:= make([]types.ResGetWinTotalByAcc, 0, 100)
+	acc.Summary.WinPrizes = &winPrizes
+	err = models.QueryWinTotalByAcc(acc.Summary.WinPrizes, acc.Addr)
+	if err != nil {
+		services.NotAcceptable(c, "fail QueryWinTotalByAcc "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// result
+	services.Success(c, nil, acc)
 }
 
 // 특정 Account 조회

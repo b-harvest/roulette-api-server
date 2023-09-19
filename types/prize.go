@@ -13,9 +13,10 @@ type PrizeDistPool struct {
 	// CreatedAt              time.Time `json:"createdAt" db:"created_at"`
 	// UpdatedAt              time.Time `json:"updatedAt" db:"updated_at"`
 	
-	Name string `json:"prizeDenomName" db:"name" gorm:"column:name"`
-	Type string `json:"prizeDenomType" db:"type" gorm:"column:type"`
-	Prizes *[]Prize `json:"prizes"`
+	Name         string    `json:"prizeDenomName" db:"name" gorm:"column:name"`
+	Type         string    `json:"prizeDenomType" db:"type" gorm:"column:type"`
+	UsdPrice     float64   `json:"prizeDenomUsdPrice" db:"usd_price" gorm:"column:usd_price"`
+	Prizes       *[]Prize  `json:"prizes"`
 }
 
 // 프로모션 조회 시 서브 정보 Detail
@@ -30,6 +31,7 @@ type PrizeDistPoolDetail struct {
 	UpdatedAt              time.Time      `json:"updatedAt" db:"updated_at"`
 	Name                   string         `json:"prizeDenomName" db:"name" gorm:"column:name"`
 	Type                   string         `json:"prizeDenomType" db:"type" gorm:"column:type"`
+	UsdPrice               float64        `json:"prizeDenomUsdPrice" db:"usd_price" gorm:"column:usd_price"`
 	Prizes                 *[]PrizeDetail `json:"prizes"`
 }
 

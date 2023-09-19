@@ -69,7 +69,22 @@ type ResGetLatestOrderByAddr struct {
 	ClaimFinishedAt time.Time `json:"claimFinishedAt" db:"claim_finished_at" gorm:"default:null"`
 	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt       time.Time `json:"updatedAt" db:"updated_at"`
-	Prize           ResOrderPrize `json:"prize"`
+	Prize           ResOrderPrize       `json:"prize"`
+	Promotion       ResSimplePromotion  `json:"promotion"`
+	RemainingTime   time.Duration       `json:"remainingTime" db:"remaining_time"`
+	IsClaimable     bool      `json:"isClaimable" db:"is_claimable"`
+}
+
+type ResSimplePromotion struct {
+	Title                 string    `json:"title" db:"title"`
+	VoucherName           string    `json:"voucherName" db:"voucher_name"`
+	VoucherExchangeRatio0 int       `json:"voucherExchangeRatio0"`
+	VoucherExchangeRatio1 int       `json:"voucherExchangeRatio1"`
+	PromotionStartAt      time.Time `json:"promotionStartAt" db:"promotion_start_at"`
+	PromotionEndAt        time.Time `json:"promotionEndAt" db:"promotion_end_at"`
+	ClaimStartAt          time.Time `json:"claimStartAt" db:"claim_start_at"`
+	ClaimEndAt            time.Time `json:"claimEndAt" db:"claim_end_at"`
+	Status                string    `json:"status" db:"status"`
 }
 
 type ResOrderPrize struct {
@@ -156,12 +171,13 @@ type ResGetAccount struct {
 type ResGetAccountSummary struct {
 	TotalWinUsd               uint64 `json:"totalWinUsd" db:"total_win_usd"`
 	TotalClaimbleUsd          uint64 `json:"totalClaimbleUsd" db:"total_claimble_usd"`
-	TotalCurrentVoucherNum    uint64 `json:"totalCurrentVoucherNum" db:"total_current_voucher_num"`
-	TotalReceivedVoucherNum   uint64 `json:"totalReceivedVoucherNum" db:"total_received_voucher_num"`
-	TotalConnectNum           uint64 `json:"totalConnectNum" db:"total_connect_num"`
-	TotalOrderNum             uint64 `json:"totalOrderNum" db:"total_order_num"`
-	TotalWinNum               uint64 `json:"totalWinNum" db:"total_win_num"`
-	TotalClaimbleNum          uint64 `json:"totalClaimbleNum" db:"total_claimble_num"`
+	TotalCurrentVoucherNum    uint64 `json:"totalCurrentVoucherCnt" db:"total_current_voucher_num"`
+	TotalReceivedVoucherNum   uint64 `json:"totalReceivedVoucherCnt" db:"total_received_voucher_num"`
+	TotalConnectNum           uint64 `json:"totalConnectCnt" db:"total_connect_num"`
+	TotalOrderNum             uint64 `json:"totalOrderCnt" db:"total_order_num"`
+	TotalWinNum               uint64 `json:"totalWinOrderCnt" db:"total_win_num"`
+	TotalClaimbleNum          uint64 `json:"totalClaimbleOrderCnt" db:"total_claimble_num"`
+	WinPrizes                 *[]ResGetWinTotalByAcc `json:"winPrizes"`
 }
 
 type ResGetVoucher struct {

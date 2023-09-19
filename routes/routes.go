@@ -50,10 +50,10 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	// 룰렛 API 1차 개발
 	//------------------------------------------------------------------------------
-	route.GET("/promotions", controllers.GetPromotions)                   // [USER] 완료: 프로모션 정보 조회
-	route.GET("/promotions/:promotion_id", controllers.GetPromotion)      // [USER] 완료: 프로모션 조회
-	route.POST("/promotions", controllers.CreatePromotion)                // 프로모션 생성 (promotion + dPools + prizes)
-	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion) // 프로모션 수정 (promotion + dPools + prizes)
+	route.GET  ("/promotions",               controllers.GetPromotions)     // [USER] 완료: 프로모션 정보 조회
+	route.GET  ("/promotions/:promotion_id", controllers.GetPromotion)      // [USER] 완료: 프로모션 조회
+	route.POST ("/promotions",               controllers.CreatePromotion)   // 프로모션 생성 (promotion + dPools + prizes)
+	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion)   // 프로모션 수정 (promotion + dPools + prizes)
 
 	// game order
 	route.POST("/game-mgmt/start", controllers.StartGame)   // [USER]TODO: review
@@ -66,8 +66,8 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/accounts/:addr",                  controllers.GetAccount)	          // [USER]상세 정보
 	route.PUT  ("/accounts/:addr",                  controllers.PutAccount)	          // [USER]계정 생성
 	route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
-	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO:히스토리 페이지에서 쓸 주문 상세 정보, claimable여부, eventName(프로모션 정보), remainingTime
-	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // TODO: [USER]유저 최근 order 정보, --> claimable, eventName(프로모션 정보), remainingTime
+	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO: in_win 필터
+	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // [USER]유저 최근 order 정보
 	route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
 	
 	// metrics
@@ -78,31 +78,31 @@ func SetupRouter() *gin.Engine {
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// flip-links
-	route.GET ("/metrics/flip-links", controllers.GetEventFlipLink)            // link클릭 내역
-	route.GET ("/metrics/flip-links/count", controllers.GetEventFlipLinkCount) // link클릭 내역 총 cnt
-	route.POST("/metrics/flip-links", controllers.PostEventFlipLinks)          // link접속 내역 생성
+	route.GET ("/metrics/flip-links",       controllers.GetEventFlipLink)            // link클릭 내역
+	route.GET ("/metrics/flip-links/count", controllers.GetEventFlipLinkCount)       // link클릭 내역 총 cnt
+	route.POST("/metrics/flip-links",       controllers.PostEventFlipLinks)          // link접속 내역 생성
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt
-	route.GET ("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)        // [USER] TODO: 유저 별
-	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)     // 바우처 보내기
-	route.GET ("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 프로모션 별 voucher 정보
+	route.GET ("/voucher-mgmt/events/send",        controllers.GetVoucherSendEvents)      // [USER] TODO: 유저 별
+	route.POST("/voucher-mgmt/events/send",        controllers.CreateVoucherSendEvents)   // 바우처 보내기
+	route.GET ("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)      // 프로모션 별 voucher 정보
 
 	// game-mgmt
-	route.GET   ("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults) // 당첨된 모든 orders
+	route.GET   ("/game-mgmt/orders/winning-results",           controllers.GetGameWinningResults) // 당첨된 모든 orders
 	route.PATCH ("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus) // order 상태 변경
-	route.GET   ("/game-mgmt/games", controllers.GetGames)            // 게임 모두 조회
-	route.POST  ("/game-mgmt/games", controllers.CreateGame)          // 게임 생성
+	route.GET   ("/game-mgmt/games",          controllers.GetGames)   // 게임 모두 조회
+	route.POST  ("/game-mgmt/games",          controllers.CreateGame) // 게임 생성
 	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)    // 특정 게임 조회
 	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame) // 게임 수정
 	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame) // 게임 삭제
 
 	// prize-mgmt
-	route.GET("/prize-mgmt/denoms", controllers.GetPrizeDenoms)          // 데놈 모두 조회
-	route.POST("/prize-mgmt/denoms", controllers.CreatePrizeDenom)       // 데놈 생성
-	route.GET("/prize-mgmt/denoms/:id", controllers.GetPrizeDenom)       // 특정 데놈 조회 
-	route.PATCH("/prize-mgmt/denoms/:id", controllers.UpdatePrizeDenom)  // 데놈 수정
-	route.DELETE("/prize-mgmt/denoms/:id", controllers.DeletePrizeDenom) // 데놈 삭제
+	route.GET   ("/prize-mgmt/denoms",      controllers.GetPrizeDenoms)    // 데놈 모두 조회
+	route.POST  ("/prize-mgmt/denoms",      controllers.CreatePrizeDenom)  // 데놈 생성
+	route.GET   ("/prize-mgmt/denoms/:id",  controllers.GetPrizeDenom)     // 특정 데놈 조회 
+	route.PATCH ("/prize-mgmt/denoms/:id",  controllers.UpdatePrizeDenom)  // 데놈 수정
+	route.DELETE("/prize-mgmt/denoms/:id",  controllers.DeletePrizeDenom)  // 데놈 삭제
 
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
