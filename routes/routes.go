@@ -55,7 +55,6 @@ func SetupRouter() *gin.Engine {
 	route.POST("/promotions", controllers.CreatePromotion)                // 완료: 프로모션 생성 (promotion + dPools + prizes)
 	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion) // TODO: 생성/삭제 프로모션 수정 (promotion + dPools + prizes)
 
-<<<<<<< HEAD
 	// game order
 	route.POST("/game-mgmt/start", controllers.StartGame)   // [USER]TODO: review
 	route.POST("/game-mgmt/stop",  controllers.StopGame)    // [USER]게임 종료
@@ -71,21 +70,6 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // TODO: [USER]유저 최근 order 정보, --> claimable, eventName(프로모션 정보), remainingTime
 	route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
 	
-=======
-	// games
-	route.POST("/game-mgmt/start", controllers.PostGameStart)           // [USER]
-	route.PATCH("/game-mgmt/stop/:order_id", controllers.PatchGameStop) // [USER]
-
-	// account
-	route.GET("/accounts", controllers.GetAccounts)                      // TODO: 상세 정보, paging
-	route.GET("/accounts/:addr", controllers.GetAccount)                 // [USER] TODO: 상세 정보
-	route.PUT("/accounts/:addr", controllers.PutAccount)                 // [USER] 완료
-	route.GET("/accounts/:addr/balances", controllers.GetBalancesByAddr) // [USER] TODO: ticket 포함
-	route.GET("/accounts/:addr/game-orders", controllers.GetGameOrdersByAddr)
-	route.GET("/accounts/:addr/winning-records", controllers.GetWinTotalByAcc)
-	route.PATCH("/accounts/:addr/claim/:order-id", controllers.PatchClaim)
-
->>>>>>> a911ec3eb58cfefc9a5cbd77e06b2ad2b83003fc
 	// metrics
 	// wallet-connects
 	route.GET ("/metrics/wallet-connects",       controllers.GetEventWalletConn)       // wallet접속 내역
@@ -105,7 +89,6 @@ func SetupRouter() *gin.Engine {
 	route.GET ("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 프로모션 별 voucher 정보
 
 	// game-mgmt
-<<<<<<< HEAD
 	route.GET   ("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults) // 당첨된 모든 orders
 	route.PATCH ("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus) // order 상태 변경
 	route.GET   ("/game-mgmt/games", controllers.GetGames)            // 게임 모두 조회
@@ -113,16 +96,8 @@ func SetupRouter() *gin.Engine {
 	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)    // 특정 게임 조회
 	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame) // 게임 수정
 	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame) // 게임 삭제
-=======
 	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)
 	route.PATCH("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus)
-
-	route.GET("/game-mgmt/games", controllers.GetGames)
-	route.POST("/game-mgmt/games", controllers.CreateGame)
-	route.GET("/game-mgmt/games/:game_id", controllers.GetGame)
-	route.PATCH("/game-mgmt/games/:game_id", controllers.UpdateGame)
-	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame)
->>>>>>> a911ec3eb58cfefc9a5cbd77e06b2ad2b83003fc
 
 	// prize-mgmt
 	route.GET("/prize-mgmt/denoms", controllers.GetPrizeDenoms)          // 데놈 모두 조회
