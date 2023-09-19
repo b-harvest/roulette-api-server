@@ -10,7 +10,6 @@ import (
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
-	"strconv"
 	"strings"
 	"time"
 
@@ -63,7 +62,7 @@ func GetBalancesByAddr(c *gin.Context) {
 func GetGameOrdersByAddr(c *gin.Context) {
 	var orders []schema.OrderRow
 
-	err := models.QueryOrdersByAcc(&orders, c.Param("addr"))
+	err := models.QueryOrdersByAcc(&orders, c.Param("address"))
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -71,34 +70,6 @@ func GetGameOrdersByAddr(c *gin.Context) {
 	}
 
 	services.Success(c, nil, &orders)
-}
-
-// 유저 별 최근 주문 (game-id 필요)
-func GetLatestOrder(c *gin.Context) {
-	addr := c.Param("addr")
-	strGameId := c.Query("game-id")
-	if strGameId == "" {
-		services.NotAcceptable(c, "invalid gameId "+c.Request.Method+" "+c.Request.RequestURI, nil)
-		return
-	}
-	gameId, err := strconv.ParseInt(strGameId, 10, 64)
-	if err != nil {
-		services.NotAcceptable(c, "invalid gameId "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	order := types.ResGetLatestOrderByAddr{
-		Addr: addr,
-		GameId: gameId,
-	}
-
-	err = models.QueryLatestOrderByAddr(&order)
-	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	services.Success(c, nil, &order)
 }
 
 func GetWinTotalByAcc(c *gin.Context) {
