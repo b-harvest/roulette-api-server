@@ -88,11 +88,12 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string) (e
 	sql := `
 		SELECT * FROM game_order
 		WHERE addr=?
+		ORDER BY order_id DESC
 	`
 	if err = config.DB.Raw(sql, addr).Scan(orders).Error; err != nil {return}
 	
 	for _, order := range *orders {
-		if err = QueryLatestOrderByAddr(order); err !=nil {
+		if err = QueryOrderDetailById(order); err !=nil {
 			return
 		}
 	}
