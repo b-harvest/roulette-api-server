@@ -145,7 +145,7 @@ func Claim(c *gin.Context) {
 		return
 	}
 
-	promotion := schema.PromotionRow{
+	promotion := schema.PromotionRowWithoutID{
 		PromotionId: order.PromotionId,
 	}
 	err = models.QueryPromotionById(&promotion)
