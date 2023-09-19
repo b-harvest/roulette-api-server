@@ -114,27 +114,31 @@ func GetWinTotalByAcc(c *gin.Context) {
 	services.Success(c, nil, &resp)
 }
 
-func PatchClaim(c *gin.Context) {
-	orderId, err := strconv.ParseInt(c.Param("order-id"), 10, 64)
+func Claim(c *gin.Context) {
+	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		fmt.Println(string(jsonData))
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
-	order := schema.OrderRow{
-		OrderId: orderId,
-	}
-	err = models.QueryOrderById(&order)
+	err = models.QueryOrderByIdAndAddr(&order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail query order "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
 	// Claimable only in below condition
 	// status: before claim(3), win(true) and claimed(null), claim(null) finished not yet
-	if order.Status != 3 && !order.IsWin || !order.ClaimedAt.IsZero() || !order.ClaimFinishedAt.IsZero() {
+	fmt.Println(order.Status)
+	if order.Status != 3 {
 		err = errors.New("Can't claim due to not win or already claimed.")
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -231,17 +235,39 @@ func CreateAccount(c *gin.Context) {
 func GetAccount(c *gin.Context) {
 	// 파라미터 조회
 	strId := c.Param("addr")
-	acc := schema.AccountRow{
+	acc := types.ResGetAccount{
 		Addr: strId,
 	}
-	err := models.QueryAccount(&acc)
+
+	err := models.QueryAccountDetail(&acc)
 
 	// result
 	if err != nil {
-		//if err.Error() == "record not found" {
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail QueryAccountDetail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 	} else {
 		services.Success(c, nil, acc)
+	}
+}
+
+// 특정 Account 조회
+func GetAccountsDetail(c *gin.Context) {
+	accounts := make([]types.ResGetAccount, 0, 500)
+	err := models.QueryAccountsDetailPrepare(&accounts)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	for i := range accounts {
+		models.QueryAccountDetail(&accounts[i])
+	}
+
+	// result
+	if err != nil {
+		services.NotAcceptable(c, "fail QueryAccountsDetail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+	} else {
+		services.Success(c, nil, accounts)
 	}
 }
 

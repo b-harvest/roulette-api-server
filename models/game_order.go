@@ -14,6 +14,11 @@ func QueryOrderById(order *schema.OrderRow) (err error) {
 	return
 }
 
+func QueryOrderByIdAndAddr(order *schema.OrderRow) (err error) {
+	err = config.DB.Table("game_order").Where("order_id = ? and addr = ?", order.OrderId, order.Addr).Find(order).Error
+	return
+}
+
 func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 	sql := `
 		SELECT * FROM game_order

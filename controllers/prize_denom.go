@@ -67,7 +67,7 @@ func CreatePrizeDenom(c *gin.Context) {
 // 특정 담청품 종류 조회
 func GetPrizeDenom(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -90,7 +90,7 @@ func GetPrizeDenom(c *gin.Context) {
 // 데놈 정보 수정
 func UpdatePrizeDenom(c *gin.Context) {
 	// 파라미터 조회 -> body 조회 -> 언마샬
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.BadRequest(c, "Bad Request id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
@@ -134,7 +134,7 @@ func UpdatePrizeDenom(c *gin.Context) {
 // 데놈 삭제
 func DeletePrizeDenom(c *gin.Context) {
 	// 파라미터 조회
-	strId := c.Param("prize_denom_id")
+	strId := c.Param("id")
 	reqId, err := strconv.ParseInt(strId, 10, 64)
 	if err != nil {
 		services.NotAcceptable(c, "Bad Request Id path parameter " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)

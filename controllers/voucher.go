@@ -484,7 +484,7 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		services.NotAcceptable(c, "remainingQty is smaller than totalSendAmount "+c.Request.Method+" "+c.Request.RequestURI, nil)
 		return
 	}
-	// 프로모션 Remainint Qty 업데이트
+	// 프로모션 Remaining Qty 업데이트
 	err = models.UpdatePromotion(&schema.PromotionRow{
 		PromotionId:         req.PromotionId,
 		VoucherRemainingQty: promotion.VoucherRemainingQty - req.Amount,

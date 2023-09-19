@@ -86,6 +86,67 @@ func QueryAccount(acc *schema.AccountRow) (err error) {
 	return
 }
 
+func QueryAccountsDetailPrepare(accs *[]types.ResGetAccount) (err error) {
+	err = config.DB.Table("account").Find(accs).Error
+	return
+}
+
+func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
+	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {return}
+	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).First(&acc.Vouchers).Error
+	if err == nil {
+		for i, vb := range acc.Vouchers {
+			config.DB.Table("promotion").Where("promotion_id = ?", vb.PromotionId).First(&acc.Vouchers[i].Promotion)
+		}
+	}
+
+	// summary
+	// total_current_voucher_num, total_received_voucher_num
+	sql := `
+	SELECT 
+		sum(current_amount) as total_current_voucher_num,
+		sum(total_received_amount) as total_received_voucher_num
+	FROM user_voucher_balance
+	WHERE addr = "cre001"
+	`
+	config.DB.Raw(sql).Scan(&acc.Summary)
+
+	sql = `
+	select count(*) as total_connect_num FROM event_wallet_conn
+	WHERE addr = ?
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+
+	sql = `
+	select 
+		count(*) as total_order_num
+	FROM game_order
+	WHERE addr = ?
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	
+	sql = `
+	select 
+		count(*) as total_win_num
+	FROM game_order
+	WHERE addr = ? AND status > 2
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+
+	sql = `
+	select 
+		count(*) as total_claimble_num
+	FROM game_order GO
+    LEFT JOIN promotion P ON GO.promotion_id=P.promotion_id
+	WHERE 
+		GO.addr = ? AND GO.status = 3 AND
+        P.claim_start_at < NOW() AND P.claim_end_at > NOW()
+	`
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	
+	return
+}
+
 func UpdateAccount(acc *schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Where("addr = ?", acc.Addr).Update(acc).Error
 	return

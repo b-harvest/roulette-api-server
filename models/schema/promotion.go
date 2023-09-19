@@ -5,7 +5,8 @@ import (
 )
 
 type PromotionRow struct {
-	ID                    int64
+	// ID                    int64
+	ID                    int64			`gorm:"column:promotion_id"`
 	PromotionId           int64     `json:"promotionId" db:"promotion_id"`
 	Title                 string    `json:"title" db:"title"`
 	Desc                  string    `json:"desc" db:"desc"`

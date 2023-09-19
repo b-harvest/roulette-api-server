@@ -177,6 +177,7 @@ func StartGame(c *gin.Context) {
 	// TODO: calculate required ticket amount for game start
 	//if account.TicketAmount < order.UsedTicketQty {
 	ticketQtyForGame := uint64(1)
+	order.UsedTicketQty = ticketQtyForGame
 	if account.TicketAmount < ticketQtyForGame {
 		err = errors.New("Insufficient ticket amount")
 		fmt.Printf("%+v\n", err.Error())
