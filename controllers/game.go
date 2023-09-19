@@ -121,7 +121,9 @@ func genOrders(order *schema.OrderRow) error {
 	return nil
 }
 
-func PostGameStart(c *gin.Context) {
+func StartGame(c *gin.Context) {
+	// 진행 중인 게임이 있는지 확인
+
 	// Fetch body
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -221,24 +223,34 @@ func PostGameStart(c *gin.Context) {
 	services.Success(c, nil, &order)
 }
 
-func PatchGameStop(c *gin.Context) {
-	orderId, err := strconv.ParseInt(c.Param("order_id"), 10, 64)
+// 게임 종료 (룰렛)
+func StopGame(c *gin.Context) {
+	/*
+		orderId 불러오기
+		order 조회하여 진행 중인지 확인
+		is_win 에 따른 상태 업데이트
+	*/
+	// Fetch body: orderId
+	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request order_id path parameter", err)
+		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
 		return
 	}
 
-	order := schema.OrderRow{
-		OrderId: orderId,
-	}
+	// 주문 조회
 	err = models.QueryOrderById(&order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-
-	// Status가 1인지확인 (게임 중 인지 확인)
+	// Status 가 1 인지 확인 (게임 중인지 확인)
 	if order.Status != 1 {
 		err = errors.New("Game not in progress")
 		fmt.Printf("%+v\n", err.Error())
@@ -246,6 +258,7 @@ func PatchGameStop(c *gin.Context) {
 		return
 	}
 
+	// 상태 업데이트
 	if order.IsWin {
 		// 당첨으로인한종료
 		order.Status = 3
@@ -253,7 +266,7 @@ func PatchGameStop(c *gin.Context) {
 		// 꽝으로인한종료
 		order.Status = 2
 	}
-
+	order.UpdatedAt = time.Now()
 	err = models.UpdateOrder(&order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
@@ -261,14 +274,14 @@ func PatchGameStop(c *gin.Context) {
 		return
 	}
 	
-
-	resp := types.ResPatchGameStop{
-		OrderId: order.OrderId,
-		Addr: order.Addr,
-		PrizeId: order.PrizeId,
+	// 주문 상세 정보 조회
+	latestOrder := types.ResGetLatestOrderByAddr{OrderId: order.OrderId}
+	if err = models.QueryOrderDetailById(&latestOrder); err != nil {
+		services.NotAcceptable(c, "fail QueryOrderDetailById "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
 	}
-
-	services.Success(c, nil, &resp)
+	
+	services.Success(c, nil, latestOrder)
 }
 
 
@@ -288,7 +301,7 @@ func GetRandom(c *gin.Context) {
 	services.Success(c, nil, randNum)
 }
 
-func StartGame(c *gin.Context) {
+func StartGameSample(c *gin.Context) {
 	iAddr := c.Param("addr")
 
 	// 이미 게임이 진행 중인지 확인
@@ -378,33 +391,6 @@ func StartGame(c *gin.Context) {
 		gameInProgress.Status = game.Status
 		gameInProgress.Type = game.Type
 		services.Success(c, nil, gameInProgress)
-	}
-}
-
-func StopGame(c *gin.Context) {
-	iAddr := c.Param("addr")
-
-	// 이미 게임이 진행 중인지 확인
-	var game schema.GameOrder
-	err := models.QueryCurGameByAddr(&game, iAddr)
-	if err != nil {
-		if err.Error() != "record not found" {
-			services.NotAcceptable(c, "Something went wrong! Can not query user game", err)
-			return
-		} else { // 진행 중인 게임이 없다면
-			services.NotAcceptable(c, "Ongoing game no exists", err)
-			return
-		}
-	}
-
-	// 상태 업데이트
-	game.Status = 2
-	err = models.StopGame(&game, iAddr)
-	if err != nil {
-		services.NotAcceptable(c, "Can not stop existing game", err)
-	} else {
-		_ = models.QueryCurGameByAddr(&game, iAddr)
-		services.Success(c, nil, game)
 	}
 }
 
