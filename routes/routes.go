@@ -52,8 +52,8 @@ func SetupRouter() *gin.Engine {
 	//------------------------------------------------------------------------------
 	route.GET("/promotions", controllers.GetPromotions)                   // [USER] 완료: 프로모션 정보 조회
 	route.GET("/promotions/:promotion_id", controllers.GetPromotion)      // [USER] 완료: 프로모션 조회
-	route.POST("/promotions", controllers.CreatePromotion)                // 완료: 프로모션 생성 (promotion + dPools + prizes)
-	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion) // TODO: 생성/삭제 프로모션 수정 (promotion + dPools + prizes)
+	route.POST("/promotions", controllers.CreatePromotion)                // 프로모션 생성 (promotion + dPools + prizes)
+	route.PATCH("/promotions/:promotion_id", controllers.UpdatePromotion) // 프로모션 수정 (promotion + dPools + prizes)
 
 	// game order
 	route.POST("/game-mgmt/start", controllers.StartGame)   // [USER]TODO: review
@@ -65,7 +65,7 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/accounts/detail",                 controllers.GetAccountsDetail)		// 계정들 상세 조회
 	route.GET  ("/accounts/:addr",                  controllers.GetAccount)	          // [USER]상세 정보
 	route.PUT  ("/accounts/:addr",                  controllers.PutAccount)	          // [USER]계정 생성
-	route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] TODO: ticket 포함, 바우처 정보 포함
+	route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
 	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO:히스토리 페이지에서 쓸 주문 상세 정보, claimable여부, eventName(프로모션 정보), remainingTime
 	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // TODO: [USER]유저 최근 order 정보, --> claimable, eventName(프로모션 정보), remainingTime
 	route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
@@ -96,8 +96,6 @@ func SetupRouter() *gin.Engine {
 	route.GET   ("/game-mgmt/games/:game_id", controllers.GetGame)    // 특정 게임 조회
 	route.PATCH ("/game-mgmt/games/:game_id", controllers.UpdateGame) // 게임 수정
 	route.DELETE("/game-mgmt/games/:game_id", controllers.DeleteGame) // 게임 삭제
-	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)
-	route.PATCH("/game-mgmt/orders/winning-results/:order_id", controllers.UpdateGameOrderStatus)
 
 	// prize-mgmt
 	route.GET("/prize-mgmt/denoms", controllers.GetPrizeDenoms)          // 데놈 모두 조회
