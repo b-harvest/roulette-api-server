@@ -5,6 +5,7 @@ import (
 	"roulette-api-server/models/schema"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryVoucherBurnEvents(events *[]schema.VoucherBurnEventRow) (err error) {
@@ -12,8 +13,16 @@ func QueryVoucherBurnEvents(events *[]schema.VoucherBurnEventRow) (err error) {
 	return
 }
 
-func CreateVoucherBurnEvent(event *schema.VoucherBurnEventRow) (err error) {
+func CreateVoucherBurnEvent(tx *gorm.DB, event *schema.VoucherBurnEventRow) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
 	err = config.DB.Table("voucher_burn_event").Create(event).Error
+	if err != nil {
+		tx.Rollback()
+		return
+	}
 	return
 }
 

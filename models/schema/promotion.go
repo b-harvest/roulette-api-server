@@ -5,7 +5,6 @@ import (
 )
 
 type PromotionRow struct {
-	ID                    int64
 	PromotionId           int64     `json:"promotionId" db:"promotion_id"`
 	Title                 string    `json:"title" db:"title"`
 	Desc                  string    `json:"desc" db:"desc"`

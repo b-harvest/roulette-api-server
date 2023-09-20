@@ -304,44 +304,6 @@ func GetVoucherBurnEvents(c *gin.Context) {
 	services.Success(c, nil, events)
 }
 
-// voucher_burn_event 생성
-func CreateVoucherBurnEvent(c *gin.Context) {
-	jsonData, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	var req types.ReqTbCreateVoucherBurnEvent
-	if err = json.Unmarshal(jsonData, &req); err != nil {
-		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// data handling
-	event := schema.VoucherBurnEventRow{
-		AccountId:           req.AccountId,
-		Addr:                req.Addr,
-		PromotionId:         req.PromotionId,
-		BurnedVoucherAmount: req.BurnedVoucherAmount,
-		MintedTicketAmount:  req.MintedTicketAmount,
-		BurnedAt:            time.Now(),
-	}
-	err = models.CreateVoucherBurnEvent(&event)
-
-	// result
-	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		if strings.Contains(err.Error(), "1062") {
-			services.NotAcceptable(c, "data already exists", err)
-		} else {
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		}
-	} else {
-		services.Success(c, nil, event)
-	}
-}
-
 // 특정 voucher_burn_event 조회
 func GetVoucherBurnEvent(c *gin.Context) {
 	// 파라미터 조회

@@ -62,13 +62,22 @@ func QueryAccountByAddr(acc *schema.AccountRow) (err error) {
 	return
 }
 
+func QueryAccountById(acc *schema.AccountRow) (err error) {
+	err = config.DB.Table("account").Where("id = ?", acc.Id).Find(acc).Error
+	return
+}
+
 func UpdateAccountById(tx *gorm.DB, acc *schema.AccountRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
 	err := tx.Table("account").Where("id = ?", acc.Id).Update(acc).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	return nil
+	return err
 }
 
 func QueryAccounts(accs *[]schema.AccountRow) (err error) {

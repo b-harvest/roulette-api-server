@@ -263,3 +263,9 @@ type ReqCreateVoucherSendEvent struct {
 type ReqUpdateOrderStatus struct {
 	Status int `json:"status" db:"status"`
 }
+
+type ReqPostVoucherBurn struct {
+	PromotionId   int64  `json:"promotionId"`
+	Addr          string `json:"addr"`
+	BurningAmount uint64 `json:"burningAmount"`
+}

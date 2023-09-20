@@ -137,3 +137,21 @@ type ResGetGameWinningResults struct {
 	PrizeDenomId    uint64    `json:"prizeDenomId" db:"prize_denom_id"`
 	PrizeId         uint64    `json:"prizeId" db:"prize_id"`
 }
+
+type ResPostVoucherBurn struct {
+	PromotionID   int64  `json:"promotionId"`
+	Addr          string `json:"addr"`
+	VoucherAmount uint64 `json:"voucher_amount"`
+	TicketAmount  uint64 `json:"ticket_amount"`
+}
+
+type ResStartGame struct {
+	OrderId         int64     `json:"orderId" db:"order_id"`
+	AccountId       int64     `json:"accountId" db:"account_id"`
+	Addr            string    `json:"addr" db:"addr"`
+	PromotionId     int64     `json:"promotionId" db:"promotion_id"`
+	GameId          int64     `json:"gameId" db:"game_id"`
+	Status          int       `json:"status" db:"status"`
+	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
+	StartedAt       time.Time `json:"startedAt" db:"started_at"`
+}

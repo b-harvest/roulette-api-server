@@ -89,6 +89,7 @@ func SetupRouter() *gin.Engine {
 	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)        // [USER] TODO: addr 별 filter by 호철
 	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)    // 완료
 	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 완료
+	route.POST("/voucher-mgmt/burn", controllers.PostVoucherBurn)
 
 	// game-mgmt
 	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)
@@ -179,7 +180,6 @@ func SetupRouter() *gin.Engine {
 
 	// voucher burn history
 	route.GET("/tb/voucher-mgmt/events/burn", tcontrollers.GetVoucherBurnEvents)
-	route.POST("/tb/voucher-mgmt/events/burn", tcontrollers.CreateVoucherBurnEvent)        // for test
 	route.GET("/tb/voucher-mgmt/events/burn/:id", tcontrollers.GetVoucherBurnEvent)        // for test
 	route.PATCH("/tb/voucher-mgmt/events/burn/:id", tcontrollers.UpdateVoucherBurnEvent)   // for test
 	route.DELETE("/tb/voucher-mgmt/evenets/burn/:id", tcontrollers.DeleteVoucherBurnEvent) // for test
