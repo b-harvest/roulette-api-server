@@ -127,7 +127,11 @@ func UpdateOrder(order *schema.OrderRow) (err error) {
 }
 
 func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRow) error {
-	err := config.DB.Table("game_order").Create(order).Error
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("game_order").Create(order).Error
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -149,6 +153,21 @@ func CreateOrder(order *schema.OrderRow) (err error) {
 func QueryOrder(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).First(order).Error
 	return
+}
+
+func QueryInProgressGameCnt(order *schema.OrderRow) (*types.Count, error) {
+	sql := `
+		SELECT COUNT(*) as cnt
+		FROM game_order
+		WHERE addr = ? AND
+			status = 1 AND
+			promotion_id = ? AND
+			game_id = ?;
+	`
+
+	var res types.Count
+	err := config.DB.Raw(sql, order.Addr, order.PromotionId, order.GameId).Scan(&res).Error
+	return &res, err
 }
 
 func DeleteOrder(order *schema.OrderRow) (err error) {

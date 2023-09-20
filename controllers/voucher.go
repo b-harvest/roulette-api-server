@@ -2,12 +2,16 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"roulette-api-server/config"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -331,44 +335,6 @@ func GetVoucherBurnEvents(c *gin.Context) {
 	services.Success(c, nil, events)
 }
 
-// voucher_burn_event 생성
-func CreateVoucherBurnEvent(c *gin.Context) {
-	jsonData, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	var req types.ReqTbCreateVoucherBurnEvent
-	if err = json.Unmarshal(jsonData, &req); err != nil {
-		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// data handling
-	event := schema.VoucherBurnEventRow{
-		AccountId:           req.AccountId,
-		Addr:                req.Addr,
-		PromotionId:         req.PromotionId,
-		BurnedVoucherAmount: req.BurnedVoucherAmount,
-		MintedTicketAmount:  req.MintedTicketAmount,
-		BurnedAt:            time.Now(),
-	}
-	err = models.CreateVoucherBurnEvent(&event)
-
-	// result
-	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		if strings.Contains(err.Error(), "1062") {
-			services.NotAcceptable(c, "data already exists", err)
-		} else {
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		}
-	} else {
-		services.Success(c, nil, event)
-	}
-}
-
 // 특정 voucher_burn_event 조회
 func GetVoucherBurnEvent(c *gin.Context) {
 	// 파라미터 조회
@@ -610,4 +576,150 @@ func CreateVoucherSendEvents(c *gin.Context) {
 	} else {
 		services.Success(c, nil, nil)
 	}
+}
+
+func PostVoucherBurn(c *gin.Context) {
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var req types.ReqPostVoucherBurn
+	if err = json.Unmarshal(jsonData, &req); err != nil {
+		services.BadRequest(c, "bad request unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 1. Check
+
+	// Table : user_voucher_balance, promotion
+	voucherBalance := schema.VoucherBalanceRow{
+		PromotionId: req.PromotionId,
+		Addr: req.Addr,
+	}
+	err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	promotion := schema.PromotionRowWithoutID{
+		PromotionId: voucherBalance.PromotionId,
+	}
+	err = models.QueryPromotionById(&promotion)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether sufficient voucher amount
+	// Check whether req.BurningAmount will be multiply of promotion => voucherExchangeRatio0
+	if (req.BurningAmount <= 0) ||
+		(voucherBalance.CurrentAmount < req.BurningAmount) ||
+		(req.BurningAmount % uint64(promotion.VoucherExchangeRatio0) != 0) {
+		err = errors.New("invalid voucher amount")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether active promotion
+	if !promotion.IsActive {
+		err = errors.New("promotion isn't active")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Table : account
+	account := schema.AccountRow{
+		Id: voucherBalance.AccountId,
+	}
+	err = models.QueryAccountById(&account)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether in promotion periods
+	now := time.Now()
+	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt)  {
+		err = errors.New("not in promotion periods")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether blacklisted account
+	if account.IsBlacklisted {
+		err = errors.New("blacklisted account")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r!= nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err = errors.New("panic")
+			debug.PrintStack()
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}()
+	err = tx.Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 2. Update
+
+	// Table : user_voucher_balance
+	// voucherBalance.CurrentAmount -= req.BurningAmount
+	voucherBalance.CurrentAmount -= req.BurningAmount
+	voucherBalance.UpdatedAt = time.Time{}
+	err = models.UpdateVoucherBalanceById(tx, &voucherBalance)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Table : account
+	// account.ticketAmount = account.TicketAmount + (promotion.VoucherExchangeRatio1 * (req.BurningAmount / promotion.VoucherExchangeRatio0))
+	mintedTicketAmount := uint64(promotion.VoucherExchangeRatio1) * (req.BurningAmount / uint64(promotion.VoucherExchangeRatio0))
+	account.TicketAmount += mintedTicketAmount
+	account.UpdatedAt = time.Time{}
+	err = models.UpdateAccountById(tx, &account)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 3. Create
+	// Table : voucher_burn_event
+	event := schema.VoucherBurnEventRow{
+		AccountId: voucherBalance.AccountId,
+		Addr: voucherBalance.Addr,
+		PromotionId: voucherBalance.PromotionId,
+		BurnedVoucherAmount: req.BurningAmount,
+		MintedTicketAmount: mintedTicketAmount,
+		BurnedAt: time.Now(),
+	}
+	err = models.CreateVoucherBurnEvent(tx, &event)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Commit transaction
+	err = tx.Commit().Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	resp := types.ResPostVoucherBurn{
+		PromotionID: voucherBalance.PromotionId,
+		Addr: voucherBalance.Addr,
+		VoucherAmount: voucherBalance.CurrentAmount,
+		TicketAmount: account.TicketAmount,
+	}
+	services.Success(c, nil, &resp)
 }

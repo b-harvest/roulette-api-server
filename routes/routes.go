@@ -67,7 +67,7 @@ func SetupRouter() *gin.Engine {
 	route.PUT  ("/accounts/:addr",                  controllers.PutAccount)	          // [USER]계정 생성
 	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO: in_win 필터
 	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // [USER]유저 최근 order 정보
-	route.GET  ("/accounts/:addr/transfers",        controllers.GetTransferEvents) // [USER] TODO: 유저 별
+	route.GET  ("/accounts/:addr/transfers",        controllers.GetTransferEvents)    // [USER] TODO: 유저 별
 	// route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
 	// route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
 	
@@ -89,6 +89,7 @@ func SetupRouter() *gin.Engine {
 	route.GET ("/voucher-mgmt/events/send",        controllers.GetVoucherSendEvents)      // 바우처 send 내역
 	route.POST("/voucher-mgmt/events/send",        controllers.CreateVoucherSendEvents)   // 바우처 보내기
 	route.GET ("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)      // 프로모션 별 voucher 정보
+	route.POST("/voucher-mgmt/burn",               controllers.PostVoucherBurn)
 
 	// game-mgmt
 	route.GET   ("/game-mgmt/orders/winning-results",           controllers.GetGameWinningResults) // 당첨된 모든 orders
@@ -177,7 +178,6 @@ func SetupRouter() *gin.Engine {
 
 	// voucher burn history
 	route.GET("/tb/voucher-mgmt/events/burn", tcontrollers.GetVoucherBurnEvents)
-	route.POST("/tb/voucher-mgmt/events/burn", tcontrollers.CreateVoucherBurnEvent)        // for test
 	route.GET("/tb/voucher-mgmt/events/burn/:id", tcontrollers.GetVoucherBurnEvent)        // for test
 	route.PATCH("/tb/voucher-mgmt/events/burn/:id", tcontrollers.UpdateVoucherBurnEvent)   // for test
 	route.DELETE("/tb/voucher-mgmt/evenets/burn/:id", tcontrollers.DeleteVoucherBurnEvent) // for test
