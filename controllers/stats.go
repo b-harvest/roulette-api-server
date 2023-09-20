@@ -46,6 +46,26 @@ func GetPromotionStat(c *gin.Context) {
 	services.Success(c, nil, stat)
 }
 
+func GetPromotionSummary(c *gin.Context) {
+
+	strId := c.Param("promotion_id")
+	reqId, err := strconv.ParseUint(strId, 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request id path parameter "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 프로모션 Summary 조회
+	pSummary, err := models.QueryPromotionSummary(reqId)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, pSummary)
+}
+
 // /stats/flip-links/{promotion_id}[?start-date=2023-09-01&end-date=2023-09-30]
 func GetFlipLinkStat(c *gin.Context) {
 
