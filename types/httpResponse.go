@@ -214,5 +214,19 @@ type ResGetVoucherPromotion struct {
 }
 
 
+type ResTransfersHistoryByAddr struct {
+	Addr               string                      `json:"addr"`
+	VoucherSendEvents  []*ResGetVoucherSendEvents  `json:"voucherSendEvents" db:"voucher_send_events"`
+	VoucherBurnEvents  []*ResGetVoucherBurnEvents  `json:"voucherBurnEvents" db:"voucher_burn_events"`
+}
 
-
+type ResGetVoucherBurnEvents struct {
+	Id                  int64     `json:"id" db:"id"`
+	AccountId           int64     `json:"accountId" db:"account_id"`
+	Addr                string    `json:"addr" db:"addr"`
+	PromotionId         int64     `json:"promotionId" db:"promotion_id"`
+	VoucherName   	    string    `json:"voucherName" db:"voucher_name"`
+	BurnedVoucherAmount uint64    `json:"burnedVoucherAmount" db:"burned_voucher_amount"`
+	MintedTicketAmount  uint64    `json:"mintedTicketAmount" db:"minted_ticket_amount"`
+	BurnedAt            time.Time `json:"burnedAt" db:"burned_at"`
+}

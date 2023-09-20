@@ -65,11 +65,13 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/accounts/detail",                 controllers.GetAccountsDetail)		// 계정들 상세 조회
 	route.GET  ("/accounts/:addr",                  controllers.GetAccount)	          // [USER]상세 정보
 	route.PUT  ("/accounts/:addr",                  controllers.PutAccount)	          // [USER]계정 생성
-	route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
 	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO: in_win 필터
 	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // [USER]유저 최근 order 정보
-	route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
+	route.GET  ("/accounts/:addr/transfers",        controllers.GetTransferEvents) // [USER] TODO: 유저 별
+	// route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
+	// route.GET  ("/accounts/:addr/winning-records",  controllers.GetWinTotalByAcc)     // [USER]유저 prize 별 총 당첨 amt
 	
+
 	// metrics
 	// wallet-connects
 	route.GET ("/metrics/wallet-connects",       controllers.GetEventWalletConn)       // wallet접속 내역
@@ -84,7 +86,7 @@ func SetupRouter() *gin.Engine {
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt
-	route.GET ("/voucher-mgmt/events/send",        controllers.GetVoucherSendEvents)      // [USER] TODO: 유저 별
+	route.GET ("/voucher-mgmt/events/send",        controllers.GetVoucherSendEvents)      // 바우처 send 내역
 	route.POST("/voucher-mgmt/events/send",        controllers.CreateVoucherSendEvents)   // 바우처 보내기
 	route.GET ("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)      // 프로모션 별 voucher 정보
 

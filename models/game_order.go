@@ -1,9 +1,11 @@
 package models
 
 import (
+	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -38,6 +40,11 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		WHERE prize_denom_id=?
 	`
 	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
+
+	if order.Status == 1 {
+		order.IsWin = false
+		order.PrizeId = 0
+	}
 
 	return
 }
@@ -84,12 +91,25 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 	return
 }
 
-func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string) (err error) {
+func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, isWin string) (err error) {
+	var conditions []string
+	if isWin != "" {
+		conditions = append(conditions, fmt.Sprintf("is_win = %s", isWin))
+	}
+
 	sql := `
 		SELECT * FROM game_order
 		WHERE addr=?
-		ORDER BY order_id DESC
 	`
+	if len(conditions) != 0 {
+		sql += "AND " + strings.Join(conditions, " ")
+	}
+	if isWin != "" {
+		sql += " AND status <> 1 ORDER BY order_id DESC"
+	} else {
+		sql += " ORDER BY order_id DESC"
+	}
+
 	if err = config.DB.Raw(sql, addr).Scan(orders).Error; err != nil {return}
 	
 	for _, order := range *orders {

@@ -169,6 +169,31 @@ func GetVoucherSendEvents(c *gin.Context) {
 	services.Success(c, nil, events)
 }
 
+// voucher send, voucher burn 내역 조회
+func GetTransferEvents(c *gin.Context) {
+	addr := c.Param("addr")
+	res  := types.ResTransfersHistoryByAddr{
+		Addr: addr,
+		VoucherSendEvents: make([]*types.ResGetVoucherSendEvents, 0, 100),
+		VoucherBurnEvents: make([]*types.ResGetVoucherBurnEvents, 0, 100),
+	}
+
+	err := models.QueryVoucherSendEventsByAddr(&res.VoucherSendEvents, addr)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	err = models.QueryVoucherBurnEventsByAddr(&res.VoucherBurnEvents, addr)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, res)
+}
+
 // voucher_send_history 생성
 func CreateTbVoucherSendEvent(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
