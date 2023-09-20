@@ -35,6 +35,11 @@ type DenomPrices struct {
 }
 
 func GetPrices() {
+	if config.PriceUrl == "" {
+		fmt.Println("Price 가져오는 URL 이 config.toml 에 추가되지 않음")
+		return
+	}
+
 	resp, err := http.Get(config.PriceUrl)
 	if err != nil {
 		fmt.Printf("GetPrices err: %+v", err.Error())
