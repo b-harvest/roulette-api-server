@@ -591,7 +591,6 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 
 	// 1. Check
-
 	// Table : user_voucher_balance, promotion
 	voucherBalance := schema.VoucherBalanceRow{
 		PromotionId: req.PromotionId,
@@ -599,7 +598,7 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 	err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
 	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail QueryVoucherBalanceByAddrPromotionId: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	promotion := schema.PromotionRowWithoutID{
@@ -612,6 +611,9 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 	// Check whether sufficient voucher amount
 	// Check whether req.BurningAmount will be multiply of promotion => voucherExchangeRatio0
+	fmt.Println(req.BurningAmount)
+	fmt.Println(voucherBalance.CurrentAmount)
+	fmt.Println(uint64(promotion.VoucherExchangeRatio0))
 	if (req.BurningAmount <= 0) ||
 		(voucherBalance.CurrentAmount < req.BurningAmount) ||
 		(req.BurningAmount % uint64(promotion.VoucherExchangeRatio0) != 0) {
