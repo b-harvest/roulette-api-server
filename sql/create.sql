@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `voucher_send_event` (
   -- `voucher_id` 는 없어짐
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `amount` bigint NOT NULL,
-  `sent_at` timestamp not null default current_timestamp
+  `sent_at` timestamp not null default current_timestamp,
   -- 보낸 사람 정보
   PRIMARY KEY (`id`),
   KEY `recipient_addr` (`recipient_addr`)
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `voucher_burn_event` (
   `promotion_id` bigint unsigned NOT NULL, -- 프로모션:바우처 1:1 매핑이 아니라면 voucher_id
   `burned_voucher_amount` bigint NOT NULL,
   `minted_ticket_amount` bigint NOT NULL,
-  `burned_at` timestamp not null default current_timestamp
+  `burned_at` timestamp not null default current_timestamp,
   PRIMARY KEY (`id`),
   KEY `addr` (`addr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

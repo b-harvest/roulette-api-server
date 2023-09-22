@@ -6,6 +6,7 @@ import (
 	"roulette-api-server/types"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryVoucherBalances(bals *[]schema.VoucherBalanceRow) (err error) {
@@ -26,6 +27,19 @@ func QueryVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 func QueryVoucherBalanceByAddrPromotionId(bal *schema.VoucherBalanceRow) (err error) {
 	err = config.DB.Table("user_voucher_balance").Where("addr = ? and promotion_id = ?", bal.Addr, bal.PromotionId).First(bal).Error
 	return
+}
+
+func UpdateVoucherBalanceById(tx *gorm.DB, bal *schema.VoucherBalanceRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return err
 }
 
 func UpdateVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {

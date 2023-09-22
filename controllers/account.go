@@ -63,7 +63,7 @@ func GetBalancesByAddr(c *gin.Context) {
 func GetGameOrdersByAddr(c *gin.Context) {
 	var orders []*types.ResGetLatestOrderByAddr
 
-	err := models.QueryOrdersByAddr(&orders, c.Param("addr"))
+	err := models.QueryOrdersByAddr(&orders, c.Param("addr"), c.Query("is-win"))
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)

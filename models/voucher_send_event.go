@@ -22,6 +22,24 @@ func QueryVoucherSendEvents(events *[](*types.ResGetVoucherSendEvents)) (err err
 	return
 }
 
+func QueryVoucherSendEventsByAddr(events *[](*types.ResGetVoucherSendEvents), addr string) (err error) {
+	q := `
+		SELECT 
+			E.*, P.voucher_name as voucher_name
+		FROM voucher_send_event E
+		LEFT JOIN
+			(select promotion_id, voucher_name from promotion
+			) P ON E.promotion_id = P.promotion_id
+		WHERE E.recipient_addr = ?
+		ORDER BY E.id DESC
+		`
+	if err = config.DB.Raw(q, addr).Scan(events).
+		Error; err != nil {
+		return
+	}
+	return
+}
+
 //---
 
 func QueryTbVoucherSendEvents(events *[]schema.VoucherSendEventRow) (err error) {

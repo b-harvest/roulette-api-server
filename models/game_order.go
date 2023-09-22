@@ -4,6 +4,7 @@ import (
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -38,6 +39,11 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		WHERE prize_denom_id=?
 	`
 	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
+
+	if order.Status == 1 {
+		order.IsWin = false
+		order.PrizeId = 0
+	}
 
 	return
 }
@@ -84,18 +90,27 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 	return
 }
 
-func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string) (err error) {
+func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, isWin string) (err error) {
 	sql := `
-		SELECT * FROM game_order
+		SELECT *
+		FROM game_order
 		WHERE addr=?
 	`
-	if err = config.DB.Raw(sql, addr).Scan(orders).Error; err != nil {return}
-	
-	for _, order := range *orders {
-		if err = QueryLatestOrderByAddr(order); err !=nil {
-			return
+	if isWin != "" {
+		isWin, err := strconv.ParseBool(isWin)
+		if err != nil {
+			return err
 		}
+
+		if isWin {
+			sql += " AND is_win = 1 ORDER BY order_id DESC"
+		} else {
+			sql += " AND is_win = 0 ORDER BY order_id DESC"
+		}
+
 	}
+
+	err = config.DB.Raw(sql, addr).Scan(orders).Error
 
 	return
 }
@@ -105,8 +120,12 @@ func UpdateOrder(order *schema.OrderRow) (err error) {
 	return
 }
 
-func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRow) error {
-	err := config.DB.Table("game_order").Create(order).Error
+func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRowWithID) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("game_order").Create(order).Error
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -128,6 +147,21 @@ func CreateOrder(order *schema.OrderRow) (err error) {
 func QueryOrder(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).First(order).Error
 	return
+}
+
+func QueryInProgressGameCnt(order *schema.OrderRow) (*types.Count, error) {
+	sql := `
+		SELECT COUNT(*) as cnt
+		FROM game_order
+		WHERE addr = ? AND
+			status = 1 AND
+			promotion_id = ? AND
+			game_id = ?;
+	`
+
+	var res types.Count
+	err := config.DB.Raw(sql, order.Addr, order.PromotionId, order.GameId).Scan(&res).Error
+	return &res, err
 }
 
 func DeleteOrder(order *schema.OrderRow) (err error) {

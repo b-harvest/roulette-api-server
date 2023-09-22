@@ -214,5 +214,37 @@ type ResGetVoucherPromotion struct {
 }
 
 
+type ResTransfersHistoryByAddr struct {
+	Addr               string                      `json:"addr"`
+	VoucherSendEvents  []*ResGetVoucherSendEvents  `json:"voucherSendEvents" db:"voucher_send_events"`
+	VoucherBurnEvents  []*ResGetVoucherBurnEvents  `json:"voucherBurnEvents" db:"voucher_burn_events"`
+}
 
+type ResGetVoucherBurnEvents struct {
+	Id                  int64     `json:"id" db:"id"`
+	AccountId           int64     `json:"accountId" db:"account_id"`
+	Addr                string    `json:"addr" db:"addr"`
+	PromotionId         int64     `json:"promotionId" db:"promotion_id"`
+	VoucherName   	    string    `json:"voucherName" db:"voucher_name"`
+	BurnedVoucherAmount uint64    `json:"burnedVoucherAmount" db:"burned_voucher_amount"`
+	MintedTicketAmount  uint64    `json:"mintedTicketAmount" db:"minted_ticket_amount"`
+	BurnedAt            time.Time `json:"burnedAt" db:"burned_at"`
+}
 
+type ResPostVoucherBurn struct {
+	PromotionID   int64  `json:"promotionId"`
+	Addr          string `json:"addr"`
+	VoucherAmount uint64 `json:"voucher_amount"`
+	TicketAmount  uint64 `json:"ticket_amount"`
+}
+
+type ResStartGame struct {
+	OrderId         int64     `json:"orderId" db:"order_id"`
+	AccountId       int64     `json:"accountId" db:"account_id"`
+	Addr            string    `json:"addr" db:"addr"`
+	PromotionId     int64     `json:"promotionId" db:"promotion_id"`
+	GameId          int64     `json:"gameId" db:"game_id"`
+	Status          int       `json:"status" db:"status"`
+	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
+	StartedAt       time.Time `json:"startedAt" db:"started_at"`
+}

@@ -116,3 +116,16 @@ func CreateDistPoolWithTx(tx *gorm.DB, pool *schema.PrizeDistPoolInsertRow) (err
 	fmt.Printf("pool created %+v\n", pool.ID)
 	return
 }
+
+func UpdateDistPoolByPoolId(tx *gorm.DB, pool *schema.PrizeDistPoolRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("distribution_pool").Where("dist_pool_id = ?", pool.DistPoolId).Update(pool).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
