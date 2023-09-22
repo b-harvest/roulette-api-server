@@ -1,15 +1,49 @@
 package models
 
 import (
+	"errors"
+	"regexp"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
 
+func isEthHexAddress(ethHexAddress string) bool {
+    hexAddressRegex := regexp.MustCompile("^(0x)?[0-9a-fA-F]{40}$")
+    if !hexAddressRegex.MatchString(ethHexAddress) {
+        return false
+    }
+
+    if strings.ToLower(ethHexAddress) == ethHexAddress || strings.ToUpper(ethHexAddress) == ethHexAddress {
+        return true
+    }
+
+	isChecksumAddress := func (address string) bool {
+		for i := 2; i < len(address); i++ {
+			if address[i] >= 'A' && address[i] <= 'F' {
+				return true
+			}
+		}
+		return false
+	}
+
+    return isChecksumAddress(ethHexAddress)
+}
+
 func QueryOrCreateAccount(acc *schema.AccountRow) (err error) {
+	// If ethereum address
+	// then check correct ethereum address format
+	if acc.Type == "ETH" {
+		if !isEthHexAddress(acc.Addr) {
+			err = errors.New("Invalid ethereum hex address")
+			return
+		}
+	}
+
 	err = config.DB.Table("account").Where("addr = ?", acc.Addr).FirstOrCreate(acc).Error
 	return
 }
@@ -102,7 +136,18 @@ func QueryAccountsDetailPrepare(accs *[]types.ResGetAccount) (err error) {
 }
 
 // Account 상세 정보
-func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
+func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
+	// ! Caution !
+	// isNotExist = true => Not exist matched record
+	// isExist = false => Exist matched record or occured error
+	isNotExist = false
+	defer func() {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+			isNotExist = true
+		}
+	}()
+
 	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {return}
 	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).Find(&acc.Vouchers).Error
 	if err == nil {
@@ -118,9 +163,9 @@ func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
 		sum(current_amount) as total_current_voucher_num,
 		sum(total_received_amount) as total_received_voucher_num
 	FROM user_voucher_balance
-	WHERE addr = "cre001"
+	WHERE addr = ?
 	`
-	config.DB.Raw(sql).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
 
 	sql = `
 	select count(*) as total_connect_num FROM event_wallet_conn

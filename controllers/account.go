@@ -239,10 +239,36 @@ func GetAccount(c *gin.Context) {
 		Addr: strId,
 	}
 
-	err := models.QueryAccountDetail(&acc)
+	isNotExist, err := models.QueryAccountDetail(&acc)
 	if err != nil {
 		services.NotAcceptable(c, "fail QueryAccountDetail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
+	}
+
+	// If matched record not exist
+	// then create account
+	if isNotExist {
+		// type
+		jsonData, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+		var req schema.AccountRow
+		if err = json.Unmarshal(jsonData, &req); err != nil {
+			fmt.Println(err.Error())
+			services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+		req.Addr         = c.Param("addr")
+		req.LastLoginAt  = time.Now()
+		req.TicketAmount = 0
+
+		err = models.QueryOrCreateAccount(&req)
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
 	}
 
 	winPrizes:= make([]types.ResGetWinTotalByAcc, 0, 100)
