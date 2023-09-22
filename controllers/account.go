@@ -137,7 +137,6 @@ func Claim(c *gin.Context) {
 
 	// Claimable only in below condition
 	// status: before claim(3), win(true) and claimed(null), claim(null) finished not yet
-	fmt.Println(order.Status)
 	if order.Status != 3 {
 		err = errors.New("Can't claim due to not win or already claimed.")
 		fmt.Printf("%+v\n", err.Error())
@@ -248,21 +247,11 @@ func GetAccount(c *gin.Context) {
 	// If matched record not exist
 	// then create account
 	if isNotExist {
-		// type
-		jsonData, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
 		var req schema.AccountRow
-		if err = json.Unmarshal(jsonData, &req); err != nil {
-			fmt.Println(err.Error())
-			services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
 		req.Addr         = c.Param("addr")
 		req.LastLoginAt  = time.Now()
 		req.TicketAmount = 0
+		req.Type = "ETH"
 
 		err = models.QueryOrCreateAccount(&req)
 		if err != nil {
