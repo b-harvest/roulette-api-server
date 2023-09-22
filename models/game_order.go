@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
@@ -96,7 +97,7 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 	return
 }
 
-func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, isWin string) (err error) {
+func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, isWin string) error {
 	sql := `
 		SELECT *
 		FROM game_order
@@ -113,12 +114,42 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, is
 		} else {
 			sql += " AND is_win = 0 ORDER BY order_id DESC"
 		}
-
+	}
+	err := config.DB.Raw(sql, addr).Scan(orders).Error
+	if err != nil {
+		return err
 	}
 
-	err = config.DB.Raw(sql, addr).Scan(orders).Error
+	for _, order := range *orders {
+		// Prize data
+		err = config.DB.Table("prize").Where("prize_id = ?", order.PrizeId).First(&order.Prize).Error
+		if err != nil {
+			return err
+		}
 
-	return
+		// Prize denom data
+		err = config.DB.Table("prize_denom").Where("prize_denom_id = ?", order.Prize.PrizeDenomId).First(&order.Prize.PrizeDenom).Error
+		if err != nil {
+			return err
+		}
+
+		// Promotion data
+		err = config.DB.Table("promotion").Where("promotion_id = ?", order.PromotionId).First(&order.Promotion).Error
+		if err != nil {
+			return err
+		}
+		if time.Now().After(order.Promotion.PromotionEndAt) {
+			order.Promotion.Status = "finished"
+		} else if time.Now().After(order.Promotion.PromotionStartAt) {
+			order.Promotion.Status = "in-progress"
+		} else {
+			order.Promotion.Status = "not-started"
+		}
+	}
+
+	fmt.Println(orders)
+
+	return nil
 }
 
 func UpdateOrder(order *schema.OrderRow) (err error) {
