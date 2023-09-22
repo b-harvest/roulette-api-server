@@ -248,3 +248,9 @@ type ResStartGame struct {
 	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
 	StartedAt       time.Time `json:"startedAt" db:"started_at"`
 }
+
+type ResAllClaim struct {
+	Addr				string		`json:"addr"`
+	NumClaimedOrder		int			`json:"numClaimedOrder"`
+	Status				int			`json:"status"`
+}

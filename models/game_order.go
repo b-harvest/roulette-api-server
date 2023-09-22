@@ -6,6 +6,7 @@ import (
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -19,6 +20,11 @@ func QueryOrderById(order *schema.OrderRow) (err error) {
 
 func QueryOrderByIdAndAddr(order *schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Where("order_id = ? and addr = ?", order.OrderId, order.Addr).Find(order).Error
+	return
+}
+
+func QueryJustOrdersByAddr(order *[]schema.OrderRow, addr string) (err error) {
+	err = config.DB.Table("game_order").Where("addr = ?", addr).Find(order).Error
 	return
 }
 
@@ -245,4 +251,18 @@ func UpdateOrderStatusClaimed(order *schema.OrderRow) (err error) {
 			"claim_finished_at": nil,
 		}).Error
 	return
+}
+
+func UpdateOrdersByOrderIds(orderIds *[]string) error {
+	if len(*orderIds) == 0 {
+		return nil
+	}
+	sql := fmt.Sprintf(`
+		UPDATE game_order
+		SET status = 4,
+			claimed_at = CURRENT_TIMESTAMP()
+		WHERE order_id in (%s)
+		`, strings.Join(*orderIds, ","))
+
+	return config.DB.Raw(sql).Scan(&[]schema.OrderRow{}).Error
 }
