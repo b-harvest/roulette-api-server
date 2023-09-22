@@ -104,7 +104,7 @@ func QueryAccountsDetailPrepare(accs *[]types.ResGetAccount) (err error) {
 // Account 상세 정보
 func QueryAccountDetail(acc *types.ResGetAccount) (err error) {
 	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {return}
-	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).First(&acc.Vouchers).Error
+	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).Find(&acc.Vouchers).Error
 	if err == nil {
 		for i, vb := range acc.Vouchers {
 			config.DB.Table("promotion").Where("promotion_id = ?", vb.PromotionId).First(&acc.Vouchers[i].Promotion)
