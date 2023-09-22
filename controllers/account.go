@@ -30,8 +30,8 @@ func PutAccount(c *gin.Context) {
 		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-	req.Addr         = c.Param("addr")
-	req.LastLoginAt  = time.Now()
+	req.Addr = c.Param("addr")
+	req.LastLoginAt = time.Now()
 	req.TicketAmount = 0
 
 	err = models.QueryOrCreateAccount(&req)
@@ -87,7 +87,7 @@ func GetLatestOrder(c *gin.Context) {
 		return
 	}
 	order := types.ResGetLatestOrderByAddr{
-		Addr: addr,
+		Addr:   addr,
 		GameId: gameId,
 	}
 
@@ -233,9 +233,9 @@ func ClaimAll(c *gin.Context) {
 	}
 
 	services.Success(c, nil, &types.ResAllClaim{
-		Addr: order.Addr,
+		Addr:            order.Addr,
 		NumClaimedOrder: len(orderIds),
-		Status: 4,
+		Status:          4,
 	})
 }
 
@@ -310,8 +310,8 @@ func GetAccount(c *gin.Context) {
 	// then create account
 	if isNotExist {
 		var req schema.AccountRow
-		req.Addr         = c.Param("addr")
-		req.LastLoginAt  = time.Now()
+		req.Addr = c.Param("addr")
+		req.LastLoginAt = time.Now()
 		req.TicketAmount = 0
 		req.Type = "ETH"
 
@@ -322,7 +322,7 @@ func GetAccount(c *gin.Context) {
 		}
 	}
 
-	winPrizes:= make([]types.ResGetWinTotalByAcc, 0, 100)
+	winPrizes := make([]types.ResGetWinTotalByAcc, 0, 100)
 	acc.Summary.WinPrizes = &winPrizes
 	err = models.QueryWinTotalByAcc(acc.Summary.WinPrizes, acc.Addr)
 	if err != nil {

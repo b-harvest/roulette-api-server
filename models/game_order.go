@@ -33,25 +33,33 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		SELECT * FROM game_order
 		WHERE order_id = ?
 	`
-	if err = config.DB.Raw(sql, order.OrderId).Scan(order).Error; err != nil {return}
-	
+	if err = config.DB.Raw(sql, order.OrderId).Scan(order).Error; err != nil {
+		return
+	}
+
 	sql = `
 		SELECT * FROM prize
 		WHERE prize_id=?
 	`
-	if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {return}
-	
+	if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
+		return
+	}
+
 	sql = `
 		SELECT * FROM prize_denom
 		WHERE prize_denom_id=?
 	`
-	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
+	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
+		return
+	}
 
 	sql = `
 		SELECT * FROM promotion
 		WHERE promotion_id=?
 	`
-	if err = config.DB.Raw(sql, order.PromotionId).Scan(&order.Promotion).Error; err != nil {return}
+	if err = config.DB.Raw(sql, order.PromotionId).Scan(&order.Promotion).Error; err != nil {
+		return
+	}
 
 	if order.Status == 1 {
 		order.IsWin = false
@@ -67,19 +75,25 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 		WHERE addr=? AND game_id=?
 		ORDER BY order_id DESC LIMIT 1
 	`
-	if err = config.DB.Raw(sql, order.Addr, order.GameId).Scan(order).Error; err != nil {return}
-	
+	if err = config.DB.Raw(sql, order.Addr, order.GameId).Scan(order).Error; err != nil {
+		return
+	}
+
 	sql = `
 		SELECT * FROM prize
 		WHERE prize_id=?
 	`
-	if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {return}
-	
+	if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
+		return
+	}
+
 	sql = `
 		SELECT * FROM prize_denom
 		WHERE prize_denom_id=?
 	`
-	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
+	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
+		return
+	}
 
 	// get simple Promotion
 	config.DB.Table("promotion").Where("promotion_id=?", order.PromotionId).First(&order.Promotion)
@@ -93,7 +107,6 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 		// order.RemainingTime = time.Now().Sub(order.Promotion.ClaimStartAt)
 		order.RemainingTime = order.Promotion.ClaimStartAt.Sub(time.Now())
 	}
-
 
 	if order.Status == 1 {
 		order.IsWin = false
@@ -151,6 +164,17 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, is
 		} else {
 			order.Promotion.Status = "not-started"
 		}
+
+		order.IsClaimable = false
+		order.RemainingTime = 0
+
+		if order.Status == 3 && time.Now().After(order.Promotion.ClaimStartAt) && time.Now().Before(order.Promotion.ClaimEndAt) {
+			order.IsClaimable = true
+		}
+		if order.Status == 3 && time.Now().Before(order.Promotion.ClaimStartAt) {
+			// order.RemainingTime = time.Now().Sub(order.Promotion.ClaimStartAt)
+			order.RemainingTime = order.Promotion.ClaimStartAt.Sub(time.Now())
+		}
 	}
 
 	fmt.Println(orders)
@@ -175,7 +199,6 @@ func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRowWithID) error {
 	}
 	return nil
 }
-
 
 func QueryOrders(orders *[]schema.OrderRow) (err error) {
 	err = config.DB.Table("game_order").Find(orders).Error
