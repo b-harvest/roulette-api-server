@@ -177,6 +177,68 @@ func Claim(c *gin.Context) {
 	services.Success(c, nil, nil)
 }
 
+func ClaimAll(c *gin.Context) {
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		fmt.Println(string(jsonData))
+		fmt.Println(err.Error())
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	var orders []schema.OrderRow
+	err = models.QueryJustOrdersByAddr(&orders, order.Addr)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail query order "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	var orderIds []string
+	for _, order := range orders {
+		// Claimable only in below condition
+		// status: before claim(3), win(true) and claimed(null), claim(null) finished not yet
+		if order.Status != 3 {
+			continue
+		}
+
+		promotion := schema.PromotionRowWithoutID{
+			PromotionId: order.PromotionId,
+		}
+		err = models.QueryPromotionById(&promotion)
+		if err != nil {
+			continue
+		}
+
+		// Claimable only in below condition
+		// claim-start <= now <= claim-end
+		now := time.Now()
+		if now.Before(promotion.ClaimStartAt) || now.After(promotion.ClaimEndAt) {
+			continue
+		}
+
+		orderIds = append(orderIds, strconv.FormatInt(order.OrderId, 10))
+	}
+
+	err = models.UpdateOrdersByOrderIds(&orderIds)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, &types.ResAllClaim{
+		Addr: order.Addr,
+		NumClaimedOrder: len(orderIds),
+		Status: 4,
+	})
+}
+
 // accounts 조회
 func GetAccounts(c *gin.Context) {
 	accs := make([]schema.AccountRow, 0, 100)
