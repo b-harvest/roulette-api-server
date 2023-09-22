@@ -150,12 +150,13 @@ func StartGame(c *gin.Context) {
 		odds := uint64(prizeInfo.Odds * float64(1000))
 		currentAccumOdds := prevAccumOdds + odds
 
-		// Fort test
-		//msg := fmt.Sprintf("odds %d : ", odds)
-		//fmt.Println(msg, prevAccumOdds, "<=", randNum, "<", currentAccumOdds)
+		// For test
+		// msg := fmt.Sprintf("id %d, odds %d : ", prizeInfo.PrizeId, odds)
+		// fmt.Println(msg, prevAccumOdds, "<=", randNum, "<", currentAccumOdds)
 
 		if prevAccumOdds <= randNum && randNum < currentAccumOdds  {
 			resPrizeInfo = &prizeInfo
+			break
 		}
 		prevAccumOdds = currentAccumOdds
 	}

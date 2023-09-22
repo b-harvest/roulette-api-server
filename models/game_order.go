@@ -40,6 +40,12 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 	`
 	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {return}
 
+	sql = `
+		SELECT * FROM promotion
+		WHERE promotion_id=?
+	`
+	if err = config.DB.Raw(sql, order.PromotionId).Scan(&order.Promotion).Error; err != nil {return}
+
 	if order.Status == 1 {
 		order.IsWin = false
 		order.PrizeId = 0
