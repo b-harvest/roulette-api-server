@@ -1,11 +1,10 @@
 package models
 
 import (
-	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
-	"strings"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -92,31 +91,26 @@ func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
 }
 
 func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, isWin string) (err error) {
-	var conditions []string
-	if isWin != "" {
-		conditions = append(conditions, fmt.Sprintf("is_win = %s", isWin))
-	}
-
 	sql := `
-		SELECT * FROM game_order
+		SELECT *
+		FROM game_order
 		WHERE addr=?
 	`
-	if len(conditions) != 0 {
-		sql += "AND " + strings.Join(conditions, " ")
-	}
 	if isWin != "" {
-		sql += " AND status <> 1 ORDER BY order_id DESC"
-	} else {
-		sql += " ORDER BY order_id DESC"
+		isWin, err := strconv.ParseBool(isWin)
+		if err != nil {
+			return err
+		}
+
+		if isWin {
+			sql += " AND is_win = 1 ORDER BY order_id DESC"
+		} else {
+			sql += " AND is_win = 0 ORDER BY order_id DESC"
+		}
+
 	}
 
-	if err = config.DB.Raw(sql, addr).Scan(orders).Error; err != nil {return}
-	
-	for _, order := range *orders {
-		if err = QueryOrderDetailById(order); err !=nil {
-			return
-		}
-	}
+	err = config.DB.Raw(sql, addr).Scan(orders).Error
 
 	return
 }
@@ -126,7 +120,7 @@ func UpdateOrder(order *schema.OrderRow) (err error) {
 	return
 }
 
-func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRow) error {
+func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRowWithID) error {
 	if tx == nil {
 		tx = config.DB
 	}
