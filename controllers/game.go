@@ -230,7 +230,19 @@ func StartGame(c *gin.Context) {
 
 	// 4. Create
 	// Table : game_order
-	err = models.CreateOrderWithTx(tx, &order)
+	jsonData, err = json.Marshal(order)
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+	orderWithId := schema.OrderRowWithID{}
+	err = json.Unmarshal(jsonData, &orderWithId)
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		return
+	}
+
+	err = models.CreateOrderWithTx(tx, &orderWithId)
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -244,7 +256,7 @@ func StartGame(c *gin.Context) {
 	}
 
 	services.Success(c, nil, types.ResStartGame{
-		OrderId: order.OrderId,
+		OrderId: orderWithId.ID,
 		AccountId: order.AccountId,
 		Addr: order.Addr,
 		PromotionId: order.PromotionId,

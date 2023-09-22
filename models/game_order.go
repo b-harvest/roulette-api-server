@@ -120,7 +120,7 @@ func UpdateOrder(order *schema.OrderRow) (err error) {
 	return
 }
 
-func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRow) error {
+func CreateOrderWithTx(tx *gorm.DB, order *schema.OrderRowWithID) error {
 	if tx == nil {
 		tx = config.DB
 	}
