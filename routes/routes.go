@@ -65,7 +65,7 @@ func SetupRouter() *gin.Engine {
 	route.GET  ("/accounts/detail",                 controllers.GetAccountsDetail)		// 계정들 상세 조회
 	route.GET  ("/accounts/:addr",                  controllers.GetAccount)	          // [USER]상세 정보
 	route.PUT  ("/accounts/:addr",                  controllers.PutAccount)	          // [USER]계정 생성
-	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // TODO: in_win 필터
+	route.GET  ("/accounts/:addr/orders",           controllers.GetGameOrdersByAddr)  // 완료
 	route.GET  ("/accounts/:addr/orders/latest",    controllers.GetLatestOrder)       // [USER]유저 최근 order 정보
 	route.GET  ("/accounts/:addr/transfers",        controllers.GetTransferEvents)    // [USER] TODO: 유저 별
 	// route.GET  ("/accounts/:addr/balances",         controllers.GetBalancesByAddr)    // [USER] -> GetAccount 에서 커버 가능
