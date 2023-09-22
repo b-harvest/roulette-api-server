@@ -10,7 +10,7 @@ type ResAccountStat struct {
 }
 
 type ResPromotionStat struct {
-	InProgressCount uint64 `json:"inProgrressCount" db:"in_progress_count" gorm:"column:in_progress_count;type:uint64"`
+	InProgressCount uint64 `json:"inProgressCount" db:"in_progress_count" gorm:"column:in_progress_count;type:uint64"`
 	FinishedCount   uint64 `json:"finishedCount" db:"finished_count" gorm:"column:finished_count;type:uint64"`
 	NotStartedCount uint64 `json:"notStartedCount" db:"not_started_count" gorm:"column:not_started_count;type:uint64"`
 }
