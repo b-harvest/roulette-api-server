@@ -171,9 +171,9 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, is
 		if order.Status == 3 && time.Now().After(order.Promotion.ClaimStartAt) && time.Now().Before(order.Promotion.ClaimEndAt) {
 			order.IsClaimable = true
 		}
-		if order.Status == 3 && time.Now().Before(order.Promotion.ClaimStartAt) {
+		if order.Status == 3 && time.Now().Before(order.Promotion.ClaimEndAt) {
 			// order.RemainingTime = time.Now().Sub(order.Promotion.ClaimStartAt)
-			order.RemainingTime = order.Promotion.ClaimStartAt.Sub(time.Now())
+			order.RemainingTime = order.Promotion.ClaimEndAt.Sub(time.Now())
 		}
 	}
 
