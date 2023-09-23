@@ -242,7 +242,7 @@ func QueryGameWinningResults(results *[](*types.ResGetGameWinningResults)) (err 
 		"	 G.claimed_at, G.claim_finished_at,  " +
 		"	 D.type as 'prize_type', R.prize_denom_id, G.prize_id, " +
 		"	 G.order_id, G.account_id " +
-		"  FROM GAME_ORDER G " +
+		"  FROM game_order G " +
 		"   LEFT JOIN (SELECT title, promotion_id FROM promotion) P ON G.promotion_id = P.promotion_id " +
 		"   LEFT JOIN prize R ON G.prize_id = R.prize_id " +
 		"   LEFT JOIN (SELECT name, type, prize_denom_id FROM prize_denom) D ON R.prize_denom_id = D.prize_denom_id " +
