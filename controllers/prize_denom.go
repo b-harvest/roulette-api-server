@@ -47,6 +47,7 @@ func CreatePrizeDenom(c *gin.Context) {
 		Name:     req.Name,
 		Type:     req.Type,
 		IsActive: req.IsActive,
+		UsdPrice: req.UsdPrice,
 	}
 	err = models.CreatePrizeDenom(&denom)
 

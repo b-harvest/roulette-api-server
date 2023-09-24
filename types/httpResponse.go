@@ -56,23 +56,23 @@ type ResGetPromotion struct {
 
 // TBD
 type ResGetLatestOrderByAddr struct {
-	OrderId         int64     `json:"orderId" db:"order_id"`
-	Addr            string    `json:"addr" db:"addr"`
-	PromotionId     int64     `json:"promotionId" db:"promotion_id"`
-	GameId          int64     `json:"gameId" db:"game_id"`
-	IsWin           bool      `json:"isWin" db:"is_win"`
-	Status          int       `json:"status" db:"status"`
-	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
-	PrizeId         int64     `json:"prizeId" db:"prize_id"`
-	StartedAt       time.Time `json:"startedAt" db:"started_at"`
-	ClaimedAt       time.Time `json:"claimedAt" db:"claimed_at" gorm:"column:claimed_at; type:timestamp; default:null"`
-	ClaimFinishedAt time.Time `json:"claimFinishedAt" db:"claim_finished_at" gorm:"default:null"`
-	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt       time.Time `json:"updatedAt" db:"updated_at"`
-	Prize           ResOrderPrize       `json:"prize"`
-	Promotion       ResSimplePromotion  `json:"promotion"`
-	RemainingTime   time.Duration       `json:"remainingTime" db:"remaining_time"`
-	IsClaimable     bool      `json:"isClaimable" db:"is_claimable"`
+	OrderId         int64              `json:"orderId" db:"order_id"`
+	Addr            string             `json:"addr" db:"addr"`
+	PromotionId     int64              `json:"promotionId" db:"promotion_id"`
+	GameId          int64              `json:"gameId" db:"game_id"`
+	IsWin           bool               `json:"isWin" db:"is_win"`
+	Status          int                `json:"status" db:"status"`
+	UsedTicketQty   uint64             `json:"usedTicketQty" db:"used_ticket_qty"`
+	PrizeId         int64              `json:"prizeId" db:"prize_id"`
+	StartedAt       time.Time          `json:"startedAt" db:"started_at"`
+	ClaimedAt       time.Time          `json:"claimedAt" db:"claimed_at" gorm:"column:claimed_at; type:timestamp; default:null"`
+	ClaimFinishedAt time.Time          `json:"claimFinishedAt" db:"claim_finished_at" gorm:"default:null"`
+	CreatedAt       time.Time          `json:"createdAt" db:"created_at"`
+	UpdatedAt       time.Time          `json:"updatedAt" db:"updated_at"`
+	Prize           ResOrderPrize      `json:"prize"`
+	Promotion       ResSimplePromotion `json:"promotion"`
+	RemainingTime   time.Duration      `json:"remainingTime" db:"remaining_time"`
+	IsClaimable     bool               `json:"isClaimable" db:"is_claimable"`
 }
 
 type ResSimplePromotion struct {
@@ -88,19 +88,18 @@ type ResSimplePromotion struct {
 }
 
 type ResOrderPrize struct {
-	PrizeId          int64     `json:"prizeId" db:"prize_id"`
-	PrizeDenomId     int64     `json:"prizeDenomId" db:"dist_pool_id"`
-	Amount           uint64    `json:"amount" db:"amount"`
-	WinImageUrl      string    `json:"winImageUrl" db:"win_image_url"`
-	PrizeDenom       ResOrderPrizeDenom `json:"prizeDenom"`
+	PrizeId      int64              `json:"prizeId" db:"prize_id"`
+	PrizeDenomId int64              `json:"prizeDenomId" db:"dist_pool_id"`
+	Amount       uint64             `json:"amount" db:"amount"`
+	WinImageUrl  string             `json:"winImageUrl" db:"win_image_url"`
+	PrizeDenom   ResOrderPrizeDenom `json:"prizeDenom"`
 }
 
 type ResOrderPrizeDenom struct {
-	PrizeDenomId int64     `json:"prizeDenomId" db:"prize_denom_id"`
-	Name         string    `json:"name" db:"name"`
-	Type         string    `json:"type" db:"type"`
+	PrizeDenomId int64  `json:"prizeDenomId" db:"prize_denom_id"`
+	Name         string `json:"name" db:"name"`
+	Type         string `json:"type" db:"type"`
 }
-
 
 type ResGetBalanceByAcc struct {
 	PromotionID                uint64 `json:"promotionId" db:"promotion_id"`
@@ -154,7 +153,7 @@ type ResGetGameWinningResults struct {
 }
 
 type ResGetAccount struct {
-	Id            int64                `json:"id" db:"id"`
+	Id int64 `json:"id" db:"id"`
 	// UserId        int64                `json:"userId" db:"user_id"`
 	Addr          string               `json:"addr" db:"addr"`
 	TicketAmount  uint64               `json:"ticketAmount" db:"ticket_amount"`
@@ -164,28 +163,28 @@ type ResGetAccount struct {
 	LastLoginAt   time.Time            `json:"lastLoginAt" db:"last_login_at" gorm:"default:null"`
 	CreatedAt     time.Time            `json:"createdAt" db:"created_at"`
 	UpdatedAt     time.Time            `json:"updatedAt" db:"updated_at"`
-	Vouchers      []*ResGetVoucher      `json:"vouchers"`
+	Vouchers      []*ResGetVoucher     `json:"vouchers"`
 	Summary       ResGetAccountSummary `json:"summary"`
 }
 
 type ResGetAccountSummary struct {
-	TotalWinUsd               float64 `json:"totalWinUsd" db:"total_win_usd"`
-	TotalClaimbleUsd          float64 `json:"totalClaimbleUsd" db:"total_claimble_usd"`
-	TotalCurrentVoucherNum    uint64 `json:"totalCurrentVoucherCnt" db:"total_current_voucher_num"`
-	TotalReceivedVoucherNum   uint64 `json:"totalReceivedVoucherCnt" db:"total_received_voucher_num"`
-	TotalConnectNum           uint64 `json:"totalConnectCnt" db:"total_connect_num"`
-	TotalOrderNum             uint64 `json:"totalOrderCnt" db:"total_order_num"`
-	TotalWinNum               uint64 `json:"totalWinOrderCnt" db:"total_win_num"`
-	TotalClaimbleNum          uint64 `json:"totalClaimbleOrderCnt" db:"total_claimble_num"`
-	WinPrizes                 *[]ResGetWinTotalByAcc `json:"winPrizes"`
+	TotalWinUsd             float64                `json:"totalWinUsd" db:"total_win_usd"`
+	TotalClaimbleUsd        float64                `json:"totalClaimbleUsd" db:"total_claimble_usd"`
+	TotalCurrentVoucherNum  uint64                 `json:"totalCurrentVoucherCnt" db:"total_current_voucher_num"`
+	TotalReceivedVoucherNum uint64                 `json:"totalReceivedVoucherCnt" db:"total_received_voucher_num"`
+	TotalConnectNum         uint64                 `json:"totalConnectCnt" db:"total_connect_num"`
+	TotalOrderNum           uint64                 `json:"totalOrderCnt" db:"total_order_num"`
+	TotalWinNum             uint64                 `json:"totalWinOrderCnt" db:"total_win_num"`
+	TotalClaimbleNum        uint64                 `json:"totalClaimbleOrderCnt" db:"total_claimble_num"`
+	WinPrizes               *[]ResGetWinTotalByAcc `json:"winPrizes"`
 }
 
 type ResGetVoucher struct {
-	CurrentAmount       uint64    `json:"currentAmount" db:"current_amount"`
-	TotalReceivedAmount uint64    `json:"totalReceivedAmount" db:"total_received_amount"`
-	CreatedAt           time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt           time.Time `json:"updatedAt" db:"updated_at"`
-	PromotionId         int64     `json:"promotionId" db:"promotion_id"`
+	CurrentAmount       uint64                 `json:"currentAmount" db:"current_amount"`
+	TotalReceivedAmount uint64                 `json:"totalReceivedAmount" db:"total_received_amount"`
+	CreatedAt           time.Time              `json:"createdAt" db:"created_at"`
+	UpdatedAt           time.Time              `json:"updatedAt" db:"updated_at"`
+	PromotionId         int64                  `json:"promotionId" db:"promotion_id"`
 	Promotion           ResGetVoucherPromotion `json:"promotion"`
 	// Id                  int64     `json:"id" db:"id"`
 	// AccountId           int64     `json:"accountId" db:"account_id"`
@@ -193,11 +192,11 @@ type ResGetVoucher struct {
 }
 
 type ResGetVoucherPromotion struct {
-	Title                 string    `json:"title" db:"title"`
-	Desc                  string    `json:"desc" db:"desc"`
-	VoucherName           string    `json:"voucherName" db:"voucher_name"`
-	VoucherExchangeRatio0 int       `json:"voucherExchangeRatio0"`
-	VoucherExchangeRatio1 int       `json:"voucherExchangeRatio1"`
+	Title                 string `json:"title" db:"title"`
+	Desc                  string `json:"desc" db:"desc"`
+	VoucherName           string `json:"voucherName" db:"voucher_name"`
+	VoucherExchangeRatio0 int    `json:"voucherExchangeRatio0"`
+	VoucherExchangeRatio1 int    `json:"voucherExchangeRatio1"`
 	// ID                    int64
 	// PromotionId           int64     `json:"promotionId" db:"promotion_id"`
 	// Url                   string    `json:"url" db:"url"`
@@ -213,11 +212,10 @@ type ResGetVoucherPromotion struct {
 	// UpdatedAt             time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-
 type ResTransfersHistoryByAddr struct {
-	Addr               string                      `json:"addr"`
-	VoucherSendEvents  []*ResGetVoucherSendEvents  `json:"voucherSendEvents" db:"voucher_send_events"`
-	VoucherBurnEvents  []*ResGetVoucherBurnEvents  `json:"voucherBurnEvents" db:"voucher_burn_events"`
+	Addr              string                     `json:"addr"`
+	VoucherSendEvents []*ResGetVoucherSendEvents `json:"voucherSendEvents" db:"voucher_send_events"`
+	VoucherBurnEvents []*ResGetVoucherBurnEvents `json:"voucherBurnEvents" db:"voucher_burn_events"`
 }
 
 type ResGetVoucherBurnEvents struct {
@@ -225,7 +223,7 @@ type ResGetVoucherBurnEvents struct {
 	AccountId           int64     `json:"accountId" db:"account_id"`
 	Addr                string    `json:"addr" db:"addr"`
 	PromotionId         int64     `json:"promotionId" db:"promotion_id"`
-	VoucherName   	    string    `json:"voucherName" db:"voucher_name"`
+	VoucherName         string    `json:"voucherName" db:"voucher_name"`
 	BurnedVoucherAmount uint64    `json:"burnedVoucherAmount" db:"burned_voucher_amount"`
 	MintedTicketAmount  uint64    `json:"mintedTicketAmount" db:"minted_ticket_amount"`
 	BurnedAt            time.Time `json:"burnedAt" db:"burned_at"`
@@ -239,18 +237,22 @@ type ResPostVoucherBurn struct {
 }
 
 type ResStartGame struct {
-	OrderId         int64     `json:"orderId" db:"order_id"`
-	AccountId       int64     `json:"accountId" db:"account_id"`
-	Addr            string    `json:"addr" db:"addr"`
-	PromotionId     int64     `json:"promotionId" db:"promotion_id"`
-	GameId          int64     `json:"gameId" db:"game_id"`
-	Status          int       `json:"status" db:"status"`
-	UsedTicketQty   uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
-	StartedAt       time.Time `json:"startedAt" db:"started_at"`
+	OrderId       int64     `json:"orderId" db:"order_id"`
+	AccountId     int64     `json:"accountId" db:"account_id"`
+	Addr          string    `json:"addr" db:"addr"`
+	PromotionId   int64     `json:"promotionId" db:"promotion_id"`
+	GameId        int64     `json:"gameId" db:"game_id"`
+	Status        int       `json:"status" db:"status"`
+	UsedTicketQty uint64    `json:"usedTicketQty" db:"used_ticket_qty"`
+	StartedAt     time.Time `json:"startedAt" db:"started_at"`
 }
 
 type ResAllClaim struct {
-	Addr				string		`json:"addr"`
-	NumClaimedOrder		int			`json:"numClaimedOrder"`
-	Status				int			`json:"status"`
+	Addr            string `json:"addr"`
+	NumClaimedOrder int    `json:"numClaimedOrder"`
+	Status          int    `json:"status"`
+}
+
+type ResHealthcheck struct {
+	Status string `json:"status"`
 }
