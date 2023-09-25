@@ -70,6 +70,14 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 }
 
 func QueryLatestOrderByAddr(order *types.ResGetLatestOrderByAddr) (err error) {
+	defer func() {
+		// If record not found
+		// then just return err as nil
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}()
+
 	sql := `
 		SELECT * FROM game_order
 		WHERE addr=? AND game_id=?
