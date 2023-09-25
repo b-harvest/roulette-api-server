@@ -98,7 +98,11 @@ func GetLatestOrder(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, &order)
+	if order.OrderId == 0 {
+		services.Success(c, nil, nil)
+	} else {
+		services.Success(c, nil, &order)
+	}
 }
 
 func GetWinTotalByAcc(c *gin.Context) {
