@@ -187,6 +187,8 @@ func CreateGame(c *gin.Context) {
 
 	// handler data
 	game := schema.Game{
+		ID: req.ID,
+		GameId: req.GameId,
 		Title: req.Title,
 		Desc: req.Desc,
 		IsActive: req.IsActive,

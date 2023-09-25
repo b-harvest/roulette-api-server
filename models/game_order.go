@@ -137,9 +137,9 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, is
 		}
 
 		if isWin {
-			sql += " AND is_win = 1 ORDER BY order_id DESC"
+			sql += " AND is_win = 1 AND status >= 3 ORDER BY order_id DESC"
 		} else {
-			sql += " AND is_win = 0 ORDER BY order_id DESC"
+			sql += " AND is_win = 0 AND status >= 3 ORDER BY order_id DESC"
 		}
 	}
 	err := config.DB.Raw(sql, addr).Scan(orders).Error

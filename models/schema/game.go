@@ -28,6 +28,7 @@ type GameInProgress struct {
 }
 
 type Game struct {
+	ID             int64  `json:"id" db:"id"`
 	GameId         int64  `json:"gameId" db:"game_id"`
 	Title 			   string `json:"title" db:"title"`
 	Desc 			     string `json:"desc" db:"desc"`

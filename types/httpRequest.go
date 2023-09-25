@@ -3,7 +3,8 @@ package types
 import "time"
 
 type ReqTbCreateGame struct {
-	//GameId         int64  `json:"gameId" db:"game_id"`
+	ID       int64
+	GameId   int64  `json:"gameId" db:"game_id"`
 	Title    string `json:"title" db:"title"`
 	Desc     string `json:"desc" db:"desc"`
 	IsActive bool   `json:"isActive" db:"is_active"`
@@ -102,6 +103,7 @@ type ReqTbUpdatePrize struct {
 
 type ReqTbCreateAccount struct {
 	Addr          string    `json:"addr" db:"addr"`
+	UserId        int64     `json:"userId" db:"user_id"`
 	TicketAmount  uint64    `json:"ticketAmount" db:"ticket_amount"`
 	AdminMemo     string    `json:"adminMemo" db:"admin_memo"`
 	Type          string    `json:"type" db:"type"`

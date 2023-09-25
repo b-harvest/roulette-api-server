@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"roulette-api-server/controllers"
 	"roulette-api-server/middlewares"
 	tcontrollers "roulette-api-server/tcontrollers"
@@ -11,6 +12,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Allow-Origin", "http://foo.com:3000")
+		c.Header("Access-Control-Allow-Methods", "GET, DELETE, POST")
+
+		if c.Request.Method == "OPTIONS" {
+				c.AbortWithStatus(204)
+				return
+		}
+
+		c.Next()
+	}
+}
+
 func SetupRouter() *gin.Engine {
 	//-- game_order -> status: 1(진행중) 2(꽝으로인한종료) 3(클레임전) 4(클레임중) 5(클레임성공) 6(클레임실패) 7(취소)
 	route := gin.Default() // gin Engine 초기화
@@ -18,9 +35,12 @@ func SetupRouter() *gin.Engine {
 	// CORS 설정
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	config.AllowCredentials = true
+	// config.AllowCredentials = false
 	config.AddAllowHeaders("authorization")
 	route.Use(cors.New(config))
+	fmt.Printf("%+v\n", config)
+	cors.Default()
+
 
 	//------------------------------------------------------------------------------
 	// test
