@@ -25,7 +25,6 @@ func SetupRouter() *gin.Engine {
 	fmt.Printf("%+v\n", config)
 	cors.Default()
 
-
 	//------------------------------------------------------------------------------
 	// test
 	//------------------------------------------------------------------------------
@@ -93,6 +92,7 @@ func SetupRouter() *gin.Engine {
 	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)    // 바우처 보내기
 	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 프로모션 별 voucher 정보
 	route.POST("/voucher-mgmt/burn", controllers.PostVoucherBurn)
+	route.GET("/voucher-mgmt/events/burn", controllers.GetVoucherBurnEvents) // 바우처 send 내역
 
 	// game-mgmt
 	route.GET("/game-mgmt/orders/winning-results", controllers.GetGameWinningResults)             // 당첨된 모든 orders

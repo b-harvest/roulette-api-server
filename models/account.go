@@ -13,16 +13,16 @@ import (
 )
 
 func isEthHexAddress(ethHexAddress string) bool {
-    hexAddressRegex := regexp.MustCompile("^(0x)?[0-9a-fA-F]{40}$")
-    if !hexAddressRegex.MatchString(ethHexAddress) {
-        return false
-    }
+	hexAddressRegex := regexp.MustCompile("^(0x)?[0-9a-fA-F]{40}$")
+	if !hexAddressRegex.MatchString(ethHexAddress) {
+		return false
+	}
 
-    if strings.ToLower(ethHexAddress) == ethHexAddress || strings.ToUpper(ethHexAddress) == ethHexAddress {
-        return true
-    }
+	if strings.ToLower(ethHexAddress) == ethHexAddress || strings.ToUpper(ethHexAddress) == ethHexAddress {
+		return true
+	}
 
-	isChecksumAddress := func (address string) bool {
+	isChecksumAddress := func(address string) bool {
 		for i := 2; i < len(address); i++ {
 			if address[i] >= 'A' && address[i] <= 'F' {
 				return true
@@ -31,7 +31,7 @@ func isEthHexAddress(ethHexAddress string) bool {
 		return false
 	}
 
-    return isChecksumAddress(ethHexAddress)
+	return isChecksumAddress(ethHexAddress)
 }
 
 func QueryOrCreateAccount(acc *schema.AccountRow) (err error) {
@@ -114,6 +114,19 @@ func UpdateAccountById(tx *gorm.DB, acc *schema.AccountRow) error {
 	return err
 }
 
+func UpdateAccountTicketById(tx *gorm.DB, acc *schema.AccountRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("account").Select("ticket_amount").Where("id = ?", acc.Id).Update("ticket_amount", acc.TicketAmount).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return err
+}
+
 func QueryAccounts(accs *[]schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Find(accs).Error
 	return
@@ -148,7 +161,9 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 		}
 	}()
 
-	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {return}
+	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {
+		return
+	}
 	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).Find(&acc.Vouchers).Error
 	if err == nil {
 		for i, vb := range acc.Vouchers {
@@ -180,7 +195,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 	WHERE addr = ?
 	`
 	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
-	
+
 	sql = `
 	select 
 		count(*) as total_win_num
@@ -199,7 +214,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
         P.claim_start_at < NOW() AND P.claim_end_at > NOW()
 	`
 	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
-	
+
 	// usd_of_win_order = (당첨 prize 의 amount * prize_denom_id 의 usd_value)
 	// total_usd = usd_of_win_order 총합
 	sql = `

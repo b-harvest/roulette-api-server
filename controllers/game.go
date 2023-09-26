@@ -24,13 +24,13 @@ import (
 func StartGame(c *gin.Context) {
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var order schema.OrderRow
 	// Update game order
 	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -66,7 +66,7 @@ func StartGame(c *gin.Context) {
 	}
 	// Check whether in promotion periods
 	now := time.Now()
-	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt)  {
+	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
 		err = errors.New("not in promotion periods")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -143,7 +143,7 @@ func StartGame(c *gin.Context) {
 	for _, prizeInfo := range tmpPrizeInfos {
 
 		if !prizeInfo.PIsActive || !prizeInfo.PDIsActive || !prizeInfo.DPIsActive {
-			continue;
+			continue
 		}
 
 		// prevAccumOdds <= randNum < currentAccumOdds
@@ -154,7 +154,7 @@ func StartGame(c *gin.Context) {
 		// msg := fmt.Sprintf("id %d, odds %d : ", prizeInfo.PrizeId, odds)
 		// fmt.Println(msg, prevAccumOdds, "<=", randNum, "<", currentAccumOdds)
 
-		if prevAccumOdds <= randNum && randNum < currentAccumOdds  {
+		if prevAccumOdds <= randNum && randNum < currentAccumOdds {
 			resPrizeInfo = &prizeInfo
 			break
 		}
@@ -176,7 +176,7 @@ func StartGame(c *gin.Context) {
 	// Start transaction
 	tx := config.DB.Begin()
 	defer func() {
-		if r := recover(); r!= nil {
+		if r := recover(); r != nil {
 			fmt.Println(r)
 
 			tx.Rollback()
@@ -200,7 +200,7 @@ func StartGame(c *gin.Context) {
 	if resPrizeInfo != nil {
 		prize := schema.PrizeRow{
 			PrizeId: resPrizeInfo.PrizeId,
-			WinCnt: resPrizeInfo.WinCnt+1,
+			WinCnt:  resPrizeInfo.WinCnt + 1,
 		}
 		err = models.UpdatePrizeByPrizeId(tx, &prize)
 		if err != nil {
@@ -209,7 +209,7 @@ func StartGame(c *gin.Context) {
 		}
 
 		pool := schema.PrizeDistPoolRow{
-			DistPoolId: resPrizeInfo.DistPoolId,
+			DistPoolId:   resPrizeInfo.DistPoolId,
 			RemainingQty: resPrizeInfo.RemainingQty - resPrizeInfo.Amount,
 		}
 		err = models.UpdateDistPoolByPoolId(tx, &pool)
@@ -223,7 +223,7 @@ func StartGame(c *gin.Context) {
 	// Subtract ticket amount for doing game
 	account.TicketAmount -= ticketQtyForGame
 	account.UpdatedAt = time.Time{}
-	err = models.UpdateAccountById(tx, &account)
+	err = models.UpdateAccountTicketById(tx, &account)
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -233,13 +233,13 @@ func StartGame(c *gin.Context) {
 	// Table : game_order
 	jsonData, err = json.Marshal(order)
 	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	orderWithId := schema.OrderRowWithID{}
 	err = json.Unmarshal(jsonData, &orderWithId)
 	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -257,14 +257,14 @@ func StartGame(c *gin.Context) {
 	}
 
 	services.Success(c, nil, types.ResStartGame{
-		OrderId: orderWithId.ID,
-		AccountId: order.AccountId,
-		Addr: order.Addr,
-		PromotionId: order.PromotionId,
-		GameId: order.GameId,
-		Status: order.Status,
+		OrderId:       orderWithId.ID,
+		AccountId:     order.AccountId,
+		Addr:          order.Addr,
+		PromotionId:   order.PromotionId,
+		GameId:        order.GameId,
+		Status:        order.Status,
 		UsedTicketQty: order.UsedTicketQty,
-		StartedAt: order.StartedAt,
+		StartedAt:     order.StartedAt,
 	})
 }
 
@@ -278,13 +278,13 @@ func StopGame(c *gin.Context) {
 	// Fetch body: orderId
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		services.BadRequest(c, "Bad Request " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	var order schema.OrderRow
 	if err = json.Unmarshal(jsonData, &order); err != nil {
 		fmt.Println(err.Error())
-		services.BadRequest(c, "Bad Request Unmarshal error: " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
+		services.BadRequest(c, "Bad Request Unmarshal error: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -318,17 +318,16 @@ func StopGame(c *gin.Context) {
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-	
+
 	// 주문 상세 정보 조회
 	latestOrder := types.ResGetLatestOrderByAddr{OrderId: order.OrderId}
 	if err = models.QueryOrderDetailById(&latestOrder); err != nil {
 		services.NotAcceptable(c, "fail QueryOrderDetailById "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
-	
+
 	services.Success(c, nil, latestOrder)
 }
-
 
 // TODO
 /*
