@@ -34,7 +34,14 @@ func UpdateVoucherBalanceById(tx *gorm.DB, bal *schema.VoucherBalanceRow) error 
 		tx = config.DB
 	}
 
-	err := tx.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
+	// err := tx.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
+	sql := `
+		UPDATE user_voucher_balance
+		SET current_amount = ?, updated_at = ?
+		WHERE id = ?
+	`
+	err := tx.Exec(sql, bal.CurrentAmount, bal.UpdatedAt, bal.Id).Error
+
 	if err != nil {
 		tx.Rollback()
 		return err

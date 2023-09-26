@@ -675,12 +675,7 @@ func PostVoucherBurn(c *gin.Context) {
 
 	// Table : user_voucher_balance
 	// voucherBalance.CurrentAmount -= req.BurningAmount
-	fmt.Printf("현재 바우처#: %+v\n", voucherBalance.CurrentAmount)
-	fmt.Printf("태울 갯수#: %+v\n", req.BurningAmount)
-	fmt.Printf("바우처 ID: %+v\n", voucherBalance.Id)
 	voucherBalance.CurrentAmount -= req.BurningAmount
-	fmt.Printf("변경될 바우처#: %+v\n", voucherBalance.CurrentAmount)
-
 	voucherBalance.UpdatedAt = time.Time{}
 	err = models.UpdateVoucherBalanceById(tx, &voucherBalance)
 	if err != nil {
