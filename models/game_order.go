@@ -37,20 +37,20 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		return
 	}
 
-	sql = `
+	if order.IsWin == true {
+		sql = `
 		SELECT * FROM prize
-		WHERE prize_id=?
-	`
-	if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
-		return
-	}
+		WHERE prize_id=?`
+		if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
+			return
+		}
 
-	sql = `
-		SELECT * FROM prize_denom
-		WHERE prize_denom_id=?
-	`
-	if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
-		return
+		sql = `
+			SELECT * FROM prize_denom
+			WHERE prize_denom_id=?`
+		if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
+			return
+		}
 	}
 
 	sql = `
