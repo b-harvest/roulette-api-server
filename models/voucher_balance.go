@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/types"
@@ -34,7 +35,12 @@ func UpdateVoucherBalanceById(tx *gorm.DB, bal *schema.VoucherBalanceRow) error 
 		tx = config.DB
 	}
 
-	err := tx.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
+	fmt.Println("UpdateVoucherBalanceById")
+	fmt.Println(bal.Id)
+	fmt.Println(bal.CurrentAmount)
+
+	err := tx.Table("user_voucher_balance").Select("current_amount").Where("id = ?", bal.Id).Update("current_amount", bal.CurrentAmount).Error
+	// tx.Table("user_voucher_balance").Where("id = ?", bal.Id).Update(bal).Error
 	if err != nil {
 		tx.Rollback()
 		return err
