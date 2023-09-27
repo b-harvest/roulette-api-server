@@ -8,12 +8,10 @@ import (
 	"io"
 	"io/ioutil"
 	"math/big"
-	"roulette-api-server/config"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -173,99 +171,7 @@ func StartGame(c *gin.Context) {
 	}
 	order.Status = 1
 
-	// Start transaction
-	tx := config.DB.Begin()
-	defer func() {
-		if r := recover(); r!= nil {
-			fmt.Println(r)
-
-			tx.Rollback()
-
-			err = errors.New("panic")
-			debug.PrintStack()
-			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-	}()
-	err = tx.Error
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// 3. Update
-
-	// Table : prize, distribution_pool
-	// If win then increase win_cnt(prize), subtract remaining_qty(distribution_pool)
-	if resPrizeInfo != nil {
-		prize := schema.PrizeRow{
-			PrizeId: resPrizeInfo.PrizeId,
-			WinCnt: resPrizeInfo.WinCnt+1,
-		}
-		err = models.UpdatePrizeByPrizeId(tx, &prize)
-		if err != nil {
-			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-
-		pool := schema.PrizeDistPoolRow{
-			DistPoolId: resPrizeInfo.DistPoolId,
-			RemainingQty: resPrizeInfo.RemainingQty - resPrizeInfo.Amount,
-		}
-		err = models.UpdateDistPoolByPoolId(tx, &pool)
-		if err != nil {
-			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-	}
-
-	// Table : account
-	// Subtract ticket amount for doing game
-	account.TicketAmount -= ticketQtyForGame
-	account.UpdatedAt = time.Time{}
-	err = models.UpdateAccountById(tx, &account)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// 4. Create
-	// Table : game_order
-	jsonData, err = json.Marshal(order)
-	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-		return
-	}
-	orderWithId := schema.OrderRowWithID{}
-	err = json.Unmarshal(jsonData, &orderWithId)
-	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : " + c.Request.Method + " " + c.Request.RequestURI + " : " + err.Error(), err)
-		return
-	}
-
-	err = models.CreateOrderWithTx(tx, &orderWithId)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// Commit transaction
-	err = tx.Commit().Error
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	services.Success(c, nil, types.ResStartGame{
-		OrderId: orderWithId.ID,
-		AccountId: order.AccountId,
-		Addr: order.Addr,
-		PromotionId: order.PromotionId,
-		GameId: order.GameId,
-		Status: order.Status,
-		UsedTicketQty: order.UsedTicketQty,
-		StartedAt: order.StartedAt,
-	})
+	services.Success(c, nil, resPrizeInfo)
 }
 
 // 게임 종료 (룰렛)
