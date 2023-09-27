@@ -1,5 +1,6 @@
 import sys
 import requests
+import pandas as pd
 
 def simulate(epoch):
     keyList = ["distPoolId", "prizeDenomId", "name", "type", "amount", "odds"]
@@ -30,17 +31,22 @@ def simulate(epoch):
     printSimulateResult(result, epoch)
 
 def printSimulateResult(result, epoch):
-    for k, v in result.items():
-        print('='*20)
-        print('prize id:', k)
-        print('prize info:', v['name'], v['type'], v['amount'])
-        print('registed odds:', v['odds']*100, '%')
-        print('win count:', v['count'])
-        print('calculated odds:', (v['count']/epoch) * 100, '%')
-        print('='*20)
+    headers = ["Prize ID", "Prize Info", "등록된 확률", "당첨 횟수", "계산된 확률"]
+    excel = {}
+    for header in headers:
+        excel[header] = []
+
+    for k, v in sorted(result.items()):
+        excel[headers[0]].append(k)
+        excel[headers[1]].append("{} {} {}".format(v['name'], v['type'], v['amount']))
+        excel[headers[2]].append("{}%".format(v['odds']*100))
+        excel[headers[3]].append( v['count'] )
+        excel[headers[4]].append("{}%".format((v['count']/epoch) * 100))
+
+    raw_data = pd.DataFrame(excel)
+    raw_data.to_excel(excel_writer='{}result.xlsx'.format(epoch), index=False)
 
 def main():
     epoch = int(sys.argv[1])
-    print("# Simulation:", epoch)
     simulate(epoch)
 main()
