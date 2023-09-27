@@ -73,3 +73,21 @@ func QueryAvailableVouchers(promotions *[](*types.ResGetAvailableVouchers)) (err
 	}
 	return
 }
+
+func QueryAvailableVoucher(voucherInfo *types.ResGetAvailableVouchers) (err error) {
+	q :=
+		"SELECT promotion_id, title, voucher_name, voucher_total_supply, voucher_remaining_qty " +
+			"FROM promotion  " +
+			// "WHERE is_active = 1 " +
+			// "AND is_whitelisted = 1  " +
+			// "AND promotion_end_at > NOW()"
+			"WHERE promotion_end_at > NOW()" +
+			"   AND promotion_id = " + fmt.Sprintf("%d", voucherInfo.PromotionId)
+
+	// if err = config.DB.Table("promotion").Order("promotion_start_at DESC").Find(promotions).
+	if err = config.DB.Raw(q).Scan(voucherInfo).
+		Error; err != nil {
+		return
+	}
+	return
+}

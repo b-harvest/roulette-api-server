@@ -88,9 +88,10 @@ func SetupRouter() *gin.Engine {
 	// TODO: 통계 정보: 유저 별, daily 등
 
 	// voucher-mgmt
-	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)        // 바우처 send 내역
-	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)    // 바우처 보내기
-	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers) // 프로모션 별 voucher 정보
+	route.GET("/voucher-mgmt/events/send", controllers.GetVoucherSendEvents)                     // 바우처 send 내역
+	route.POST("/voucher-mgmt/events/send", controllers.CreateVoucherSendEvents)                 // 바우처 보내기
+	route.GET("/voucher-mgmt/available-vouchers", controllers.GetAvailableVouchers)              // 프로모션 별 voucher 정보
+	route.GET("/voucher-mgmt/available-vouchers/:promotion_id", controllers.GetAvailableVoucher) // 프로모션 별 voucher 정보
 	route.POST("/voucher-mgmt/burn", controllers.PostVoucherBurn)
 	route.GET("/voucher-mgmt/events/burn", controllers.GetVoucherBurnEvents) // 바우처 send 내역
 
@@ -112,6 +113,18 @@ func SetupRouter() *gin.Engine {
 
 	// healthcheck
 	route.GET("/healthcheck", controllers.GetHealthcheck)
+
+	// stats : Global
+	route.GET("/stats/accounts", controllers.GetAccountStat)
+	route.GET("/stats/promotions", controllers.GetPromotionStat)
+
+	// stats : Promotion specific
+	route.GET("/stats/promotion-summary/:promotion_id", controllers.GetPromotionSummary)
+	route.GET("/stats/flip-links/:promotion_id", controllers.GetFlipLinkStat)
+	route.GET("/stats/wallet-connects/:promotion_id", controllers.GetWalletConnectStat)
+	route.GET("/stats/vouchers/:promotion_id", controllers.GetVoucherStat)
+	route.GET("/stats/tickets/:promotion_id", controllers.GetTicketStat)
+	route.GET("/stats/prizes/:promotion_id", controllers.GetPrizeStat)
 
 	//------------------------------------------------------------------------------
 	// 룰렛 only 특정 테이블 CRUD APIs
@@ -187,18 +200,6 @@ func SetupRouter() *gin.Engine {
 	route.GET("/tb/voucher-mgmt/events/burn/:id", tcontrollers.GetVoucherBurnEvent)        // for test
 	route.PATCH("/tb/voucher-mgmt/events/burn/:id", tcontrollers.UpdateVoucherBurnEvent)   // for test
 	route.DELETE("/tb/voucher-mgmt/evenets/burn/:id", tcontrollers.DeleteVoucherBurnEvent) // for test
-
-	// stats : Global
-	route.GET("/stats/accounts", controllers.GetAccountStat)
-	route.GET("/stats/promotions", controllers.GetPromotionStat)
-
-	// stats : Promotion specific
-	route.GET("/stats/promotion-summary/:promotion_id", controllers.GetPromotionSummary)
-	route.GET("/stats/flip-links/:promotion_id", controllers.GetFlipLinkStat)
-	route.GET("/stats/wallet-connects/:promotion_id", controllers.GetWalletConnectStat)
-	route.GET("/stats/vouchers/:promotion_id", controllers.GetVoucherStat)
-	route.GET("/stats/tickets/:promotion_id", controllers.GetTicketStat)
-	route.GET("/stats/prizes/:promotion_id", controllers.GetPrizeStat)
 
 	return route
 }

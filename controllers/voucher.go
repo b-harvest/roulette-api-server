@@ -176,8 +176,8 @@ func GetVoucherSendEvents(c *gin.Context) {
 // voucher send, voucher burn 내역 조회
 func GetTransferEvents(c *gin.Context) {
 	addr := c.Param("addr")
-	res  := types.ResTransfersHistoryByAddr{
-		Addr: addr,
+	res := types.ResTransfersHistoryByAddr{
+		Addr:              addr,
 		VoucherSendEvents: make([]*types.ResGetVoucherSendEvents, 0, 100),
 		VoucherBurnEvents: make([]*types.ResGetVoucherBurnEvents, 0, 100),
 	}
@@ -438,6 +438,29 @@ func GetAvailableVouchers(c *gin.Context) {
 	services.Success(c, nil, vouchers)
 }
 
+func GetAvailableVoucher(c *gin.Context) {
+	// 파라미터 조회 -> body 조회 -> 언마샬
+	strId := c.Param("promotion_id")
+	reqId, err := strconv.ParseUint(strId, 10, 64)
+	if err != nil {
+		services.BadRequest(c, "Bad Request Id path parameter", err)
+		return
+	}
+
+	voucherInfo := types.ResGetAvailableVouchers{
+		PromotionId: reqId,
+	}
+	err = models.QueryAvailableVoucher(&voucherInfo)
+
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, voucherInfo)
+}
+
 // voucher_send_history 생성
 func CreateVoucherSendEvents(c *gin.Context) {
 	jsonData, err := ioutil.ReadAll(c.Request.Body)
@@ -487,13 +510,12 @@ func CreateVoucherSendEvents(c *gin.Context) {
 		return
 	}
 
-
 	for _, addr := range req.RecipientAddrs {
 
 		fmt.Printf("addr : %s\n", addr)
 
 		// 사용자 Account Id 조회
-		
+
 		addrType := services.GetAddressType(addr)
 		acc := schema.AccountRow{
 			Addr: addr,
@@ -594,7 +616,7 @@ func PostVoucherBurn(c *gin.Context) {
 	// Table : user_voucher_balance, promotion
 	voucherBalance := schema.VoucherBalanceRow{
 		PromotionId: req.PromotionId,
-		Addr: req.Addr,
+		Addr:        req.Addr,
 	}
 	err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
 	if err != nil {
@@ -616,7 +638,7 @@ func PostVoucherBurn(c *gin.Context) {
 	fmt.Println(uint64(promotion.VoucherExchangeRatio0))
 	if (req.BurningAmount <= 0) ||
 		(voucherBalance.CurrentAmount < req.BurningAmount) ||
-		(req.BurningAmount % uint64(promotion.VoucherExchangeRatio0) != 0) {
+		(req.BurningAmount%uint64(promotion.VoucherExchangeRatio0) != 0) {
 		err = errors.New("invalid voucher amount")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -639,7 +661,7 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 	// Check whether in promotion periods
 	now := time.Now()
-	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt)  {
+	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
 		err = errors.New("not in promotion periods")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -654,7 +676,7 @@ func PostVoucherBurn(c *gin.Context) {
 	// Start transaction
 	tx := config.DB.Begin()
 	defer func() {
-		if r := recover(); r!= nil {
+		if r := recover(); r != nil {
 			fmt.Println(r)
 
 			tx.Rollback()
@@ -684,7 +706,6 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 	fmt.Printf("변경된 정보#: %+v\n", voucherBalance)
 
-
 	// Table : account
 	// account.ticketAmount = account.TicketAmount + (promotion.VoucherExchangeRatio1 * (req.BurningAmount / promotion.VoucherExchangeRatio0))
 	mintedTicketAmount := uint64(promotion.VoucherExchangeRatio1) * (req.BurningAmount / uint64(promotion.VoucherExchangeRatio0))
@@ -699,12 +720,12 @@ func PostVoucherBurn(c *gin.Context) {
 	// 3. Create
 	// Table : voucher_burn_event
 	event := schema.VoucherBurnEventRow{
-		AccountId: voucherBalance.AccountId,
-		Addr: voucherBalance.Addr,
-		PromotionId: voucherBalance.PromotionId,
+		AccountId:           voucherBalance.AccountId,
+		Addr:                voucherBalance.Addr,
+		PromotionId:         voucherBalance.PromotionId,
 		BurnedVoucherAmount: req.BurningAmount,
-		MintedTicketAmount: mintedTicketAmount,
-		BurnedAt: time.Now(),
+		MintedTicketAmount:  mintedTicketAmount,
+		BurnedAt:            time.Now(),
 	}
 	err = models.CreateVoucherBurnEvent(tx, &event)
 	if err != nil {
@@ -720,10 +741,10 @@ func PostVoucherBurn(c *gin.Context) {
 	}
 
 	resp := types.ResPostVoucherBurn{
-		PromotionID: voucherBalance.PromotionId,
-		Addr: voucherBalance.Addr,
+		PromotionID:   voucherBalance.PromotionId,
+		Addr:          voucherBalance.Addr,
 		VoucherAmount: voucherBalance.CurrentAmount,
-		TicketAmount: account.TicketAmount,
+		TicketAmount:  account.TicketAmount,
 	}
 	services.Success(c, nil, &resp)
 }
