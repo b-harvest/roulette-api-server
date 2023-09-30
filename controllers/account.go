@@ -171,7 +171,7 @@ func Claim(c *gin.Context) {
 	order.Status = 4
 	order.ClaimedAt = now
 
-	err = models.UpdateOrder(&order)
+	err = models.UpdateOrder(nil, &order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)

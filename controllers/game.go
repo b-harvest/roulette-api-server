@@ -321,11 +321,36 @@ func StopGame(c *gin.Context) {
 		return
 	}
 
-	// 주문 조회
-	err = models.QueryOrderById(&order)
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err = errors.New("panic")
+			debug.PrintStack()
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}()
+	err = tx.Error
 	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 주문 조회
+	isLocked, err := models.QueryOrderByIdWithLock(tx, &order)
+	if isLocked {
+		// If is there any in stop event
+		// then just ignore request
+		services.Success(c, "there are some game stop event", nil)
+		return
+	}
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	// Status 가 1 인지 확인 (게임 중인지 확인)
@@ -333,6 +358,8 @@ func StopGame(c *gin.Context) {
 		err = errors.New("Game not in progress")
 		fmt.Printf("%+v\n", err.Error())
 		services.BadRequest(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
 		return
 	}
 
@@ -345,7 +372,7 @@ func StopGame(c *gin.Context) {
 		order.Status = 2
 	}
 	order.UpdatedAt = time.Now()
-	err = models.UpdateOrder(&order)
+	err = models.UpdateOrder(tx, &order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -354,8 +381,15 @@ func StopGame(c *gin.Context) {
 
 	// 주문 상세 정보 조회
 	latestOrder := types.ResGetLatestOrderByAddr{OrderId: order.OrderId}
-	if err = models.QueryOrderDetailById(&latestOrder); err != nil {
+	if err = models.QueryOrderDetailById(tx, &latestOrder); err != nil {
 		services.NotAcceptable(c, "fail QueryOrderDetailById "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Commit transaction
+	err = tx.Commit().Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 

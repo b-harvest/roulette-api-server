@@ -13,9 +13,26 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func QueryOrderById(order *schema.OrderRow) (err error) {
-	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Find(order).Error
-	return
+func QueryOrderByIdWithLock(tx *gorm.DB, order *schema.OrderRow) (bool, error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	sql :=  "SELECT * FROM game_order WHERE order_id = ? FOR UPDATE NOWAIT"
+
+	err := tx.Raw(sql, order.OrderId).Scan(order).Error
+	if err != nil {
+		tx.Rollback()
+
+		// When order is locked
+		// then rollback and just return (true, nil)
+		if err.Error() == "Error 1205: Lock wait timeout exceeded; try restarting transaction" {
+			tx.Rollback()
+			return true, nil
+		}
+		return false, err
+	}
+	return false, nil
 }
 
 func QueryOrderByIdAndAddr(order *schema.OrderRow) (err error) {
@@ -28,12 +45,17 @@ func QueryJustOrdersByAddr(order *[]schema.OrderRow, addr string) (err error) {
 	return
 }
 
-func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
+func QueryOrderDetailById(tx *gorm.DB, order *types.ResGetLatestOrderByAddr) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
 	sql := `
 		SELECT * FROM game_order
 		WHERE order_id = ?
 	`
-	if err = config.DB.Raw(sql, order.OrderId).Scan(order).Error; err != nil {
+	if err = tx.Raw(sql, order.OrderId).Scan(order).Error; err != nil {
+		tx.Rollback()
 		return
 	}
 
@@ -41,14 +63,16 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		sql = `
 		SELECT * FROM prize
 		WHERE prize_id=?`
-		if err = config.DB.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
+		if err = tx.Raw(sql, order.PrizeId).Scan(&order.Prize).Error; err != nil {
+			tx.Rollback()
 			return
 		}
 
 		sql = `
 			SELECT * FROM prize_denom
 			WHERE prize_denom_id=?`
-		if err = config.DB.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
+		if err = tx.Raw(sql, order.Prize.PrizeDenomId).Scan(&order.Prize.PrizeDenom).Error; err != nil {
+			tx.Rollback()
 			return
 		}
 	}
@@ -57,7 +81,8 @@ func QueryOrderDetailById(order *types.ResGetLatestOrderByAddr) (err error) {
 		SELECT * FROM promotion
 		WHERE promotion_id=?
 	`
-	if err = config.DB.Raw(sql, order.PromotionId).Scan(&order.Promotion).Error; err != nil {
+	if err = tx.Raw(sql, order.PromotionId).Scan(&order.Promotion).Error; err != nil {
+		tx.Rollback()
 		return
 	}
 
@@ -190,8 +215,15 @@ func QueryOrdersByAddr(orders *[]*types.ResGetLatestOrderByAddr, addr string, is
 	return nil
 }
 
-func UpdateOrder(order *schema.OrderRow) (err error) {
-	err = config.DB.Table("game_order").Where("order_id = ?", order.OrderId).Update(order).Error
+func UpdateOrder(tx *gorm.DB, order *schema.OrderRow) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err = tx.Table("game_order").Where("order_id = ?", order.OrderId).Update(order).Error
+	if err != nil {
+		tx.Rollback()
+	}
 	return
 }
 
