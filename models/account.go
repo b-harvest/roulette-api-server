@@ -91,18 +91,6 @@ func QueryWinTotalByAcc(winTotals *[]types.ResGetWinTotalByAcc, addr string) (er
 	return
 }
 
-func QueryAccountByAddr(tx *gorm.DB, acc *schema.AccountRow) (err error) {
-	if tx == nil {
-		tx = config.DB
-	}
-
-	err = tx.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
-	if err != nil {
-		tx.Rollback()
-	}
-	return
-}
-
 func QueryAccountById(acc *schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Where("id = ?", acc.Id).Find(acc).Error
 	return
@@ -149,15 +137,14 @@ func QueryAccount(acc *schema.AccountRow) (err error) {
 	return
 }
 
-func LockAccountByAddr(tx *gorm.DB, addr string) (bool, error) {
+func QueryAndLockAccountByAddr(tx *gorm.DB, account *schema.AccountRow) (bool, error) {
 	if tx == nil {
 		tx = config.DB
 	}
 
-	sql := "SELECT id FROM account WHERE addr = ? FOR UPDATE NOWAIT"
+	sql := "SELECT * FROM account WHERE addr = ? FOR UPDATE NOWAIT"
 
-	err := tx.Exec(sql, addr).Error
-	
+	err := tx.Raw(sql, account.Addr).Scan(account).Error
 	if err != nil {
 		tx.Rollback()
 

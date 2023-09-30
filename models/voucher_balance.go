@@ -25,8 +25,15 @@ func QueryVoucherBalance(bal *schema.VoucherBalanceRow) (err error) {
 	return
 }
 
-func QueryVoucherBalanceByAddrPromotionId(bal *schema.VoucherBalanceRow) (err error) {
-	err = config.DB.Table("user_voucher_balance").Where("addr = ? and promotion_id = ?", bal.Addr, bal.PromotionId).First(bal).Error
+func QueryVoucherBalanceByAddrPromotionId(tx *gorm.DB, bal *schema.VoucherBalanceRow) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err = tx.Table("user_voucher_balance").Where("addr = ? and promotion_id = ?", bal.Addr, bal.PromotionId).First(bal).Error
+	if err != nil {
+		tx.Rollback()
+	}
 	return
 }
 

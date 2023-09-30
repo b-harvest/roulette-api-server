@@ -13,7 +13,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func QueryOrderByIdWithLock(tx *gorm.DB, order *schema.OrderRow) (bool, error) {
+func QueryAndLockOrderById(tx *gorm.DB, order *schema.OrderRow) (bool, error) {
 	if tx == nil {
 		tx = config.DB
 	}

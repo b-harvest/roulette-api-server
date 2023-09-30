@@ -54,12 +54,20 @@ func StartGame(c *gin.Context) {
 		return
 	}
 
+	// 1. Check
+
+	// Table : account
+	account := schema.AccountRow{
+		Addr: order.Addr,
+	}
 	// Check whether account is doing game
-	isLocked, err := models.LockAccountByAddr(tx, order.Addr)
+	isLocked, err := models.QueryAndLockAccountByAddr(tx, &account)
 	if isLocked {
 		// If is there any in progress game
 		// then just ignore request
 		services.Success(c, "there are some games in progress", nil)
+
+		tx.Rollback()
 		return
 	}
 	if err != nil {
@@ -67,7 +75,20 @@ func StartGame(c *gin.Context) {
 		return
 	}
 
-	// 1. Check
+	// TODO: calculate required ticket amount for game start
+	// Check whether account has sufficient ticket amount
+	ticketQtyForGame := uint64(1)
+	if account.TicketAmount < ticketQtyForGame {
+		err = errors.New("insufficient ticket amount")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+
+	// Update game order
+	order.AccountId = account.Id
+	order.UsedTicketQty = ticketQtyForGame
 
 	// Table : game_order
 	counter, err := models.QueryInProgressGameCnt(tx, &order)
@@ -129,31 +150,6 @@ func StartGame(c *gin.Context) {
 		tx.Rollback()
 		return
 	}
-
-	// Table : account
-	account := schema.AccountRow{
-		Addr: order.Addr,
-	}
-	err = models.QueryAccountByAddr(tx, &account)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// TODO: calculate required ticket amount for game start
-	// Check whether account has sufficient ticket amount
-	ticketQtyForGame := uint64(1)
-	if account.TicketAmount < ticketQtyForGame {
-		err = errors.New("insufficient ticket amount")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-
-		tx.Rollback()
-		return
-	}
-
-	// Update game order
-	order.AccountId = account.Id
-	order.UsedTicketQty = ticketQtyForGame
 
 	// 2. Game Logic
 
@@ -342,11 +338,13 @@ func StopGame(c *gin.Context) {
 	}
 
 	// 주문 조회
-	isLocked, err := models.QueryOrderByIdWithLock(tx, &order)
+	isLocked, err := models.QueryAndLockOrderById(tx, &order)
 	if isLocked {
 		// If is there any in stop event
 		// then just ignore request
 		services.Success(c, "there are some game stop event", nil)
+
+		tx.Rollback()
 		return
 	}
 	if err != nil {
