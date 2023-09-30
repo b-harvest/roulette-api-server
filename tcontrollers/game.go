@@ -220,7 +220,7 @@ func GetGame(c *gin.Context) {
 	game := schema.Game{
 		GameId: gameId,
 	}
-	err = models.QueryGameType(&game)
+	err = models.QueryGameType(nil, &game)
 
 	if err != nil {
 		if err.Error() == "record not found" {	// if addr not exists

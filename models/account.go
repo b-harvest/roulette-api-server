@@ -91,11 +91,6 @@ func QueryWinTotalByAcc(winTotals *[]types.ResGetWinTotalByAcc, addr string) (er
 	return
 }
 
-func QueryAccountByAddr(acc *schema.AccountRow) (err error) {
-	err = config.DB.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
-	return
-}
-
 func QueryAccountById(acc *schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Where("id = ?", acc.Id).Find(acc).Error
 	return
@@ -140,6 +135,28 @@ func CreateAccount(acc *types.ReqTbCreateAccount) (err error) {
 func QueryAccount(acc *schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error
 	return
+}
+
+func QueryAndLockAccountByAddr(tx *gorm.DB, account *schema.AccountRow) (bool, error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	sql := "SELECT * FROM account WHERE addr = ? FOR UPDATE NOWAIT"
+
+	err := tx.Raw(sql, account.Addr).Scan(account).Error
+	if err != nil {
+		tx.Rollback()
+
+		// When specific account is locked
+		// then rollback and just return (true, nil)
+		if err.Error() == "Error 1205: Lock wait timeout exceeded; try restarting transaction" {
+			tx.Rollback()
+			return true, nil
+		}
+		return false, err
+	}
+	return false, nil
 }
 
 // Accounts 에 대해 각각 QueryAccountDetail 조회하기 전에 Account 기본 정보 세팅

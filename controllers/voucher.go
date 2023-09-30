@@ -550,7 +550,7 @@ func CreateVoucherSendEvents(c *gin.Context) {
 			PromotionId: req.PromotionId,
 		}
 
-		err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
+		err = models.QueryVoucherBalanceByAddrPromotionId(nil, &voucherBalance)
 		if err != nil && err.Error() != "record not found" {
 			fmt.Printf("QueryVoucherBalanceByAddrPromotionId 515 : %+v\n", err.Error())
 			voucherBalance.Id = 0
@@ -612,67 +612,6 @@ func PostVoucherBurn(c *gin.Context) {
 		return
 	}
 
-	// 1. Check
-	// Table : user_voucher_balance, promotion
-	voucherBalance := schema.VoucherBalanceRow{
-		PromotionId: req.PromotionId,
-		Addr:        req.Addr,
-	}
-	err = models.QueryVoucherBalanceByAddrPromotionId(&voucherBalance)
-	if err != nil {
-		services.NotAcceptable(c, "fail QueryVoucherBalanceByAddrPromotionId: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	promotion := schema.PromotionRowWithoutID{
-		PromotionId: voucherBalance.PromotionId,
-	}
-	err = models.QueryPromotionById(&promotion)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether sufficient voucher amount
-	// Check whether req.BurningAmount will be multiply of promotion => voucherExchangeRatio0
-	fmt.Println(req.BurningAmount)
-	fmt.Println(voucherBalance.CurrentAmount)
-	fmt.Println(uint64(promotion.VoucherExchangeRatio0))
-	if (req.BurningAmount <= 0) ||
-		(voucherBalance.CurrentAmount < req.BurningAmount) ||
-		(req.BurningAmount%uint64(promotion.VoucherExchangeRatio0) != 0) {
-		err = errors.New("invalid voucher amount")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether active promotion
-	if !promotion.IsActive {
-		err = errors.New("promotion isn't active")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// Table : account
-	account := schema.AccountRow{
-		Id: voucherBalance.AccountId,
-	}
-	err = models.QueryAccountById(&account)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether in promotion periods
-	now := time.Now()
-	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
-		err = errors.New("not in promotion periods")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether blacklisted account
-	if account.IsBlacklisted {
-		err = errors.New("blacklisted account")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
 	// Start transaction
 	tx := config.DB.Begin()
 	defer func() {
@@ -690,6 +629,85 @@ func PostVoucherBurn(c *gin.Context) {
 	err = tx.Error
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 1. Check
+
+	// Table : account
+	account := schema.AccountRow{
+		Addr: req.Addr,
+	}
+	// Check whether account is doing burn voucher
+	isLocked, err := models.QueryAndLockAccountByAddr(tx, &account)
+	if isLocked {
+		// If is there any in progress burn event
+		// then just ignore request
+		services.Success(c, "there are some games in progress", nil)
+
+		tx.Rollback()
+		return
+	}
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether blacklisted account
+	if account.IsBlacklisted {
+		err = errors.New("blacklisted account")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+
+	// Table : user_voucher_balance, promotion
+	voucherBalance := schema.VoucherBalanceRow{
+		PromotionId: req.PromotionId,
+		Addr:        req.Addr,
+	}
+	err = models.QueryVoucherBalanceByAddrPromotionId(tx, &voucherBalance)
+	if err != nil {
+		services.NotAcceptable(c, "fail QueryVoucherBalanceByAddrPromotionId: "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	promotion := schema.PromotionRowWithoutID{
+		PromotionId: voucherBalance.PromotionId,
+	}
+	err = models.QueryPromotionById(tx, &promotion)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether sufficient voucher amount
+	// Check whether req.BurningAmount will be multiply of promotion => voucherExchangeRatio0
+	fmt.Println(req.BurningAmount)
+	fmt.Println(voucherBalance.CurrentAmount)
+	fmt.Println(uint64(promotion.VoucherExchangeRatio0))
+	if (req.BurningAmount <= 0) ||
+		(voucherBalance.CurrentAmount < req.BurningAmount) ||
+		(req.BurningAmount%uint64(promotion.VoucherExchangeRatio0) != 0) {
+		err = errors.New("invalid voucher amount")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+	// Check whether active promotion
+	if !promotion.IsActive {
+		err = errors.New("promotion isn't active")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+	// Check whether in promotion periods
+	now := time.Now()
+	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
+		err = errors.New("not in promotion periods")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
 		return
 	}
 

@@ -34,65 +34,42 @@ func StartGame(c *gin.Context) {
 		return
 	}
 
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err = errors.New("panic")
+			debug.PrintStack()
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}()
+	err = tx.Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
 	// 1. Check
-
-	// Table : game_order
-	cnt, err := models.QueryInProgressGameCnt(&order)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check existence of in progress game
-	if cnt.Cnt != 0 {
-		err = errors.New("there are some games in progress")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// Table : promotion
-	promotion := schema.PromotionRowWithoutID{
-		PromotionId: order.PromotionId,
-	}
-	err = models.QueryPromotionById(&promotion)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether active promotion
-	if !promotion.IsActive {
-		err = errors.New("promotion isn't active")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether in promotion periods
-	now := time.Now()
-	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
-		err = errors.New("not in promotion periods")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// Table : game_type
-	gameType := schema.Game{
-		GameId: order.GameId,
-	}
-	err = models.QueryGameType(&gameType)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	// Check whether active game
-	if !gameType.IsActive {
-		err = errors.New("game isn't active")
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
 
 	// Table : account
 	account := schema.AccountRow{
 		Addr: order.Addr,
 	}
-	err = models.QueryAccountByAddr(&account)
+	// Check whether account is doing game
+	isLocked, err := models.QueryAndLockAccountByAddr(tx, &account)
+	if isLocked {
+		// If is there any in progress game
+		// then just ignore request
+		services.Success(c, "there are some games in progress", nil)
+
+		tx.Rollback()
+		return
+	}
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -104,12 +81,75 @@ func StartGame(c *gin.Context) {
 	if account.TicketAmount < ticketQtyForGame {
 		err = errors.New("insufficient ticket amount")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
 		return
 	}
 
 	// Update game order
 	order.AccountId = account.Id
 	order.UsedTicketQty = ticketQtyForGame
+
+	// Table : game_order
+	counter, err := models.QueryInProgressGameCnt(tx, &order)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check existence of in progress game
+	if counter.Cnt != 0 {
+		// If is there any in progress game
+		// then just ignore request
+		services.Success(c, "there are some games in progress", nil)
+
+		tx.Rollback()
+		return
+	}
+
+	// Table : promotion
+	promotion := schema.PromotionRowWithoutID{
+		PromotionId: order.PromotionId,
+	}
+	err = models.QueryPromotionById(tx, &promotion)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether active promotion
+	if !promotion.IsActive {
+		err = errors.New("promotion isn't active")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+	// Check whether in promotion periods
+	now := time.Now()
+	if now.Before(promotion.PromotionStartAt) || now.After(promotion.PromotionEndAt) {
+		err = errors.New("not in promotion periods")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+
+	// Table : game_type
+	gameType := schema.Game{
+		GameId: order.GameId,
+	}
+	err = models.QueryGameType(tx, &gameType)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	// Check whether active game
+	if !gameType.IsActive {
+		err = errors.New("game isn't active")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
 
 	// 2. Game Logic
 
@@ -118,7 +158,7 @@ func StartGame(c *gin.Context) {
 
 	// Query joined data(prize info) with prize, prize_denom, distribution_pool
 	var tmpPrizeInfos []types.PrizeInfo
-	err = models.QueryPrizeInfosByPromotionId(&tmpPrizeInfos, promotion.PromotionId)
+	err = models.QueryPrizeInfosByPromotionId(tx, &tmpPrizeInfos, promotion.PromotionId)
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -135,14 +175,23 @@ func StartGame(c *gin.Context) {
 
 	var resPrizeInfo *types.PrizeInfo
 
-	// TODO Check the other condition
-	// TODO prize => max_*_win_limit
-	// TODO distribution_pool => remaining_qty
 	// Check whether is active prize
 	var prevAccumOdds uint64 = 0
 	for _, prizeInfo := range tmpPrizeInfos {
+		// Query the number of today win game_orders of prize
+		var todayWinCounter types.Counter
+		err = models.QueryTodayWins(tx, &todayWinCounter, prizeInfo.PrizeId)
+		if err != nil {
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
 
-		if !prizeInfo.PIsActive || !prizeInfo.PDIsActive || !prizeInfo.DPIsActive {
+		// Only include prizes that meet the conditions
+		condition1 := !prizeInfo.PIsActive || !prizeInfo.PDIsActive || !prizeInfo.DPIsActive
+		condition2 := prizeInfo.MaxTotalWinLimit < (prizeInfo.WinCnt+1)
+		condition3 := prizeInfo.MaxDailyWinLimit < (todayWinCounter.Cnt+1)
+		condition4 := prizeInfo.RemainingQty < prizeInfo.Amount
+		if condition1 || condition2 || condition3 || condition4 {
 			continue
 		}
 
@@ -172,26 +221,6 @@ func StartGame(c *gin.Context) {
 		order.IsWin = true
 	}
 	order.Status = 1
-
-	// Start transaction
-	tx := config.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println(r)
-
-			tx.Rollback()
-
-			err = errors.New("panic")
-			debug.PrintStack()
-			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-	}()
-	err = tx.Error
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
 
 	// 3. Update
 
@@ -288,11 +317,38 @@ func StopGame(c *gin.Context) {
 		return
 	}
 
-	// 주문 조회
-	err = models.QueryOrderById(&order)
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err = errors.New("panic")
+			debug.PrintStack()
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}()
+	err = tx.Error
 	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 주문 조회
+	isLocked, err := models.QueryAndLockOrderById(tx, &order)
+	if isLocked {
+		// If is there any in stop event
+		// then just ignore request
+		services.Success(c, "there are some game stop event", nil)
+
+		tx.Rollback()
+		return
+	}
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 	// Status 가 1 인지 확인 (게임 중인지 확인)
@@ -300,6 +356,8 @@ func StopGame(c *gin.Context) {
 		err = errors.New("Game not in progress")
 		fmt.Printf("%+v\n", err.Error())
 		services.BadRequest(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
 		return
 	}
 
@@ -312,7 +370,7 @@ func StopGame(c *gin.Context) {
 		order.Status = 2
 	}
 	order.UpdatedAt = time.Now()
-	err = models.UpdateOrder(&order)
+	err = models.UpdateOrder(tx, &order)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -321,8 +379,15 @@ func StopGame(c *gin.Context) {
 
 	// 주문 상세 정보 조회
 	latestOrder := types.ResGetLatestOrderByAddr{OrderId: order.OrderId}
-	if err = models.QueryOrderDetailById(&latestOrder); err != nil {
+	if err = models.QueryOrderDetailById(tx, &latestOrder); err != nil {
 		services.NotAcceptable(c, "fail QueryOrderDetailById "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// Commit transaction
+	err = tx.Commit().Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
@@ -519,7 +584,7 @@ func GetGame(c *gin.Context) {
 	game := schema.Game{
 		GameId: gameId,
 	}
-	err = models.QueryGameType(&game)
+	err = models.QueryGameType(nil, &game)
 
 	if err != nil {
 		if err.Error() == "record not found" { // if addr not exists

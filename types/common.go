@@ -7,6 +7,6 @@ type QueryFilter struct {
 
 type QueryFilterMap map[string]string
 
-type Count struct {
+type Counter struct {
 	Cnt uint64 `json:"cnt" db:"cnt"`
 }

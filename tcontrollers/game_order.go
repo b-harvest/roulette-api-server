@@ -125,7 +125,7 @@ func UpdateGameOrder(c *gin.Context) {
 		ClaimFinishedAt: req.ClaimFinishedAt,
 		UpdatedAt: time.Now(),
 	}
-	err = models.UpdateOrder(&order)
+	err = models.UpdateOrder(nil, &order)
 
 	// result
 	if err != nil {
