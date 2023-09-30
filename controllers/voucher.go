@@ -626,7 +626,7 @@ func PostVoucherBurn(c *gin.Context) {
 	promotion := schema.PromotionRowWithoutID{
 		PromotionId: voucherBalance.PromotionId,
 	}
-	err = models.QueryPromotionById(&promotion)
+	err = models.QueryPromotionById(nil, &promotion)
 	if err != nil {
 		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return

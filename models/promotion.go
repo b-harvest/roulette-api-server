@@ -244,6 +244,15 @@ func CreatePromotionWithTx(tx *gorm.DB, promotion *schema.PromotionRow) (err err
 	return
 }
 
-func QueryPromotionById(promotion *schema.PromotionRowWithoutID) error {
-	return config.DB.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).First(promotion).Error
+func QueryPromotionById(tx *gorm.DB,promotion *schema.PromotionRowWithoutID) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("promotion").Where("promotion_id = ?", promotion.PromotionId).First(promotion).Error
+	if err != nil {
+		tx.Rollback()
+	}
+
+	return err
 }

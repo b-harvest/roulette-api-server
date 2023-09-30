@@ -223,7 +223,11 @@ func QueryOrder(order *schema.OrderRow) (err error) {
 	return
 }
 
-func QueryInProgressGameCnt(order *schema.OrderRow) (*types.Count, error) {
+func QueryInProgressGameCnt(tx *gorm.DB, order *schema.OrderRow) (*types.Counter, error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
 	sql := `
 		SELECT COUNT(*) as cnt
 		FROM game_order
@@ -233,8 +237,11 @@ func QueryInProgressGameCnt(order *schema.OrderRow) (*types.Count, error) {
 			game_id = ?;
 	`
 
-	var res types.Count
-	err := config.DB.Raw(sql, order.Addr, order.PromotionId, order.GameId).Scan(&res).Error
+	var res types.Counter
+	err := tx.Raw(sql, order.Addr, order.PromotionId, order.GameId).Scan(&res).Error
+	if err != nil {
+		tx.Rollback()
+	}
 	return &res, err
 }
 
@@ -296,4 +303,26 @@ func UpdateOrdersByOrderIds(orderIds *[]string) error {
 		`, strings.Join(*orderIds, ","))
 
 	return config.DB.Raw(sql).Scan(&[]schema.OrderRow{}).Error
+}
+
+func QueryTodayWins(tx *gorm.DB, todayWinCounter *types.Counter, prizeId int64) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	current := time.Now()
+    // Extract only date part as string
+    today := current.Format("2006-01-02")
+
+	sql := `
+		SELECT COUNT(*) as cnt
+		FROM game_order
+		WHERE prize_id = ?
+			AND DATE(started_at) = ?;
+	`
+	err = tx.Raw(sql, prizeId, today).Scan(todayWinCounter).Error
+	if err != nil {
+		tx.Rollback()
+	}
+	return
 }

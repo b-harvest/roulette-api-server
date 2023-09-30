@@ -5,6 +5,7 @@ import (
 	"roulette-api-server/models/schema"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func QueryCurGameByAddr(game *schema.GameOrder, addr string) (err error) {
@@ -49,8 +50,15 @@ func CreateGame(game *schema.Game) (err error) {
 	return
 }
 
-func QueryGameType(game *schema.Game) (err error) {
-	err = config.DB.Table("game_type").Where("game_id = ?", game.GameId).First(game).Error
+func QueryGameType(tx *gorm.DB, game *schema.Game) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err = tx.Table("game_type").Where("game_id = ?", game.GameId).First(game).Error
+	if err != nil {
+		tx.Rollback()
+	}
 	return
 }
 

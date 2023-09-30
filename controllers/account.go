@@ -151,7 +151,7 @@ func Claim(c *gin.Context) {
 	promotion := schema.PromotionRowWithoutID{
 		PromotionId: order.PromotionId,
 	}
-	err = models.QueryPromotionById(&promotion)
+	err = models.QueryPromotionById(nil, &promotion)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -214,7 +214,7 @@ func ClaimAll(c *gin.Context) {
 		promotion := schema.PromotionRowWithoutID{
 			PromotionId: order.PromotionId,
 		}
-		err = models.QueryPromotionById(&promotion)
+		err = models.QueryPromotionById(nil, &promotion)
 		if err != nil {
 			continue
 		}

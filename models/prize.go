@@ -9,7 +9,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func QueryPrizeInfosByPromotionId(prizeInfos *[]types.PrizeInfo, promotionId int64) (err error) {
+func QueryPrizeInfosByPromotionId(tx *gorm.DB, prizeInfos *[]types.PrizeInfo, promotionId int64) (err error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
 	sql := `
 		SELECT P.prize_id AS prize_id, P.dist_pool_id AS dist_pool_id, P.prize_denom_id AS prize_denom_id, P.amount AS amount, P.odds AS odds, P.win_cnt AS win_cnt, P.win_image_url AS win_image_url, P.max_daily_win_limit AS max_daily_win_limit, P.max_total_win_limit AS max_total_win_limit, P.is_active AS p_is_active,
 			DP.total_supply AS total_supply, DP.remaining_qty AS remaining_qty, DP.is_active AS dp_is_active,
@@ -21,7 +25,10 @@ func QueryPrizeInfosByPromotionId(prizeInfos *[]types.PrizeInfo, promotionId int
 				ON P.prize_denom_id = PD.prize_denom_id
 		WHERE P.promotion_id = ?
 	`
-	err = config.DB.Raw(sql, promotionId).Scan(prizeInfos).Error
+	err = tx.Raw(sql, promotionId).Scan(prizeInfos).Error
+	if err != nil {
+		tx.Rollback()
+	}
 	return
 }
 
