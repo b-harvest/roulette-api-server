@@ -17,7 +17,7 @@ type WinningRequst struct {
 }
 
 func init() {
-	api = fmt.Sprintf("http://%s:%s", config.Cfg.TPConf.Host, config.Cfg.TPConf.Port)
+	api = fmt.Sprintf("http://%s:%d", config.Cfg.TPConf.Host, config.Cfg.TPConf.Port)
 }
 
 func IsDelegated(address string) (bool, error) {
