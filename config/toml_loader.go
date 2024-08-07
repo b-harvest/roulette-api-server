@@ -13,19 +13,25 @@ var (
 
 // Config defines all necessary configuration parameters.
 type tomlConfig struct {
-	DBConf        TomlDBConf                  `toml:"config_db"`
-	PriceConf     TomlPriceConf               `toml:"price"`
+	DBConf    TomlDBConf    `toml:"config_db"`
+	TPConf    TomlTPConf    `toml:"config_third_party"`
+	PriceConf TomlPriceConf `toml:"price"`
 }
 
 type TomlDBConf struct {
-	Host string `toml:"host"`
-	Port int    `toml:"port"`
-	User string `toml:"user"`
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	User     string `toml:"user"`
 	Password string `toml:"password"`
-	DBName string `toml:"db_name"`
+	DBName   string `toml:"db_name"`
 }
 type TomlPriceConf struct {
 	Url string `toml:"url"`
+}
+
+type TomlTPConf struct {
+	Host string `toml:"host"`
+	Port int    `toml:"port"`
 }
 
 func Load(configPath string) (*tomlConfig, error) {
