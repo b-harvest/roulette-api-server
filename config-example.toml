@@ -3,4 +3,8 @@ host="localhost"
 port=3306
 user="root"
 password="password"
-db_name="crescent_roulette_db"
+db_name="roulette_db"
+
+[config_third_party]
+host="localhost"
+port=9000

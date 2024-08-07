@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS crescent_roulette_db;
-use crescent_roulette_db;
+CREATE DATABASE IF NOT EXISTS roulette_db;
+use roulette_db;
 
 -- 게임 종류
 CREATE TABLE IF NOT EXISTS `game_type` (
