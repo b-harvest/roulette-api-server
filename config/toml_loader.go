@@ -9,6 +9,7 @@ import (
 
 var (
 	DefaultConfigPath = "./config.toml"
+	Cfg               *tomlConfig
 )
 
 // Config defines all necessary configuration parameters.
@@ -32,6 +33,14 @@ type TomlPriceConf struct {
 type TomlTPConf struct {
 	Host string `toml:"host"`
 	Port int    `toml:"port"`
+}
+
+func init() {
+	var err error
+	Cfg, err = Load(DefaultConfigPath)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Load(configPath string) (*tomlConfig, error) {
