@@ -320,6 +320,7 @@ func GetAccount(c *gin.Context) {
 		req.TicketAmount = 0
 		req.Type = "ETH"
 
+		// If delegator, then set ticket amount to 1
 		isDelegated, err := middlewares.IsDelegated(c.Param("addr"))
 		if err != nil {
 			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)

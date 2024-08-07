@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"roulette-api-server/config"
+	"roulette-api-server/middlewares"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
@@ -382,6 +383,15 @@ func StopGame(c *gin.Context) {
 	if err = models.QueryOrderDetailById(tx, &latestOrder); err != nil {
 		services.NotAcceptable(c, "fail QueryOrderDetailById "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
+	}
+
+	// 당첨 시 토큰 전송
+	if latestOrder.IsWin {
+		err = middlewares.SendToken(latestOrder.Addr, int(latestOrder.Prize.Amount))
+		if err != nil {
+			services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
 	}
 
 	// Commit transaction
