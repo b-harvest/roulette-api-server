@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"roulette-api-server/middlewares"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
@@ -318,6 +319,15 @@ func GetAccount(c *gin.Context) {
 		req.LastLoginAt = time.Now()
 		req.TicketAmount = 0
 		req.Type = "ETH"
+
+		isDelegated, err := middlewares.IsDelegated(c.Param("addr"))
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+		if isDelegated {
+			req.TicketAmount = 1
+		}
 
 		err = models.QueryOrCreateAccount(&req)
 		if err != nil {
