@@ -119,6 +119,42 @@ func GetWinTotalByAcc(c *gin.Context) {
 	services.Success(c, nil, &resp)
 }
 
+// This is claim function for BeraBola
+func ClaimForBB(c *gin.Context) {
+	addr := c.Param("addr")
+
+	// 1. Check
+	acc := schema.AccountRow{
+		Addr: addr,
+	}
+	err := models.QueryAccountByAddr(&acc)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail query account "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	if acc.TicketAmount < 1 {
+		err = errors.New("Can't claim due to not enough ticket amount")
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 2. update
+
+	// Table : account
+	acc.TicketAmount = acc.TicketAmount - 1
+	err = models.UpdateAccountById(nil, &acc)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	services.Success(c, nil, acc)
+}
+
+// This is real claim function
 func Claim(c *gin.Context) {
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
