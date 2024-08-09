@@ -141,11 +141,19 @@ func ClaimForBB(c *gin.Context) {
 		return
 	}
 
-	// 2. update
+	// 2. Sending Token
+
+	err = middlewares.SendToken(acc.Addr, 1)
+	if err != nil {
+		services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 3. Update Table
 
 	// Table : account
 	acc.TicketAmount = acc.TicketAmount - 1
-	err = models.UpdateAccountById(nil, &acc)
+	err = models.UpdateAccountTicketById(nil, &acc)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
