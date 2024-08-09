@@ -60,7 +60,8 @@ func SetupRouter() *gin.Engine {
 	// game order
 	route.POST("/game-mgmt/start", controllers.StartGame)    // [USER]TODO: review
 	route.POST("/game-mgmt/stop", controllers.StopGame)      // [USER]게임 종료
-	route.POST("/game-mgmt/claim", controllers.Claim)        // [USER]특정 order 클레임
+	// route.POST("/game-mgmt/claim", controllers.Claim)        // [USER]특정 order 클레임
+	route.PATCH("/game-mgmt/claim/:addr", controllers.ClaimForBB)
 	route.POST("/game-mgmt/claim-all", controllers.ClaimAll) // 완료
 
 	// account

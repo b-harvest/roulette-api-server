@@ -96,6 +96,11 @@ func QueryAccountById(acc *schema.AccountRow) (err error) {
 	return
 }
 
+func QueryAccountByAddr(acc *schema.AccountRow) (err error) {
+	err = config.DB.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
+	return
+}
+
 func UpdateAccountById(tx *gorm.DB, acc *schema.AccountRow) error {
 	if tx == nil {
 		tx = config.DB
