@@ -423,7 +423,7 @@ func GetAccount(c *gin.Context) {
 		// If account exist
 
 		if delegated != nil {
-			err = models.QueryAccountInfoWithTx(tx, &accInfoRow)
+			isAccInfoExist, err := models.QueryAccountInfoWithTx(tx, &accInfoRow)
 			if err != nil {
 				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
@@ -431,8 +431,32 @@ func GetAccount(c *gin.Context) {
 				return
 			}
 
-			// If delegated amount is increased
-			if delegated.Amount > accInfoRow.DelegationAmount {
+			if !isAccInfoExist {
+				// If user did delegate
+
+
+				// Update account ticket amount (Increase 1)
+				account.TicketAmount = account.TicketAmount + 1
+				err = models.UpdateAccountTicketById(tx, &account)
+				if err != nil {
+					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+					tx.Rollback()
+					return
+				}
+
+				// Create account_info
+				accInfoRow.DelegationAmount = delegated.Amount
+				err = models.CreateAccountInfoWithTx(tx, &accInfoRow)
+				if err != nil {
+					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+					tx.Rollback()
+					return
+				}
+			} else if delegated.Amount > accInfoRow.DelegationAmount {
+				// If delegated amount is increased
+
 				// update account_info for delegation_amount
 				accInfoRow.DelegationAmount = delegated.Amount
 				err = models.UpdateDelegationAmountById(tx, &accInfoRow)
