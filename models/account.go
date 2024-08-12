@@ -34,6 +34,27 @@ func isEthHexAddress(ethHexAddress string) bool {
 	return isChecksumAddress(ethHexAddress)
 }
 
+func CreateAccountWithTx(tx *gorm.DB, acc *schema.AccountRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	// If ethereum address
+	// then check correct ethereum address format
+	if acc.Type == "ETH" {
+		if !isEthHexAddress(acc.Addr) {
+			err := errors.New("Invalid ethereum hex address")
+			return err
+		}
+	}
+
+	err := config.DB.Table("account").Create(acc).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return err
+}
 func QueryOrCreateAccount(acc *schema.AccountRow) (err error) {
 	// If ethereum address
 	// then check correct ethereum address format
@@ -99,6 +120,22 @@ func QueryAccountById(acc *schema.AccountRow) (err error) {
 func QueryAccountByAddr(acc *schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
 	return
+}
+func QueryAccountByAddrWithTx(tx *gorm.DB, acc *schema.AccountRow) (bool, error) {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := config.DB.Table("account").Where("addr = ?", acc.Addr).Find(acc).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return false, nil
+		} else {
+			tx.Rollback()
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 func UpdateAccountById(tx *gorm.DB, acc *schema.AccountRow) error {
