@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"roulette-api-server/config"
 	"roulette-api-server/middlewares"
 	"roulette-api-server/models"
 	"roulette-api-server/models/schema"
 	"roulette-api-server/services"
 	"roulette-api-server/types"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -341,56 +343,127 @@ func CreateAccount(c *gin.Context) {
 	}
 }
 
-// 특정 Account 조회
+// This function customized for-bb
 func GetAccount(c *gin.Context) {
-	// 파라미터 조회
-	strId := c.Param("addr")
-	acc := types.ResGetAccount{
-		Addr: strId,
+	addr := c.Param("addr")
+	account := schema.AccountRow{
+		Addr: addr,
+	}
+	accInfoRow := schema.AccountInfoRow{
+		Addr: addr,
 	}
 
-	isNotExist, err := models.QueryAccountDetail(&acc)
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+
+			tx.Rollback()
+
+			err := errors.New("panic")
+			debug.PrintStack()
+			services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+			return
+		}
+	}()
+	err := tx.Error
 	if err != nil {
-		services.NotAcceptable(c, "fail QueryAccountDetail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
-	// If matched record not exist
-	// then create account
-	if isNotExist {
-		var req schema.AccountRow
-		req.Addr = c.Param("addr")
-		req.LastLoginAt = time.Now()
-		req.TicketAmount = 0
-		req.Type = "ETH"
-
-		// If delegator, then set ticket amount to 1
-		isDelegated, err := middlewares.IsDelegated(c.Param("addr"))
-		if err != nil {
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-		if isDelegated {
-			req.TicketAmount = 1
-		}
-
-		err = models.QueryOrCreateAccount(&req)
-		if err != nil {
-			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-			return
-		}
-	}
-
-	winPrizes := make([]types.ResGetWinTotalByAcc, 0, 100)
-	acc.Summary.WinPrizes = &winPrizes
-	err = models.QueryWinTotalByAcc(acc.Summary.WinPrizes, acc.Addr)
+	// Check account is exist or not
+	isAccExist, err := models.QueryAccountByAddrWithTx(tx, &account)
 	if err != nil {
-		services.NotAcceptable(c, "fail QueryWinTotalByAcc "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
 		return
 	}
 
-	// result
-	services.Success(c, nil, acc)
+	// Query account is delegated or not
+	// if delegated is nil then not delegated
+	delegated, err := middlewares.IsDelegated(c.Param("addr"))
+	if err != nil {
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	if !isAccExist {
+		account.LastLoginAt = time.Now()
+		account.TicketAmount = 1
+		account.Type = "ETH"
+
+		if delegated != nil {
+			account.TicketAmount = 2
+		}
+
+		err = models.CreateAccountWithTx(tx, &account)
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+			tx.Rollback()
+			return
+		}
+
+		// if delegated account, then create account_info
+		if delegated != nil {
+			accInfoRow.DelegationAmount = delegated.Amount
+
+			err = models.CreateAccountInfoWithTx(tx, &accInfoRow)
+			if err != nil {
+				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+				tx.Rollback()
+				return
+			}
+		}
+	} else {
+		// If account exist
+
+		if delegated != nil {
+			err = models.QueryAccountInfoWithTx(tx, &accInfoRow)
+			if err != nil {
+				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+				tx.Rollback()
+				return
+			}
+
+			// If delegated amount is increased
+			if delegated.Amount > accInfoRow.DelegationAmount {
+				// update account_info for delegation_amount
+				accInfoRow.DelegationAmount = delegated.Amount
+				err = models.UpdateDelegationAmountById(tx, &accInfoRow)
+				if err != nil {
+					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+					tx.Rollback()
+					return
+				}
+
+				// increase 1 ticket_amount to account
+				account.TicketAmount = account.TicketAmount + 1
+				err = models.UpdateAccountTicketById(tx, &account)
+				if err != nil {
+					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+					tx.Rollback()
+					return
+				}
+			}
+		}
+	}
+
+	// Commit transaction
+	err = tx.Commit().Error
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, account)
 }
 
 // 특정 Account 조회

@@ -100,6 +100,17 @@ CREATE TABLE IF NOT EXISTS `account` (
   UNIQUE KEY `addr` (`addr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 유저 정보 테이블
+CREATE TABLE IF NOT EXISTS `account_info` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `delegation_amount` double unsigned DEFAULT NULL default 0,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp not null default current_timestamp on update current_timestamp,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `addr` (`addr`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 게임 주문
 CREATE TABLE IF NOT EXISTS `game_order` (
   `order_id` bigint unsigned NOT NULL AUTO_INCREMENT,
