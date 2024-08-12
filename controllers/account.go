@@ -463,7 +463,17 @@ func GetAccount(c *gin.Context) {
 		return
 	}
 
-	services.Success(c, nil, account)
+	acc := types.ResGetAccount{
+		Addr: addr,
+	}
+
+	_, err = models.QueryAccountDetail(&acc)
+	if err != nil {
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, acc)
 }
 
 // 특정 Account 조회
