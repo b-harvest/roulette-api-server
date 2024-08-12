@@ -164,6 +164,19 @@ func UpdateAccountTicketById(tx *gorm.DB, acc *schema.AccountRow) error {
 	return err
 }
 
+func UpdateAccountTicketByAddr(tx *gorm.DB, acc *schema.AccountRow) error {
+	if tx == nil {
+		tx = config.DB
+	}
+
+	err := tx.Table("account").Select("ticket_amount").Where("addr = ?", acc.Addr).Update("ticket_amount", acc.TicketAmount).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return err
+}
+
 func QueryAccounts(accs *[]schema.AccountRow) (err error) {
 	err = config.DB.Table("account").Find(accs).Error
 	return
