@@ -392,11 +392,11 @@ func GetAccount(c *gin.Context) {
 
 	if !isAccExist {
 		account.LastLoginAt = time.Now()
-		account.TicketAmount = 1
+		account.TicketAmount = 0
 		account.Type = "ETH"
 
 		if delegated != nil {
-			account.TicketAmount = 2
+			account.TicketAmount = 1
 		}
 
 		err = models.CreateAccountWithTx(tx, &account)
@@ -433,7 +433,6 @@ func GetAccount(c *gin.Context) {
 
 			if !isAccInfoExist {
 				// If user did delegate
-
 
 				// Update account ticket amount (Increase 1)
 				account.TicketAmount = account.TicketAmount + 1
