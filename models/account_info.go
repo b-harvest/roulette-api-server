@@ -37,12 +37,12 @@ func CreateAccountInfoWithTx(tx *gorm.DB, acc_info *schema.AccountInfoRow) error
 	return err
 }
 
-func UpdateDelegationAmountById(tx *gorm.DB, acc_info *schema.AccountInfoRow) error {
+func UpdateAccountInfoById(tx *gorm.DB, acc_info *schema.AccountInfoRow) error {
 	if tx == nil {
 		tx = config.DB
 	}
 
-	err := tx.Table("account_info").Select("delegation_amount").Where("id = ?", acc_info.ID).Update("delegation_amount", acc_info.DelegationAmount).Error
+	err := tx.Table("account_info").Where("id = ?", acc_info.ID).Update(acc_info).Error
 	if err != nil {
 		tx.Rollback()
 		return err

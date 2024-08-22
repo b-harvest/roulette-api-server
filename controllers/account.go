@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -373,32 +375,68 @@ func GetAccount(c *gin.Context) {
 		return
 	}
 
+	// 1. Check logics
+
 	// Check account is exist or not
 	isAccExist, err := models.QueryAccountByAddrWithTx(tx, &account)
 	if err != nil {
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-
-		tx.Rollback()
 		return
 	}
 
-	// Query account is delegated or not
-	// if delegated is nil then not delegated
-	delegated, err := middlewares.IsDelegated(c.Param("addr"))
+	// Check account info is exist or not
+	isAccInfoExist, err := models.QueryAccountInfoWithTx(tx, &accInfoRow)
 	if err != nil {
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
 	}
 
+	ctxMid, cancelMid := context.WithTimeout(context.Background(), 10*time.Second)
+	chDelegated := make(chan *middlewares.IsSomethingReturnType, 1)
+	chYeetardNFT := make(chan *middlewares.IsSomethingReturnType, 1)
+	chDelErr := make(chan error, 1)
+	chYeetErr := make(chan error, 1)
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	defer cancelMid()
+
+	// Check delegation amount
+	// if don't any deletegation, then return nil
+	go func() {
+		defer wg.Done()
+
+		delegated, err := middlewares.IsDelegated(ctxMid, c.Param("addr"))
+		if err != nil {
+			chDelErr <- err
+			return
+		}
+		chDelegated <- delegated
+		chDelErr <- nil
+	}()
+
+	// Check yeetard NFT amount
+	// if don't have yeetard NFT, then return nil
+	go func() {
+		defer wg.Done()
+
+		yeatardNft, err := middlewares.IsYeetardHave(ctxMid, c.Param("addr"))
+		if err != nil {
+			chYeetErr <- err
+			return
+		}
+		chYeetardNFT <- yeatardNft
+		chYeetErr <- nil
+	}()
+
+	// 2. Create logics
+
+	// If account or account info not exist create new one
 	if !isAccExist {
 		account.LastLoginAt = time.Now()
 		account.TicketAmount = 0
 		account.Type = "ETH"
-
-		if delegated != nil {
-			account.TicketAmount = 1
-		}
-
 		err = models.CreateAccountWithTx(tx, &account)
 		if err != nil {
 			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -406,76 +444,82 @@ func GetAccount(c *gin.Context) {
 			tx.Rollback()
 			return
 		}
+	}
+	if !isAccInfoExist {
+		err = models.CreateAccountInfoWithTx(tx, &accInfoRow)
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
-		// if delegated account, then create account_info
-		if delegated != nil {
-			accInfoRow.DelegationAmount = delegated.Amount
-
-			err = models.CreateAccountInfoWithTx(tx, &accInfoRow)
-			if err != nil {
-				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-
-				tx.Rollback()
-				return
-			}
+			tx.Rollback()
+			return
 		}
-	} else {
-		// If account exist
+	}
 
-		if delegated != nil {
-			isAccInfoExist, err := models.QueryAccountInfoWithTx(tx, &accInfoRow)
-			if err != nil {
-				services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+	// 3. Get goroutine results
+	wg.Wait()
 
-				tx.Rollback()
-				return
-			}
+	err = <-chDelErr
+	if err != nil {
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
-			if !isAccInfoExist {
-				// If user did delegate
+		tx.Rollback()
+		return
+	}
+	delegated := <-chDelegated
 
-				// Update account ticket amount (Increase 1)
-				account.TicketAmount = account.TicketAmount + 1
-				err = models.UpdateAccountTicketById(tx, &account)
-				if err != nil {
-					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+	err = <-chYeetErr
+	if err != nil {
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
-					tx.Rollback()
-					return
-				}
+		tx.Rollback()
+		return
+	}
+	yeetardNFT := <-chYeetardNFT
 
-				// Create account_info
-				accInfoRow.DelegationAmount = delegated.Amount
-				err = models.CreateAccountInfoWithTx(tx, &accInfoRow)
-				if err != nil {
-					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+	// 4. Update logics
 
-					tx.Rollback()
-					return
-				}
-			} else if delegated.Amount > accInfoRow.DelegationAmount {
-				// If delegated amount is increased
+	// If delegated amount is increased
+	delCondition := delegated != nil && delegated.Amount != accInfoRow.DelegationAmount
+	if delCondition {
+		// If amount increased, then increase ticket amount
+		if delegated.Amount > accInfoRow.DelegationAmount {
+			account.TicketAmount = account.TicketAmount + 1
+		}
 
-				// update account_info for delegation_amount
-				accInfoRow.DelegationAmount = delegated.Amount
-				err = models.UpdateDelegationAmountById(tx, &accInfoRow)
-				if err != nil {
-					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		// Update delegation_amount
+		accInfoRow.DelegationAmount = delegated.Amount
+	}
 
-					tx.Rollback()
-					return
-				}
+	// If yeetardNFT amount increased
+	yeetardCondition := yeetardNFT != nil && yeetardNFT.Amount != accInfoRow.YeetardAmount
+	if yeetardCondition {
+		// If amount increased, then increase ticket amount
+		if yeetardNFT.Amount > accInfoRow.YeetardAmount {
+			account.TicketAmount = account.TicketAmount + 1
+		}
 
-				// increase 1 ticket_amount to account
-				account.TicketAmount = account.TicketAmount + 1
-				err = models.UpdateAccountTicketById(tx, &account)
-				if err != nil {
-					services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		// Update yeetard_amount
+		accInfoRow.YeetardAmount = yeetardNFT.Amount
+	}
 
-					tx.Rollback()
-					return
-				}
-			}
+	// Only update row If need to account and account_info
+	if delCondition || yeetardCondition {
+		// Update account_info
+		err = models.UpdateAccountInfoById(tx, &accInfoRow)
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+			tx.Rollback()
+			return
+		}
+
+		// Update account
+		err = models.UpdateAccountById(tx, &account)
+		if err != nil {
+			services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+			tx.Rollback()
+			return
 		}
 	}
 
