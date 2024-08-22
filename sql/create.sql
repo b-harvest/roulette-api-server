@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS `account_info` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `delegation_amount` double unsigned DEFAULT NULL default 0,
+  `yeetard_amount` double unsigned DEFAULT NULL default 0,
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (`id`),
