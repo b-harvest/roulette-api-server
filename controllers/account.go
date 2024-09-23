@@ -483,7 +483,7 @@ func GetAccount(c *gin.Context) {
 	if delCondition {
 		// If amount increased, then increase ticket amount
 		// 1000000000000000000 == 1BGT
-		if delegated.Amount > (accInfoRow.DelegationAmount + 500000000000000000) {
+		if delegated.Amount >= (accInfoRow.DelegationAmount + 500000000000000000) {
 			account.TicketAmount = account.TicketAmount + 1
 		}
 
