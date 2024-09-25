@@ -33,7 +33,7 @@ func SetupRouter() *gin.Engine {
 	// gold game order
 	route.POST("/game-mgmt/start-gold-game", controllers.StartGoldGame)
 	route.POST("/game-mgmt/stop-gold-game", controllers.StopGoldGame)
-	route.PATCH("/game-mgmt/claim/:addr", controllers.ClaimGold)
+	route.PATCH("/game-mgmt/claim-gold/:addr", controllers.ClaimGold)
 
 	// account
 	route.GET("/accounts", controllers.GetAccounts)                        // 계정들 조회
