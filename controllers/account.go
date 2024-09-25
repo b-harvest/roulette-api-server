@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -391,43 +390,24 @@ func GetAccount(c *gin.Context) {
 		return
 	}
 
-	ctxMid, cancelMid := context.WithTimeout(context.Background(), 10*time.Second)
 	chDelegated := make(chan *middlewares.IsSomethingReturnType, 1)
-	chYeetardNFT := make(chan *middlewares.IsSomethingReturnType, 1)
 	chDelErr := make(chan error, 1)
-	chYeetErr := make(chan error, 1)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
-
-	defer cancelMid()
 
 	// Check delegation amount
 	// if don't any deletegation, then return nil
 	go func() {
 		defer wg.Done()
 
-		delegated, err := middlewares.IsDelegated(ctxMid, c.Param("addr"))
+		delegated, err := middlewares.IsDelegated(c.Param("addr"))
 		if err != nil {
 			chDelErr <- err
 			return
 		}
 		chDelegated <- delegated
 		chDelErr <- nil
-	}()
-
-	// Check yeetard NFT amount
-	// if don't have yeetard NFT, then return nil
-	go func() {
-		defer wg.Done()
-
-		yeatardNft, err := middlewares.IsYeetardHave(ctxMid, c.Param("addr"))
-		if err != nil {
-			chYeetErr <- err
-			return
-		}
-		chYeetardNFT <- yeatardNft
-		chYeetErr <- nil
 	}()
 
 	// 2. Create logics
@@ -467,44 +447,23 @@ func GetAccount(c *gin.Context) {
 	}
 	delegated := <-chDelegated
 
-	err = <-chYeetErr
-	if err != nil {
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-
-		tx.Rollback()
-		return
-	}
-	yeetardNFT := <-chYeetardNFT
-
 	// 4. Update logics
 
 	// If delegated amount is increased
-	delCondition := delegated != nil && delegated.Amount != accInfoRow.DelegationAmount
+	delCondition := delegated != nil &&
+		delegated.Amount != accInfoRow.DelegationAmount &&
+		delegated.Amount >= (accInfoRow.DelegationAmount+500000000000000000)
 	if delCondition {
 		// If amount increased, then increase ticket amount
 		// 1000000000000000000 == 1BGT
-		if delegated.Amount >= (accInfoRow.DelegationAmount + 500000000000000000) {
-			account.TicketAmount = account.TicketAmount + 1
-		}
+		account.TicketAmount = account.TicketAmount + 1
 
 		// Update delegation_amount
 		accInfoRow.DelegationAmount = delegated.Amount
 	}
 
-	// If yeetardNFT amount increased
-	yeetardCondition := yeetardNFT != nil && yeetardNFT.Amount != accInfoRow.YeetardAmount
-	if yeetardCondition {
-		// If amount increased, then increase ticket amount
-		if yeetardNFT.Amount > accInfoRow.YeetardAmount {
-			account.TicketAmount = account.TicketAmount + 1
-		}
-
-		// Update yeetard_amount
-		accInfoRow.YeetardAmount = yeetardNFT.Amount
-	}
-
 	// Only update row If need to account and account_info
-	if delCondition || yeetardCondition {
+	if delCondition {
 		// Update account_info
 		err = models.UpdateAccountInfoById(tx, &accInfoRow)
 		if err != nil {

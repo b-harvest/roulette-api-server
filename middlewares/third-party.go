@@ -8,9 +8,10 @@ import (
 	"io"
 	"net/http"
 	"roulette-api-server/config"
+	"time"
 )
 
-var api string
+var thirdPartyAPI string
 
 type WinningRequst struct {
 	Address string `json:"address"`
@@ -32,12 +33,15 @@ type (
 )
 
 func init() {
-	api = fmt.Sprintf("http://%s:%d", config.Cfg.TPConf.Host, config.Cfg.TPConf.Port)
+	thirdPartyAPI = fmt.Sprintf("http://%s:%d", config.Cfg.TPConf.Host, config.Cfg.TPConf.Port)
 }
 
 // if return is nil then not delegated
-func IsDelegated(ctx context.Context, address string) (*IsSomethingReturnType, error) {
-	url := fmt.Sprintf("%s/checkaddr/%s", api, address)
+func IsDelegated(address string) (*IsSomethingReturnType, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	url := fmt.Sprintf("%s/checkaddr/%s", thirdPartyAPI, address)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -81,8 +85,11 @@ func IsDelegated(ctx context.Context, address string) (*IsSomethingReturnType, e
 }
 
 // if return is nil then not delegated
-func IsYeetardHave(ctx context.Context, address string) (*IsSomethingReturnType, error) {
-	url := fmt.Sprintf("%s/haveYeetard/%s", api, address)
+func IsYeetardHave(address string) (*IsSomethingReturnType, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	url := fmt.Sprintf("%s/haveYeetard/%s", thirdPartyAPI, address)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -126,7 +133,10 @@ func IsYeetardHave(ctx context.Context, address string) (*IsSomethingReturnType,
 }
 
 func SendToken(address string, amount int) error {
-	url := fmt.Sprintf("%s/winning", api)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	url := fmt.Sprintf("%s/winning", thirdPartyAPI)
 
 	reqBytes, err := json.Marshal(WinningRequst{
 		Address: address,
@@ -137,7 +147,7 @@ func SendToken(address string, amount int) error {
 	}
 	reqBody := bytes.NewBuffer(reqBytes)
 
-	req, err := http.NewRequest("POST", url, reqBody)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, reqBody)
 	if err != nil {
 		return err
 	}

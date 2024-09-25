@@ -26,8 +26,9 @@ func SetupRouter() *gin.Engine {
 	route.POST("/promotions", controllers.CreatePromotion)                // 프로모션 생성 (promotion + dPools + prizes)
 
 	// game order
-	route.POST("/game-mgmt/start", controllers.StartGame)    // [USER]TODO: review
-	route.POST("/game-mgmt/stop", controllers.StopGame)      // [USER]게임 종료
+	route.POST("/game-mgmt/start", controllers.StartGame)
+	route.POST("/game-mgmt/start-gold-game", controllers.StartGoldGame)
+	route.POST("/game-mgmt/stop", controllers.StopGame)
 	route.PATCH("/game-mgmt/claim/:addr", controllers.ClaimForBB)
 
 	// account

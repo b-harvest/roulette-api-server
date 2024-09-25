@@ -5,7 +5,6 @@ import (
 	config "roulette-api-server/config"
 	schema "roulette-api-server/models/schema"
 	routes "roulette-api-server/routes"
-	"roulette-api-server/services"
 
 	"github.com/jinzhu/gorm"
 )
@@ -23,9 +22,6 @@ func main() {
 		&schema.OAuthRefreshToken{},
 		&schema.User{},
 	)
-
-	// get prices
-	go services.PriceGetterHandler()
 
 	// web server
 	r := routes.SetupRouter()
