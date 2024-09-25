@@ -123,7 +123,7 @@ func GetWinTotalByAcc(c *gin.Context) {
 }
 
 // This is claim function for BeraBola
-func ClaimForBB(c *gin.Context) {
+func ClaimBola(c *gin.Context) {
 	addr := c.Param("addr")
 
 	// 1. Check
@@ -157,6 +157,49 @@ func ClaimForBB(c *gin.Context) {
 	// Table : account
 	acc.TicketAmount = acc.TicketAmount - 1
 	err = models.UpdateAccountTicketById(nil, &acc)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	services.Success(c, nil, acc)
+}
+
+// This is claim function for BeraBola Gold Game
+func ClaimGold(c *gin.Context) {
+	addr := c.Param("addr")
+
+	// 1. Check
+	acc := schema.AccountRow{
+		Addr: addr,
+	}
+	err := models.QueryAccountByAddr(&acc)
+	if err != nil {
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail query account "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	if acc.GoldTicketAmount < 1 {
+		err = errors.New("Can't claim due to not enough gold ticket amount")
+		fmt.Printf("%+v\n", err.Error())
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 2. Sending Token
+
+	err = middlewares.SendToken(acc.Addr, 100)
+	if err != nil {
+		services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	// 3. Update Table
+
+	// Table : account
+	acc.GoldTicketAmount = acc.GoldTicketAmount - 1
+	err = models.UpdateAccountGoldTicketById(nil, &acc)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -449,21 +492,21 @@ func GetAccount(c *gin.Context) {
 
 	// 4. Update logics
 
-	// If delegated amount is increased
-	delCondition := delegated != nil &&
-		delegated.Amount != accInfoRow.DelegationAmount &&
-		delegated.Amount >= (accInfoRow.DelegationAmount+500000000000000000)
-	if delCondition {
-		// If amount increased, then increase ticket amount
-		// 1000000000000000000 == 1BGT
+	delCondition := delegated != nil && delegated.Amount != accInfoRow.DelegationAmount
+	// If amount increased, then increase ticket amount
+	// 1000000000000000000 == 1BGT
+	goldBolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 100000000000000000000))
+	bolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 500000000000000000))
+	if goldBolaCondition {
+		account.GoldTicketAmount = account.GoldTicketAmount + 1
+		accInfoRow.DelegationAmount = delegated.Amount
+	} else if bolaCondition {
 		account.TicketAmount = account.TicketAmount + 1
-
-		// Update delegation_amount
 		accInfoRow.DelegationAmount = delegated.Amount
 	}
 
 	// Only update row If need to account and account_info
-	if delCondition {
+	if bolaCondition || goldBolaCondition {
 		// Update account_info
 		err = models.UpdateAccountInfoById(tx, &accInfoRow)
 		if err != nil {
