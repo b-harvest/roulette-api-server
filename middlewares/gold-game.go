@@ -21,7 +21,7 @@ func init() {
 }
 
 func StartGoldGame(order *schema.OrderRow) (*types.ResStartGame, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	url := fmt.Sprintf("%s/game-mgmt/start", goldGameAPI)
@@ -55,6 +55,49 @@ func StartGoldGame(order *schema.OrderRow) (*types.ResStartGame, error) {
 	}
 
 	var res types.ResStartGame
+	err = json.Unmarshal(resBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func StopGoldGame(order *schema.OrderRow) (*types.ResGetLatestOrderByAddr, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	url := fmt.Sprintf("%s/game-mgmt/stop", goldGameAPI)
+
+	reqBytes, err := json.Marshal(order)
+	if err != nil {
+		return nil, err
+	}
+	reqBody := bytes.NewBuffer(reqBytes)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New("failed to start gold game")
+	}
+
+	resBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var res types.ResGetLatestOrderByAddr
 	err = json.Unmarshal(resBytes, &res)
 	if err != nil {
 		return nil, err

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -299,27 +298,6 @@ func StartGame(c *gin.Context) {
 	})
 }
 
-func StartGoldGame(c *gin.Context) {
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	var order schema.OrderRow
-	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	resp, err := middlewares.StartGoldGame(&order)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	services.Success(c, nil, resp)
-}
-
 // 게임 종료 (룰렛)
 func StopGame(c *gin.Context) {
 	/*
@@ -407,12 +385,9 @@ func StopGame(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
 	// 당첨 시 토큰 전송
 	if latestOrder.IsWin {
-		err = middlewares.SendToken(ctx, latestOrder.Addr, int(latestOrder.Prize.Amount))
+		err = middlewares.SendToken(latestOrder.Addr, int(latestOrder.Prize.Amount))
 		if err != nil {
 			services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 			return
@@ -427,6 +402,48 @@ func StopGame(c *gin.Context) {
 	}
 
 	services.Success(c, nil, latestOrder)
+}
+
+func StartGoldGame(c *gin.Context) {
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	resp, err := middlewares.StartGoldGame(&order)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, resp)
+}
+
+func StopGoldGame(c *gin.Context) {
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+	var order schema.OrderRow
+	if err = json.Unmarshal(jsonData, &order); err != nil {
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	resp, err := middlewares.StopGoldGame(&order)
+	if err != nil {
+		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	services.Success(c, nil, resp)
 }
 
 // TODO
