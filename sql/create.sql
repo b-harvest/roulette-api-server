@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `account` (
   `user_id` bigint unsigned NOT NULL,
   `addr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ticket_amount` int NOT NULL DEFAULT 0,
+  `gold_ticket_amount` int NOT NULL DEFAULT 0,
   `admin_memo` tinytext COLLATE utf8mb4_unicode_ci,
   `type` varchar(32),
   `is_blacklisted` tinyint(1) NOT NULL DEFAULT 0,

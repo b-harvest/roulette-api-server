@@ -421,12 +421,12 @@ func GetAccount(c *gin.Context) {
 	go func() {
 		defer wg.Done()
 
-		yeatardNft, err := middlewares.IsYeetardHave(ctxMid, c.Param("addr"))
+		yeetardNft, err := middlewares.IsYeetardHave(ctxMid, c.Param("addr"))
 		if err != nil {
 			chYeetErr <- err
 			return
 		}
-		chYeetardNFT <- yeatardNft
+		chYeetardNFT <- yeetardNft
 		chYeetErr <- nil
 	}()
 
@@ -479,25 +479,25 @@ func GetAccount(c *gin.Context) {
 	// 4. Update logics
 
 	// If delegated amount is increased
-	delCondition := delegated != nil && delegated.Amount != accInfoRow.DelegationAmount
+	delCondition := delegated != nil &&
+		delegated.Amount != accInfoRow.DelegationAmount &&
+		delegated.Amount >= (accInfoRow.DelegationAmount+500000000000000000)
 	if delCondition {
 		// If amount increased, then increase ticket amount
 		// 1000000000000000000 == 1BGT
-		if delegated.Amount >= (accInfoRow.DelegationAmount + 500000000000000000) {
-			account.TicketAmount = account.TicketAmount + 1
-		}
+		account.TicketAmount = account.TicketAmount + 1
 
 		// Update delegation_amount
 		accInfoRow.DelegationAmount = delegated.Amount
 	}
 
 	// If yeetardNFT amount increased
-	yeetardCondition := yeetardNFT != nil && yeetardNFT.Amount != accInfoRow.YeetardAmount
+	yeetardCondition := yeetardNFT != nil &&
+		yeetardNFT.Amount != accInfoRow.YeetardAmount &&
+		yeetardNFT.Amount > accInfoRow.YeetardAmount
 	if yeetardCondition {
 		// If amount increased, then increase ticket amount
-		if yeetardNFT.Amount > accInfoRow.YeetardAmount {
-			account.TicketAmount = account.TicketAmount + 1
-		}
+		account.TicketAmount = account.TicketAmount + 1
 
 		// Update yeetard_amount
 		accInfoRow.YeetardAmount = yeetardNFT.Amount
