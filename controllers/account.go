@@ -436,8 +436,12 @@ func GetAccount(c *gin.Context) {
 	chDelegated := make(chan *middlewares.IsSomethingReturnType, 1)
 	chDelErr := make(chan error, 1)
 
+	// TODO
+	// Please check if you create or remove go function
+	goFuncNum := 1
+
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(goFuncNum)
 
 	// Check delegation amount
 	// if don't any deletegation, then return nil
