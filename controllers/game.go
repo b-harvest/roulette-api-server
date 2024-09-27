@@ -84,7 +84,7 @@ func StartGame(c *gin.Context) {
 		// Gold Berabola game
 		ticketAmount = &account.GoldTicketAmount
 	} else {
-		err = errors.New("invalid game choosen")
+		err = errors.New("invalid game type")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
 		tx.Rollback()
