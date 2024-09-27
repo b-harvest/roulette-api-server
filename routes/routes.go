@@ -29,10 +29,6 @@ func SetupRouter() *gin.Engine {
 	route.POST("/game-mgmt/start", controllers.StartGame)
 	route.POST("/game-mgmt/stop", controllers.StopGame)
 	route.PATCH("/game-mgmt/claim/:addr", controllers.ClaimBola)
-
-	// gold game order
-	route.POST("/game-mgmt/start-gold-game", controllers.StartGoldGame)
-	route.POST("/game-mgmt/stop-gold-game", controllers.StopGoldGame)
 	route.PATCH("/game-mgmt/claim-gold/:addr", controllers.ClaimGold)
 
 	// account

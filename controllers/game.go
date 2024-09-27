@@ -76,10 +76,25 @@ func StartGame(c *gin.Context) {
 		return
 	}
 
+	var ticketAmount *uint64
+	if order.PromotionId == 1 && order.GameId == 1 {
+		// Berabola game
+		ticketAmount = &account.TicketAmount
+	} else if order.PromotionId == 2 && order.GameId == 2 {
+		// Gold Berabola game
+		ticketAmount = &account.GoldTicketAmount
+	} else {
+		err = errors.New("invalid game choosen")
+		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+
+		tx.Rollback()
+		return
+	}
+
 	// TODO: calculate required ticket amount for game start
 	// Check whether account has sufficient ticket amount
 	ticketQtyForGame := uint64(1)
-	if account.TicketAmount < ticketQtyForGame {
+	if *ticketAmount < ticketQtyForGame {
 		err = errors.New("insufficient ticket amount")
 		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 
@@ -251,7 +266,7 @@ func StartGame(c *gin.Context) {
 
 	// Table : account
 	// Subtract ticket amount for doing game
-	account.TicketAmount -= ticketQtyForGame
+	*ticketAmount -= ticketQtyForGame
 	account.UpdatedAt = time.Time{}
 	err = models.UpdateAccountTicketById(tx, &account)
 	if err != nil {
@@ -402,48 +417,6 @@ func StopGame(c *gin.Context) {
 	}
 
 	services.Success(c, nil, latestOrder)
-}
-
-func StartGoldGame(c *gin.Context) {
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	var order schema.OrderRow
-	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	resp, err := middlewares.StartGoldGame(&order)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	services.Success(c, nil, resp)
-}
-
-func StopGoldGame(c *gin.Context) {
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	var order schema.OrderRow
-	if err = json.Unmarshal(jsonData, &order); err != nil {
-		services.BadRequest(c, "bad request : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	resp, err := middlewares.StopGoldGame(&order)
-	if err != nil {
-		services.NotAcceptable(c, "fail : "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	services.Success(c, nil, resp)
 }
 
 // TODO
