@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"roulette-api-server/config"
 	"roulette-api-server/models/schema"
@@ -156,20 +157,14 @@ func UpdateAccountTicketById(tx *gorm.DB, acc *schema.AccountRow) error {
 		tx = config.DB
 	}
 
-	err := tx.Table("account").Select("ticket_amount").Where("id = ?", acc.Id).Update("ticket_amount", acc.TicketAmount).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	return err
-}
+	sql := fmt.Sprintf(`
+		UPDATE account
+		SET ticket_amount = %d,
+			gold_ticket_amount = %d
+		WHERE id = %d
+	`, acc.TicketAmount, acc.GoldTicketAmount, acc.Id)
 
-func UpdateAccountGoldTicketById(tx *gorm.DB, acc *schema.AccountRow) error {
-	if tx == nil {
-		tx = config.DB
-	}
-
-	err := tx.Table("account").Select("gold_ticket_amount").Where("id = ?", acc.Id).Update("gold_ticket_amount", acc.GoldTicketAmount).Error
+	err := tx.Raw(sql).Scan(&[]schema.AccountRow{}).Error
 	if err != nil {
 		tx.Rollback()
 		return err

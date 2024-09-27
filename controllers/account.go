@@ -124,6 +124,7 @@ func GetWinTotalByAcc(c *gin.Context) {
 
 // This is claim function for BeraBola
 func ClaimBola(c *gin.Context) {
+	gameType := c.Param("type")
 	addr := c.Param("addr")
 
 	// 1. Check
@@ -137,7 +138,21 @@ func ClaimBola(c *gin.Context) {
 		return
 	}
 
-	if acc.TicketAmount < 1 {
+	var ticketAmount *uint64
+	var claimAmount int
+	if gameType == "bola" {
+		ticketAmount = &acc.TicketAmount
+		claimAmount = 1
+	} else if gameType == "gold" {
+		ticketAmount = &acc.GoldTicketAmount
+		claimAmount = 100
+	} else {
+		err = errors.New("invalid game type")
+		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
+		return
+	}
+
+	if *ticketAmount < 1 {
 		err = errors.New("Can't claim due to not enough ticket amount")
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
@@ -146,7 +161,7 @@ func ClaimBola(c *gin.Context) {
 
 	// 2. Sending Token
 
-	err = middlewares.SendToken(acc.Addr, 1)
+	err = middlewares.SendToken(acc.Addr, claimAmount)
 	if err != nil {
 		services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
 		return
@@ -155,51 +170,8 @@ func ClaimBola(c *gin.Context) {
 	// 3. Update Table
 
 	// Table : account
-	acc.TicketAmount = acc.TicketAmount - 1
+	*ticketAmount = *ticketAmount - 1
 	err = models.UpdateAccountTicketById(nil, &acc)
-	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-	services.Success(c, nil, acc)
-}
-
-// This is claim function for BeraBola Gold Game
-func ClaimGold(c *gin.Context) {
-	addr := c.Param("addr")
-
-	// 1. Check
-	acc := schema.AccountRow{
-		Addr: addr,
-	}
-	err := models.QueryAccountByAddr(&acc)
-	if err != nil {
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail query account "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	if acc.GoldTicketAmount < 1 {
-		err = errors.New("Can't claim due to not enough gold ticket amount")
-		fmt.Printf("%+v\n", err.Error())
-		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// 2. Sending Token
-
-	err = middlewares.SendToken(acc.Addr, 100)
-	if err != nil {
-		services.NotAcceptable(c, "fail SendToken "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
-		return
-	}
-
-	// 3. Update Table
-
-	// Table : account
-	acc.GoldTicketAmount = acc.GoldTicketAmount - 1
-	err = models.UpdateAccountGoldTicketById(nil, &acc)
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
 		services.NotAcceptable(c, "fail "+c.Request.Method+" "+c.Request.RequestURI+" : "+err.Error(), err)
