@@ -8,7 +8,3 @@ db_name="roulette_db"
 [config_third_party]
 host="localhost"
 port=9000
-
-[config_gold_game]
-host="localhost"
-port=8081
