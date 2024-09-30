@@ -241,10 +241,10 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 		}
 	}()
 
-	if err = config.DB.Table("account").Where("addr = ?", acc.Addr).First(acc).Error; err != nil {
+	if err = config.DB.Table("account").Where("addr = ?", acc.Account.Addr).First(acc).Error; err != nil {
 		return
 	}
-	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Addr).Find(&acc.Vouchers).Error
+	err = config.DB.Table("user_voucher_balance").Where("addr = ?", acc.Account.Addr).Find(&acc.Vouchers).Error
 	if err == nil {
 		for i, vb := range acc.Vouchers {
 			config.DB.Table("promotion").Where("promotion_id = ?", vb.PromotionId).First(&acc.Vouchers[i].Promotion)
@@ -260,13 +260,13 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 	FROM user_voucher_balance
 	WHERE addr = ?
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	sql = `
 	select count(*) as total_connect_num FROM event_wallet_conn
 	WHERE addr = ?
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	sql = `
 	select 
@@ -274,7 +274,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 	FROM game_order
 	WHERE addr = ?
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	sql = `
 	select 
@@ -282,7 +282,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 	FROM game_order
 	WHERE addr = ? AND status > 2
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	sql = `
 	select 
@@ -293,7 +293,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 		GO.addr = ? AND GO.status = 3 AND
         P.claim_start_at < NOW() AND P.claim_end_at > NOW()
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	// usd_of_win_order = (당첨 prize 의 amount * prize_denom_id 의 usd_value)
 	// total_usd = usd_of_win_order 총합
@@ -305,7 +305,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 	LEFT JOIN prize_denom D ON P.prize_denom_id=D.prize_denom_id
 	WHERE A.addr = ? AND A.is_win = true AND A.status in (3,4,5)
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	sql = `
 	SELECT
@@ -321,7 +321,7 @@ func QueryAccountDetail(acc *types.ResGetAccount) (isNotExist bool, err error) {
 			PROM.claim_start_at < NOW() AND
 			PROM.claim_end_at > NOW()
 	`
-	config.DB.Raw(sql, acc.Addr).Scan(&acc.Summary)
+	config.DB.Raw(sql, acc.Account.Addr).Scan(&acc.Summary)
 
 	return
 }

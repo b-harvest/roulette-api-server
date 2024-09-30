@@ -472,7 +472,7 @@ func GetAccount(c *gin.Context) {
 	// If amount increased, then increase ticket amount
 	// 1000000000000000000 == 1BGT
 	goldBolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 100000000000000000000))
-	bolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 500000000000000000))
+	bolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 1000000000000000000))
 	if goldBolaCondition {
 		account.GoldTicketAmount = account.GoldTicketAmount + 1
 		accInfoRow.DelegationAmount = delegated.Amount
@@ -510,7 +510,7 @@ func GetAccount(c *gin.Context) {
 	}
 
 	acc := types.ResGetAccount{
-		Addr: addr,
+		Account: account,
 	}
 
 	_, err = models.QueryAccountDetail(&acc)
