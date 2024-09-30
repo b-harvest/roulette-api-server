@@ -1,6 +1,7 @@
 package types
 
 import (
+	"roulette-api-server/models/schema"
 	"time"
 )
 
@@ -153,18 +154,9 @@ type ResGetGameWinningResults struct {
 }
 
 type ResGetAccount struct {
-	Id int64 `json:"id" db:"id"`
-	// UserId        int64                `json:"userId" db:"user_id"`
-	Addr          string               `json:"addr" db:"addr"`
-	TicketAmount  uint64               `json:"ticketAmount" db:"ticket_amount"`
-	AdminMemo     string               `json:"adminMemo" db:"admin_memo"`
-	Type          string               `json:"type" db:"type"`
-	IsBlacklisted bool                 `json:"isBlacklisted" db:"is_blacklisted"`
-	LastLoginAt   time.Time            `json:"lastLoginAt" db:"last_login_at" gorm:"default:null"`
-	CreatedAt     time.Time            `json:"createdAt" db:"created_at"`
-	UpdatedAt     time.Time            `json:"updatedAt" db:"updated_at"`
-	Vouchers      []*ResGetVoucher     `json:"vouchers"`
-	Summary       ResGetAccountSummary `json:"summary"`
+	Account  schema.AccountRow    `json:"account"`
+	Vouchers []*ResGetVoucher     `json:"vouchers"`
+	Summary  ResGetAccountSummary `json:"summary"`
 }
 
 type ResGetAccountSummary struct {
