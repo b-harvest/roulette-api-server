@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"roulette-api-server/config"
 	"roulette-api-server/middlewares"
 	"roulette-api-server/models"
@@ -471,8 +472,9 @@ func GetAccount(c *gin.Context) {
 	delCondition := delegated != nil && delegated.Amount != accInfoRow.DelegationAmount
 	// If amount increased, then increase ticket amount
 	// 1000000000000000000 == 1BGT
-	goldBolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 100000000000000000000))
-	bolaCondition := delCondition && (delegated.Amount >= (accInfoRow.DelegationAmount + 1000000000000000000))
+	epsilon := math.Nextafter(1, 2) - 1
+	goldBolaCondition := delCondition && ((delegated.Amount + epsilon) >= (accInfoRow.DelegationAmount + 100000000000000000000))
+	bolaCondition := delCondition && ((delegated.Amount + epsilon) >= (accInfoRow.DelegationAmount + 1000000000000000000))
 	if goldBolaCondition {
 		account.GoldTicketAmount = account.GoldTicketAmount + 1
 		accInfoRow.DelegationAmount = delegated.Amount
