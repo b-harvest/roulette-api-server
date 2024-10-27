@@ -473,7 +473,7 @@ func GetAccount(c *gin.Context) {
 	// If amount increased, then increase ticket amount
 	// 1000000000000000000 == 1BGT
 	epsilon := math.Nextafter(1, 2) - 1
-	goldBolaCondition := delCondition && ((delegated.Amount + epsilon) >= (accInfoRow.DelegationAmount + 200000000000000000000))
+	goldBolaCondition := delCondition && ((delegated.Amount + epsilon) >= (accInfoRow.DelegationAmount + 199000000000000000000))
 	bolaCondition := delCondition && ((delegated.Amount + epsilon) >= (accInfoRow.DelegationAmount + 1000000000000000000))
 	if goldBolaCondition {
 		account.GoldTicketAmount = account.GoldTicketAmount + 1
